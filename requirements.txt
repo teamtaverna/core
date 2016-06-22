@@ -1,0 +1,7 @@
+coverage==4.1
+coveralls==1.1
+Django==1.9.7
+docopt==0.6.2
+envvars==0.3.0
+requests==2.10.0
+wheel==0.24.0

@@ -4,14 +4,6 @@
 set -e
 set -o pipefail
 
-# Install python3 if absent
-if which python3; then
-    echo "Python3 present. Moving on..."
-else
-    echo "Installing Python3...."
-    brew install python3
-fi
-
 # Install virtualenvwrapper if absent
 if pip freeze | grep virtualenvwrapper; then
     echo "Virtualenvwrapper present. Moving on..."

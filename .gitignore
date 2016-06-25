@@ -90,3 +90,6 @@ ENV/
 
 # database
 db.sqlite3
+
+# static
+staticfiles

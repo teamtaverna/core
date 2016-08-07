@@ -1,10 +1,10 @@
-[![Coverage Status](https://coveralls.io/repos/github/teamtaverna/taverna_api/badge.svg?branch=master)](https://coveralls.io/github/teamtaverna/taverna_api?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/teamtaverna/core/badge.svg?branch=master)](https://coveralls.io/github/teamtaverna/core?branch=master)
 
-# Taverna API
-Taverna API is the power house of Taverna app, an open source meal review and management platform.
+# CORE
+Core is the power house of Taverna app, an open source meal review and management platform.
 
 ### Tech
-Taverna API is written in Python3 and Django 1.9.
+Core is written in Python3 and Django 1.9.
 
 ### Collaboration
 
@@ -14,7 +14,11 @@ You need to have postgreSQL installed and set up on your machine.
 
 Clone the repository from [GitHub](https://www.github.com)
 ```
+<<<<<<< Updated upstream
 git clone https://github.com/teamtaverna/taverna_api.git
+=======
+$ git clone https://github.com/teamtaverna/core.git
+>>>>>>> Stashed changes
 ```
 
 ### Installation

@@ -1,1 +1,1 @@
-web: gunicorn taverna_api.wsgi --log-file -
+web: gunicorn core.wsgi --log-file -

@@ -14,11 +14,7 @@ You need to have postgreSQL installed and set up on your machine.
 
 Clone the repository from [GitHub](https://www.github.com)
 ```
-<<<<<<< Updated upstream
-git clone https://github.com/teamtaverna/taverna_api.git
-=======
 $ git clone https://github.com/teamtaverna/core.git
->>>>>>> Stashed changes
 ```
 
 ### Installation

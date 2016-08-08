@@ -1,7 +1,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/teamtaverna/core/badge.svg?branch=master)](https://coveralls.io/github/teamtaverna/core?branch=master)
 
 # CORE
-Core is the power house of Taverna app, an open source meal review and management platform.
+Core is the power house of Taverna app, an open source meal review and management platform. More information can be found on the [wiki](https://github.com/teamtaverna/core/wiki).
 
 ### Tech
 Core is written in Python3 and Django 1.9.
@@ -26,13 +26,7 @@ Be sure to have the following installed and setup first.
 * Brew
 * Xcode
 
-Next, step into the project directory and set up your environment by running this script.
-
-```
-./scripts/local_env_setup.sh
-```
-
-**OR follow these steps to set up manually.**
+Next,
 * Install [Virtualenvwrapper](https://virtualenvwrapper.readthedocs.org/en/latest/install.html).
 * Create a virtual environment for the project.
 * Install requirements in the virtual environment created

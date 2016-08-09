@@ -93,11 +93,8 @@ db.sqlite3
 
 # static
 staticfiles
-<<<<<<< Updated upstream
-=======
 
 # confidential
 secret_key.txt
 
 .DS_Store
->>>>>>> Stashed changes

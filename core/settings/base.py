@@ -25,16 +25,24 @@ dotenv.load()
 SECRET_KEY = dotenv.get('SECRET_KEY')
 
 # Application definition
-
-INSTALLED_APPS = [
+PREREQ_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.api',
 ]
+
+PROJECT_APPS = [
+    'apps.api',
+    'apps.accounts',
+    'apps.shared',
+    'apps.reviews',
+    'apps.timetables',
+]
+
+INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',

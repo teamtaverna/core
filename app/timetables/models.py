@@ -19,5 +19,11 @@ class Weekday(models.Model):
         self.clean()
         return super(Weekday, self).save(*args, **kwargs)
 
+
+class Meal(models.Model):
+    name = models.TextField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
     def __str__(self):
         return self.name

@@ -35,11 +35,11 @@ PREREQ_APPS = [
 ]
 
 PROJECT_APPS = [
-    'apps.api',
-    'apps.accounts',
-    'apps.shared',
-    'apps.reviews',
-    'apps.timetables',
+    'app.api',
+    'app.accounts',
+    'app.shared',
+    'app.reviews',
+    'app.timetables',
 ]
 
 INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS

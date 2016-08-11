@@ -41,7 +41,7 @@ class Meal(ForceCapitalizeMixin, models.Model):
         return self.name
 
 
-class MealOption(models.Model):
+class MealOption(TimestampMixin):
     name = models.CharField(max_length=120)
 
     def __str__(self):

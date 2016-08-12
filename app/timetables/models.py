@@ -21,7 +21,7 @@ class Weekday(models.Model):
 
 
 class Meal(models.Model):
-    name = models.CharField(max_length=60)
+    name = models.CharField(max_length=60, unique=True)
     start_time = models.TimeField()
     end_time = models.TimeField()
 

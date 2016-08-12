@@ -1,8 +1,13 @@
 from __future__ import unicode_literals
 
 from django.db import models
+<<<<<<< 30a887456af0307c996224767574a2cb23e50764
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+=======
+
+from app.shared.models import TimestampMixin
+>>>>>>> Remove unneccessary inheritance and correct spacing
 
 from common.mixins import ForceCapitalizeMixin
 

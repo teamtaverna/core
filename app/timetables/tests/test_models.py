@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.test import TestCase
 from django.db import IntegrityError
 
@@ -26,7 +28,9 @@ class MealTest(TestCase):
 
     def setUp(self):
         Meal.objects.create(
-            name='breakfast', start_time='21:30:05', end_time='22:30:05'
+            name='breakfast',
+            start_time=datetime.strptime('21:30:05', '%H:%M:%S').time(),
+            end_time=datetime.strptime('22:30:05', '%H:%M:%S').time()
         )
 
     def test_meal_name_should_be_capitalized_on_save(self):

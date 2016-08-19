@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.test import TestCase
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 from app.timetables.models import Weekday, Meal
 
@@ -29,8 +30,8 @@ class MealTest(TestCase):
     def setUp(self):
         Meal.objects.create(
             name='breakfast',
-            start_time=datetime.strptime('21:30:05', '%H:%M:%S').time(),
-            end_time=datetime.strptime('22:30:05', '%H:%M:%S').time()
+            start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
         )
 
     def test_meal_name_should_be_capitalized_on_save(self):
@@ -39,6 +40,28 @@ class MealTest(TestCase):
         self.assertEqual(meal.name, 'Breakfast')
 
     def test_duplicate_meal_name_cannot_be_saved(self):
-        meal = Meal(name='Breakfast')
+        meal = Meal(
+            name='Breakfast',
+            start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
+        )
 
         self.assertRaises(IntegrityError, meal.save)
+
+    def test_meal_end_time_less_than_start_time_cannot_be_saved(self):
+        meal = Meal(
+            name='lunch',
+            start_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('9:7:9', '%H:%M:%S'))
+        )
+
+        self.assertRaises(ValidationError, meal.save)
+
+    def test_meal_end_time_same_with_start_time_cannot_be_saved(self):
+        meal = Meal(
+            name='lunch',
+            start_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S'))
+        )
+
+        self.assertRaises(ValidationError, meal.save)

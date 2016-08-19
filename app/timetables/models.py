@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 from common.mixins import ForceCapitalizeMixin
 
@@ -29,6 +31,11 @@ class Meal(ForceCapitalizeMixin, models.Model):
     end_time = models.TimeField()
 
     capitalized_field_names = ('name',)
+
+    def clean(self):
+        if self.start_time >= self.end_time:
+            raise ValidationError(_('start_time must be less than end_time.'))
+        super().clean()
 
     def __str__(self):
         return self.name

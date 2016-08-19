@@ -37,7 +37,6 @@ PREREQ_APPS = [
 PROJECT_APPS = [
     'app.api',
     'app.accounts',
-    'app.shared',
     'app.reviews',
     'app.timetables',
 ]

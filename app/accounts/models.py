@@ -11,7 +11,7 @@ class UserProfile(models.Model):
     Example of extra information can be google user id, facebook user id, etc.
     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, unique=True, on_delete=models.CASCADE)
     custom_auth_id = models.TextField(blank=True)
     facebook_oauth_id = models.TextField(blank=True)
     google_oauth_id = models.TextField(blank=True)

@@ -11,11 +11,11 @@ class UserProfile(models.Model):
     Example of extra information can be google user id, facebook user id, etc.
     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    custom_auth_id = models.TextField(blank=True)
-    facebook_oauth_id = models.TextField(blank=True)
-    google_oauth_id = models.TextField(blank=True)
-    twitter_oauth_id = models.TextField(blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    custom_auth_id = models.CharField(max_length=255, blank=True)
+    facebook_oauth_id = models.CharField(max_length=255, blank=True)
+    google_oauth_id = models.CharField(max_length=255, blank=True)
+    twitter_oauth_id = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.user.username

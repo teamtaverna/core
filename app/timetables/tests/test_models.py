@@ -93,7 +93,7 @@ class CourseTest(TestCase):
     def test_course_name_should_be_capitalized_on_save(self):
         course = Course.objects.get(name__iexact='test')
 
-        self.assertEqual(course.name, 'test')
+        self.assertEqual(course.name, 'Test')
 
     def test_duplicate_course_name_cannot_be_saved(self):
         course = Course(name='test')

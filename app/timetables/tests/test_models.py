@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from app.timetables.models import Weekday, Meal
+from app.timetables.models import Weekday, Meal, MealOption
 
 
 class WeekdayTest(TestCase):
@@ -65,3 +65,20 @@ class MealTest(TestCase):
         )
 
         self.assertRaises(ValidationError, meal.save)
+
+
+class MealOptionTest(TestCase):
+    """Tests the MealOption model."""
+
+    def setUp(self):
+        MealOption.objects.create(name='lunch')
+
+    def test_mealoption_name_should_be_capitalized_on_save(self):
+        option = MealOption.objects.get(name__iexact='lunch')
+
+        self.assertEqual(option.name, 'Lunch')
+
+    def test_duplicate_mealoption_name_cannot_be_saved(self):
+        option = MealOption(name='lunch')
+
+        self.assertRaises(IntegrityError, option.save)

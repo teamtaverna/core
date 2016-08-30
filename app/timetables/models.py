@@ -47,4 +47,10 @@ class MealOption(ForceCapitalizeMixin, models.Model):
     capitalized_field_names = ('name',)
 
     def __str__(self):
+
+
+class Course(CommonInfo):
+    name = models.CharField(max_length=150, unique=True)
+
+    def __str(self):
         return self.name

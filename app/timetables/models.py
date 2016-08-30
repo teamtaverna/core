@@ -55,5 +55,5 @@ class Course(ForceCapitalizeMixin,  models.Model):
 
     capitalized_field_names = ('name',)
 
-    def __str(self):
+    def __str__(self):
         return self.name

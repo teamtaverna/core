@@ -50,14 +50,13 @@ class MealOption(ForceCapitalizeMixin, models.Model):
         return self.name
 
 
-class Course(ForceCapitalizeMixin,  models.Model):
+class Course(ForceCapitalizeMixin, models.Model):
     name = models.CharField(max_length=150, unique=True)
 
     capitalized_field_names = ('name',)
 
     def __str__(self):
         return self.name
-
 
 
 class Timetable(TimestampMixin):
@@ -72,8 +71,8 @@ class Timetable(TimestampMixin):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=60, unique=True)
     api_key = models.CharField(max_length=255, unique=True)
-    cycle_length = models.IntegerField()
-    current_cycle_day = models.IntegerField()
+    cycle_length = models.PositiveSmallIntegerField()
+    current_cycle_day = models.PositiveSmallIntegerField()
 
     def clean(self):
         if self.current_cycle_day > self.cycle_length:

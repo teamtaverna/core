@@ -4,7 +4,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from common.mixins import ForceCapitalizeMixin
+from common.mixins import ForceCapitalizeMixin, TimestampMixin
 
 
 class Weekday(ForceCapitalizeMixin, models.Model):
@@ -54,6 +54,35 @@ class Course(ForceCapitalizeMixin,  models.Model):
     name = models.CharField(max_length=150, unique=True)
 
     capitalized_field_names = ('name',)
+
+    def __str__(self):
+        return self.name
+
+
+
+class Timetable(TimestampMixin):
+    """
+    A timetable is the central entity or model of the platform.
+
+    It represents/encapsulates the entire structure and
+    scheduling of meals, menu-items, dishes, courses, options etc,
+    served at a location, to a team or the entire organisation.
+    """
+
+    name = models.CharField(max_length=255, unique=True)
+    code = models.CharField(max_length=60, unique=True)
+    api_key = models.CharField(max_length=255, unique=True)
+    cycle_length = models.IntegerField()
+    current_cycle_day = models.IntegerField()
+
+    def clean(self):
+        if self.current_cycle_day > self.cycle_length:
+            raise ValidationError(_('current_cycle_day must not be greater than cycle_length.'))
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

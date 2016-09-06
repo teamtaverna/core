@@ -90,7 +90,8 @@ class Timetable(TimestampMixin):
         super().clean()
 
     def save(self, *args, **kwargs):
-        self.clean()
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
         return super().save(*args, **kwargs)
 
     def __str__(self):

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.core.validators import MinValueValidator
 
 from common.mixins import ForceCapitalizeMixin, TimestampMixin
 
@@ -71,12 +72,18 @@ class Timetable(TimestampMixin):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=60, unique=True)
     api_key = models.CharField(max_length=255, unique=True)
-    cycle_length = models.PositiveSmallIntegerField()
-    current_cycle_day = models.PositiveSmallIntegerField()
+    cycle_length = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)]
+    )
+    current_cycle_day = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)]
+    )
 
     def clean(self):
         if self.current_cycle_day > self.cycle_length:
-            raise ValidationError(_('current_cycle_day must not be greater than cycle_length.'))
+            raise ValidationError(_(
+                'current_cycle_day must not be greater than cycle_length.')
+            )
         super().clean()
 
     def save(self, *args, **kwargs):

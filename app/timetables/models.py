@@ -80,10 +80,13 @@ class Timetable(TimestampMixin):
     )
 
     def clean(self):
-        if self.current_cycle_day > self.cycle_length:
-            raise ValidationError(_(
-                'current_cycle_day must not be greater than cycle_length.')
-            )
+        # Ensure current_cycle_day and cycle_length are not None before compare
+        if self.current_cycle_day and self.cycle_length:
+            if self.current_cycle_day > self.cycle_length:
+                raise ValidationError(_(
+                    'Ensure Current cycle day is greater than Cycle length.')
+                )
+
         super().clean()
 
     def save(self, *args, **kwargs):

@@ -111,8 +111,8 @@ class TimetableTest(TestCase):
             api_key='419223',
             cycle_length=14,
             current_cycle_day=2,
-            date_created=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
-            date_modified=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S'))
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
     def test_duplicate_timetable_name_cannot_be_saved(self):
@@ -122,11 +122,11 @@ class TimetableTest(TestCase):
             api_key='41923',
             cycle_length=14,
             current_cycle_day=2,
-            date_created=datetime.time(datetime.strptime('4:7:9', '%H:%M:%S')),
-            date_modified=datetime.time(datetime.strptime('15:7:9', '%H:%M:%S'))
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
-        self.assertRaises(IntegrityError, timetable.save)
+        self.assertRaises(ValidationError, timetable.save)
 
     def test_duplicate_timetable_code_cannot_be_saved(self):
         timetable = Timetable(
@@ -135,11 +135,11 @@ class TimetableTest(TestCase):
             api_key='41923',
             cycle_length=14,
             current_cycle_day=2,
-            date_created=datetime.time(datetime.strptime('4:7:9', '%H:%M:%S')),
-            date_modified=datetime.time(datetime.strptime('15:7:9', '%H:%M:%S'))
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
-        self.assertRaises(IntegrityError, timetable.save)
+        self.assertRaises(ValidationError, timetable.save)
 
     def test_duplicate_api_key_cannot_be_saved(self):
         timetable = Timetable(
@@ -148,21 +148,47 @@ class TimetableTest(TestCase):
             api_key='419223',
             cycle_length=14,
             current_cycle_day=2,
-            date_created=datetime.time(datetime.strptime('4:7:9', '%H:%M:%S')),
-            date_modified=datetime.time(datetime.strptime('15:7:9', '%H:%M:%S'))
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
-        self.assertRaises(IntegrityError, timetable.save)
+        self.assertRaises(ValidationError, timetable.save)
 
-    def test_timetable_with_current_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
+    def test_current_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
         timetable = Timetable(
             name='timtable',
             code='FBI232123',
             api_key='4192237',
             cycle_length=1,
             current_cycle_day=2,
-            date_created=datetime.time(datetime.strptime('4:7:9', '%H:%M:%S')),
-            date_modified=datetime.time(datetime.strptime('15:7:9', '%H:%M:%S'))
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_cycle_length_and_current_cycle_day_of_zero_cant_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='4192237',
+            cycle_length=0,
+            current_cycle_day=0,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_cycle_length_and_current_cycle_day_of_negative_value_cant_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='4192237',
+            cycle_length=-1,
+            current_cycle_day=-3,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
         self.assertRaises(ValidationError, timetable.save)

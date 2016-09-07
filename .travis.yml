@@ -17,6 +17,7 @@ before_script:
 # command to run tests
 script:
   - coverage run --source=app manage.py test --settings=core.settings
+  - flake 8 .
 
 after_success:
   coveralls

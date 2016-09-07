@@ -84,7 +84,7 @@ class Timetable(TimestampMixin):
         if self.current_cycle_day and self.cycle_length:
             if self.current_cycle_day > self.cycle_length:
                 raise ValidationError(_(
-                    'Ensure Current cycle day is greater than Cycle length.')
+                    'Ensure Current cycle day is not greater than Cycle length.')
                 )
 
         super().clean()

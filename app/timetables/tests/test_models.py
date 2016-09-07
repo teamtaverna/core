@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from app.timetables.models import Course, Meal, MealOption, Weekday
+from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable
 
 
 class WeekdayTest(TestCase):
@@ -99,3 +99,96 @@ class CourseTest(TestCase):
         course = Course(name='test')
 
         self.assertRaises(IntegrityError, course.save)
+
+
+class TimetableTest(TestCase):
+    """Tests the Timetable model."""
+
+    def setUp(self):
+        Timetable.objects.create(
+            name='timtable-item',
+            code='FBI23212',
+            api_key='419223',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+    def test_duplicate_timetable_name_cannot_be_saved(self):
+        timetable = Timetable(
+            name='timtable-item',
+            code='FB23212',
+            api_key='41923',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_duplicate_timetable_code_cannot_be_saved(self):
+        timetable = Timetable(
+            name='timtable-value',
+            code='FBI23212',
+            api_key='41923',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_duplicate_api_key_cannot_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='419223',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_current_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='4192237',
+            cycle_length=1,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_cycle_length_and_current_cycle_day_of_zero_cant_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='4192237',
+            cycle_length=0,
+            current_cycle_day=0,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)
+
+    def test_cycle_length_and_current_cycle_day_of_negative_value_cant_be_saved(self):
+        timetable = Timetable(
+            name='timtable',
+            code='FBI232123',
+            api_key='4192237',
+            cycle_length=-1,
+            current_cycle_day=-3,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.assertRaises(ValidationError, timetable.save)

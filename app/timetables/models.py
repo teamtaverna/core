@@ -96,3 +96,20 @@ class Timetable(TimestampMixin):
 
     def __str__(self):
         return self.name
+
+
+class Dish(TimestampMixin):
+    """
+    Model representing Dish.
+
+    A dish represents the actual food served as a given
+    course under an option of a meal on a cycle day in a timetable.
+    E.g, Coconut rice garnished with fish stew and chicken or just
+    Ice-cream.
+    """
+
+    name = models.CharField(max_length=255, unique=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.name

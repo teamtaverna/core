@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable
+from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable, Dish
 
 
 class WeekdayTest(TestCase):
@@ -192,3 +192,20 @@ class TimetableTest(TestCase):
         )
 
         self.assertRaises(ValidationError, timetable.save)
+
+
+class DishTest(TestCase):
+    """Tests the Dish model."""
+
+    def setUp(self):
+        Dish.objects.create(
+            name='eba',
+            description='eba and garri. Make eba for your wedding day.',
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+    def test_duplicate_dish_name_cannot_be_saved(self):
+        dish = Dish(name='eba')
+
+        self.assertRaises(IntegrityError, dish.save)

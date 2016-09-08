@@ -78,6 +78,7 @@ class Timetable(TimestampMixin):
     current_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
+    description = models.TextField(blank=True)
 
     def clean(self):
         # Ensure current_cycle_day and cycle_length are not None before compare
@@ -93,6 +94,23 @@ class Timetable(TimestampMixin):
         # Calling full_clean instead of clean to ensure validators are called
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Dish(TimestampMixin):
+    """
+    Model representing the actual food served.
+
+    A dish represents the actual food served as a given
+    course under an option of a meal on a cycle day in a timetable.
+    E.g, Coconut rice garnished with fish stew and chicken or just
+    Ice-cream.
+    """
+
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name

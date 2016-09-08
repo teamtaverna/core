@@ -43,6 +43,8 @@ class Meal(ForceCapitalizeMixin, models.Model):
 
 
 class MealOption(ForceCapitalizeMixin, models.Model):
+    """Model representing course/dish combinations to be served during a given meal."""
+
     name = models.CharField(max_length=120, unique=True)
 
     capitalized_field_names = ('name',)
@@ -52,6 +54,8 @@ class MealOption(ForceCapitalizeMixin, models.Model):
 
 
 class Course(ForceCapitalizeMixin, models.Model):
+    """Model representing the particular dish served as one of the parts of a meal option."""
+
     name = models.CharField(max_length=150, unique=True)
 
     capitalized_field_names = ('name',)
@@ -62,7 +66,7 @@ class Course(ForceCapitalizeMixin, models.Model):
 
 class Timetable(TimestampMixin):
     """
-    A timetable is the central entity or model of the platform.
+    Central model of the platform.
 
     It represents/encapsulates the entire structure and
     scheduling of meals, menu-items, dishes, courses, options etc,

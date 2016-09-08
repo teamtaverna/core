@@ -7,8 +7,10 @@ Copied from https://gist.github.com/mattseymour/9205591
 import string
 import random
 
-# Get ascii Characters numbers and punctuation (minus quote characters as they could terminate string).
-chars = ''.join([string.ascii_letters, string.digits, string.punctuation]).replace('\'', '').replace('"', '').replace('\\', '')
+# Get ascii Characters numbers and punctuation
+# (minus quote characters as they could terminate string).
+char_list = [string.ascii_letters, string.digits, string.punctuation]
+chars = ''.join(char_list).replace('\'', '').replace('"', '').replace('\\', '')
 
 SECRET_KEY = ''.join([random.SystemRandom().choice(chars) for i in range(50)])
 

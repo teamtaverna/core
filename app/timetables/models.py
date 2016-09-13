@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from common.mixins import ForceCapitalizeMixin, TimestampMixin
 

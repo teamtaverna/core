@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
-from django.db import models
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
 from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from common.mixins import ForceCapitalizeMixin, TimestampMixin
 
@@ -83,6 +84,7 @@ class Timetable(TimestampMixin):
         validators=[MinValueValidator(1)]
     )
     description = models.TextField(blank=True)
+    admins = models.ManyToManyField(User, through='Admin')
 
     def clean(self):
         # Ensure current_cycle_day and cycle_length are not None before compare
@@ -118,3 +120,14 @@ class Dish(TimestampMixin):
 
     def __str__(self):
         return self.name
+
+
+class Admin(models.Model):
+    """Model representing timetables' administratorship"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    is_super = models.BooleanField()
+
+    def __str__(self):
+        return self.user.username

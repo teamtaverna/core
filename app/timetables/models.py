@@ -152,5 +152,8 @@ class MenuItem(TimestampMixin):
     meal = models.ForeignKey(Meal)
     meal_option = models.ForeignKey(MealOption)
 
+    class Meta:
+        unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
+
     def __str__(self):
-        return self.id
+        return '%s %s' % (self.cycle_day, self.meal)

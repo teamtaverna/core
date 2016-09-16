@@ -131,3 +131,6 @@ class Admin(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    class Meta:
+        unique_together = ('user', 'timetable')

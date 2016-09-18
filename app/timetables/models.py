@@ -5,26 +5,17 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.utils.text import slugify
+
+from common.mixins import SlugifyMixin, ForceCapitalizeMixin, TimestampMixin
 
 
-from common.mixins import ForceCapitalizeMixin, TimestampMixin
-
-
-class Weekday(models.Model):
+class Weekday(SlugifyMixin, models.Model):
     """Model representing the day of the week."""
 
     name = models.CharField(max_length=60)
     slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
 
-    def clean(self):
-        self.slug = slugify(self.name)
-        if Weekday.objects.get(slug=self.slug):
-            raise ValidationError("This object already exists.")
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        return super().save(*args, **kwargs)
+    slugify_field = 'name'
 
     def __str__(self):
         return self.name

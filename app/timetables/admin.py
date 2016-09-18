@@ -3,7 +3,11 @@ from django.contrib import admin
 from . import models
 
 
-admin.site.register(models.Weekday)
+class WeekdayAdmin(admin.ModelAdmin):
+    readonly_fields = ('slug',)
+    empty_value_display = ''
+
+admin.site.register(models.Weekday, WeekdayAdmin)
 admin.site.register(models.Meal)
 admin.site.register(models.MealOption)
 admin.site.register(models.Course)

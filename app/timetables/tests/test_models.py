@@ -252,7 +252,7 @@ class MenuItemTest(TestCase):
 
         self.assertRaises(IntegrityError, menu_item_two.save)
 
-    def test_cycle_day_is_greater_than_zero(self):
+    def test_cycle_day_cannot_be_less_than_one(self):
         menu_item_three = MenuItem(
             cycle_day=-1,
             meal=self.meal_object,

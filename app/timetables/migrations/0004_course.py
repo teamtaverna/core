@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=150, unique=True)),
             ],
-            bases=(common.mixins.ForceCapitalizeMixin, models.Model),
+            bases=(common.mixins.SlugifyMixin, models.Model),
         ),
     ]

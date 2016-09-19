@@ -156,4 +156,4 @@ class MenuItem(TimestampMixin):
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
 
     def __str__(self):
-        return '%s %s' % (self.cycle_day, self.meal)
+        return '{0} {1}'.format(self.cycle_day, self.meal)

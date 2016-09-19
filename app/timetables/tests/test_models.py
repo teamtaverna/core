@@ -215,6 +215,7 @@ class MenuItemTest(TestCase):
     """Tests the MenuItem model."""
 
     def setUp(self):
+
         self.timetable_object = Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
@@ -233,22 +234,17 @@ class MenuItemTest(TestCase):
 
         self.meal_option = MealOption.objects.create(name='lunch')
 
-        self.menu_item = MenuItem.objects.create(
-            date_created=datetime.strptime('20 07 2016', '%d %m %Y'),
-            date_modified=datetime.strptime('22 08 2016', '%d %m %Y'),
-            cycle_day=4,
-            meal=self.meal_object,
-            meal_option=self.meal_option,
-            timetable=self.timetable_object)
+        self.menu_item_object = {
+            'timetable': self.timetable_object,
+            'cycle_day': 4,
+            'meal': self.meal_object,
+            'meal_option': self.meal_option
+        }
+
+        self.menu_item = MenuItem.objects.create(**self.menu_item_object)
 
     def test_duplicates_of_all_cannot_be_saved(self):
-        menu_item_two = MenuItem(
-            date_created=datetime.strptime('20 07 2016', '%d %m %Y'),
-            date_modified=datetime.strptime('22 08 2016', '%d %m %Y'),
-            cycle_day=4,
-            meal=self.meal_object,
-            meal_option=self.meal_option,
-            timetable=self.timetable_object)
+        menu_item_two = MenuItem(**self.menu_item_object)
 
         self.assertRaises(IntegrityError, menu_item_two.save)
 

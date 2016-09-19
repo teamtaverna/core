@@ -136,7 +136,6 @@ class Admin(models.Model):
         unique_together = ('user', 'timetable')
 
 
-
 class MenuItem(TimestampMixin):
     """
     Model representing a Menu Item.

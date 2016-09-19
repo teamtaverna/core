@@ -118,6 +118,9 @@ class Dish(TimestampMixin):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name_plural = 'Dishes'
+
     def __str__(self):
         return self.name
 

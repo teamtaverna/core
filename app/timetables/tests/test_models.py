@@ -243,9 +243,6 @@ class MenuItemTest(TestCase):
 
         self.menu_item = MenuItem.objects.create(**self.menu_item_object)
 
-    def tearDown(self):
-        del self
-
     def test_duplicates_of_all_cannot_be_saved(self):
         menu_item_two = MenuItem(**self.menu_item_object)
 

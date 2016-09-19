@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from common.mixins import SlugifyMixin, ForceCapitalizeMixin, TimestampMixin
+from common.mixins import SlugifyMixin, TimestampMixin
 
 
 class Weekday(SlugifyMixin, models.Model):
@@ -21,7 +21,7 @@ class Weekday(SlugifyMixin, models.Model):
         return self.name
 
 
-class Meal(ForceCapitalizeMixin, models.Model):
+class Meal(SlugifyMixin, models.Model):
     """
     Model representing food occasions.
 
@@ -30,43 +30,47 @@ class Meal(ForceCapitalizeMixin, models.Model):
     """
 
     name = models.CharField(max_length=60, unique=True)
+    slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
-    capitalized_field_names = ('name',)
+    slugify_field = 'name'
 
     def clean(self):
         if self.start_time >= self.end_time:
             raise ValidationError(_('start_time must be less than end_time.'))
+
         super().clean()
 
     def __str__(self):
         return self.name
 
 
-class MealOption(ForceCapitalizeMixin, models.Model):
+class MealOption(SlugifyMixin, models.Model):
     """Model representing course/dish combinations to be served during a given meal."""
 
     name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, null=True, editable=False)
 
-    capitalized_field_names = ('name',)
+    slugify_field = 'name'
 
     def __str__(self):
         return self.name
 
 
-class Course(ForceCapitalizeMixin, models.Model):
+class Course(SlugifyMixin, models.Model):
     """Model representing the particular dish served as one of the parts of a meal option."""
 
     name = models.CharField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True, null=True, editable=False)
 
-    capitalized_field_names = ('name',)
+    slugify_field = 'name'
 
     def __str__(self):
         return self.name
 
 
-class Timetable(TimestampMixin):
+class Timetable(SlugifyMixin, TimestampMixin):
     """
     Central model of the platform.
 
@@ -76,6 +80,7 @@ class Timetable(TimestampMixin):
     """
 
     name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     code = models.CharField(max_length=60, unique=True)
     api_key = models.CharField(max_length=255, unique=True)
     cycle_length = models.PositiveSmallIntegerField(
@@ -86,6 +91,8 @@ class Timetable(TimestampMixin):
     )
     description = models.TextField(blank=True)
     admins = models.ManyToManyField(User, through='Admin')
+
+    slugify_field = 'name'
 
     def clean(self):
         # Ensure current_cycle_day and cycle_length are not None before compare
@@ -106,7 +113,7 @@ class Timetable(TimestampMixin):
         return self.name
 
 
-class Dish(TimestampMixin):
+class Dish(SlugifyMixin, TimestampMixin):
     """
     Model representing the actual food served.
 
@@ -117,7 +124,10 @@ class Dish(TimestampMixin):
     """
 
     name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     description = models.TextField(blank=True)
+
+    slugify_field = 'name'
 
     class Meta:
         verbose_name_plural = 'Dishes'

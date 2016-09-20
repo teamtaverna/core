@@ -143,11 +143,11 @@ class Admin(models.Model):
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     is_super = models.BooleanField()
 
-    def __str__(self):
-        return self.user.username
-
     class Meta:
         unique_together = ('user', 'timetable')
+
+    def __str__(self):
+        return self.user.username
 
 
 class MenuItem(TimestampMixin):
@@ -164,6 +164,11 @@ class MenuItem(TimestampMixin):
     )
     meal = models.ForeignKey(Meal)
     meal_option = models.ForeignKey(MealOption)
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')

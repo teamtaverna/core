@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 from django.test import TestCase
 
 from app.timetables import models
@@ -220,18 +219,18 @@ class MenuItemTest(TestCase):
             'meal_option': self.meal_option
         }
 
-        self.menu_item = models.MenuItem.objects.create(**self.menu_item_object)
+        models.MenuItem.objects.create(**self.menu_item_object)
 
     def test_duplicates_of_all_cannot_be_saved(self):
         menu_item_two = models.MenuItem(**self.menu_item_object)
 
-        self.assertRaises(IntegrityError, menu_item_two.save)
+        self.assertRaises(ValidationError, menu_item_two.save)
 
-    def test_cycle_day_cannot_be_less_than_one(self):
+    def test_zero_cycle_day_value_cannot_be_saved(self):
         menu_item_three = models.MenuItem(
-            cycle_day=-1,
+            cycle_day=0,
             meal=self.meal_object,
             meal_option=self.meal_option,
             timetable=self.timetable_object)
 
-        self.assertRaises(IntegrityError, menu_item_three.save)
+        self.assertRaises(ValidationError, menu_item_three.save)

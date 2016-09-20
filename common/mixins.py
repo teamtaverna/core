@@ -21,7 +21,8 @@ class SlugifyMixin():
 
     This mixin helps in solving the problem of having case insensitive duplicates
     by creating a slug and ensuring uniqueness.
-    Model field to be slugified should be passed into a variable called slugify_field.
+    Model field to be slugified should be passed as a string into a variable
+    called slugify_field.
     Slug field in the model should be named slug.
     """
 

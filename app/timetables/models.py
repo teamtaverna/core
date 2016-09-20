@@ -29,7 +29,7 @@ class Meal(SlugifyMixin, models.Model):
     is scheduled to be served. E.g breakfast, lunch, etc.
     """
 
-    name = models.CharField(max_length=60, unique=True)
+    name = models.CharField(max_length=60)
     slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -49,7 +49,7 @@ class Meal(SlugifyMixin, models.Model):
 class MealOption(SlugifyMixin, models.Model):
     """Model representing course/dish combinations to be served during a given meal."""
 
-    name = models.CharField(max_length=120, unique=True)
+    name = models.CharField(max_length=120)
     slug = models.SlugField(max_length=120, unique=True, null=True, editable=False)
 
     slugify_field = 'name'
@@ -61,7 +61,7 @@ class MealOption(SlugifyMixin, models.Model):
 class Course(SlugifyMixin, models.Model):
     """Model representing the particular dish served as one of the parts of a meal option."""
 
-    name = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True, null=True, editable=False)
 
     slugify_field = 'name'
@@ -79,7 +79,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     served at a location, to a team or the entire organisation.
     """
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     code = models.CharField(max_length=60, unique=True)
     api_key = models.CharField(max_length=255, unique=True)
@@ -123,17 +123,17 @@ class Dish(SlugifyMixin, TimestampMixin):
     Ice-cream.
     """
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     description = models.TextField(blank=True)
 
     slugify_field = 'name'
 
-    class Meta:
-        verbose_name_plural = 'Dishes'
-
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name_plural = 'Dishes'
 
 
 class Admin(models.Model):
@@ -143,11 +143,11 @@ class Admin(models.Model):
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     is_super = models.BooleanField()
 
-    class Meta:
-        unique_together = ('user', 'timetable')
-
     def __str__(self):
         return self.user.username
+
+    class Meta:
+        unique_together = ('user', 'timetable')
 
 
 class MenuItem(TimestampMixin):
@@ -170,8 +170,8 @@ class MenuItem(TimestampMixin):
         self.full_clean()
         return super().save(*args, **kwargs)
 
-    class Meta:
-        unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
-
     def __str__(self):
         return '{0} {1}'.format(self.cycle_day, self.meal)
+
+    class Meta:
+        unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')

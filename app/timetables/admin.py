@@ -32,5 +32,5 @@ class DishAdmin(DefaultAdmin):
 
 admin.site.empty_value_display = ''
 
-admin.site.register(models.Admin)
-admin.site.register(models.MenuItem)
+other_models = [models.Admin, models.MenuItem]
+admin.site.register(other_models)

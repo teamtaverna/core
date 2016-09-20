@@ -158,12 +158,12 @@ class MenuItem(TimestampMixin):
     served on a given cycle-day of a particular timetable.
     """
 
-    timetable = models.ForeignKey(Timetable)
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    meal = models.ForeignKey(Meal)
-    meal_option = models.ForeignKey(MealOption)
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    meal_option = models.ForeignKey(MealOption, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         # Calling full_clean instead of clean to ensure validators are called

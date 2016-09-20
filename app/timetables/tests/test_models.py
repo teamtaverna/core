@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable, Dish
+from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable, Dish, MenuItem
 
 
 class WeekdayTest(TestCase):
@@ -209,3 +209,50 @@ class DishTest(TestCase):
         dish = Dish(name='eba')
 
         self.assertRaises(IntegrityError, dish.save)
+
+
+class MenuItemTest(TestCase):
+    """Tests the MenuItem model."""
+
+    def setUp(self):
+
+        self.timetable_object = Timetable.objects.create(
+            name='timtable-item',
+            code='FBI23212',
+            api_key='419223',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+
+        self.meal_object = Meal.objects.create(
+            name='breakfast',
+            start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
+        )
+
+        self.meal_option = MealOption.objects.create(name='lunch')
+
+        self.menu_item_object = {
+            'timetable': self.timetable_object,
+            'cycle_day': 4,
+            'meal': self.meal_object,
+            'meal_option': self.meal_option
+        }
+
+        self.menu_item = MenuItem.objects.create(**self.menu_item_object)
+
+    def test_duplicates_of_all_cannot_be_saved(self):
+        menu_item_two = MenuItem(**self.menu_item_object)
+
+        self.assertRaises(IntegrityError, menu_item_two.save)
+
+    def test_cycle_day_cannot_be_less_than_one(self):
+        menu_item_three = MenuItem(
+            cycle_day=-1,
+            meal=self.meal_object,
+            meal_option=self.meal_option,
+            timetable=self.timetable_object)
+
+        self.assertRaises(IntegrityError, menu_item_three.save)

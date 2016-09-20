@@ -118,6 +118,9 @@ class Dish(TimestampMixin):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name_plural = 'Dishes'
+
     def __str__(self):
         return self.name
 
@@ -134,3 +137,25 @@ class Admin(models.Model):
 
     class Meta:
         unique_together = ('user', 'timetable')
+
+
+class MenuItem(TimestampMixin):
+    """
+    Model representing a Menu Item.
+
+    A MenuItem represents the particular meal combination option that is to be
+    served on a given cycle-day of a particular timetable.
+    """
+
+    timetable = models.ForeignKey(Timetable)
+    cycle_day = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)]
+    )
+    meal = models.ForeignKey(Meal)
+    meal_option = models.ForeignKey(MealOption)
+
+    class Meta:
+        unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
+
+    def __str__(self):
+        return '{0} {1}'.format(self.cycle_day, self.meal)

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import TestCase
 
 from app.timetables import models
@@ -194,8 +195,7 @@ class MenuItemTest(TestCase):
     """Tests the MenuItem model."""
 
     def setUp(self):
-
-        self.timetable_object = Timetable.objects.create(
+        self.timetable_object = models.Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
             api_key='419223',
@@ -205,13 +205,13 @@ class MenuItemTest(TestCase):
             date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
-        self.meal_object = Meal.objects.create(
+        self.meal_object = models.Meal.objects.create(
             name='breakfast',
             start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
         )
 
-        self.meal_option = MealOption.objects.create(name='lunch')
+        self.meal_option = models.MealOption.objects.create(name='lunch')
 
         self.menu_item_object = {
             'timetable': self.timetable_object,
@@ -220,15 +220,15 @@ class MenuItemTest(TestCase):
             'meal_option': self.meal_option
         }
 
-        self.menu_item = MenuItem.objects.create(**self.menu_item_object)
+        self.menu_item = models.MenuItem.objects.create(**self.menu_item_object)
 
     def test_duplicates_of_all_cannot_be_saved(self):
-        menu_item_two = MenuItem(**self.menu_item_object)
+        menu_item_two = models.MenuItem(**self.menu_item_object)
 
         self.assertRaises(IntegrityError, menu_item_two.save)
 
     def test_cycle_day_cannot_be_less_than_one(self):
-        menu_item_three = MenuItem(
+        menu_item_three = models.MenuItem(
             cycle_day=-1,
             meal=self.meal_object,
             meal_option=self.meal_option,

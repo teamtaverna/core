@@ -22,6 +22,7 @@ $ git clone https://github.com/teamtaverna/core.git
 **Mac Users**
 
 Be sure to have the following installed and setup first.
+* Python 3
 * PostgreSQL (Ensure the server is running)
 * Brew
 * Xcode
@@ -29,17 +30,33 @@ Be sure to have the following installed and setup first.
 Next,
 * Install [Virtualenvwrapper](https://virtualenvwrapper.readthedocs.org/en/latest/install.html).
 * Create a virtual environment for the project.
+    ```
+    mkvirtualenv <envname>
+    ```
+
+* Use the flag `-p python3` if you also have python 2 installed
+    ```
+    mkvirtualenv -p python3 <envname>
+    ```
+
 * Install requirements in the virtual environment created
     ```
     pip install -r requirements.txt
     ```
+
 * Create a database with PostgreSQL.
 * Create a `.env` file and copy the contents of `.env.example` file to it.
-* Replace the `DB_NAME` with the name of your database, and `SECRET_KEY` with the value gotten when you run this script in the terminal `python3 scripts/secret_key_gen.py`.
+* Replace
+  - `DB_NAME` with the name of your database,
+  - `DB_USER` with your database user name,
+  - `DB_PASSWORD` with your database password,
+  - `SECRET_KEY` with the value gotten when you run this script in the terminal `python3 scripts/secret_key_gen.py`.
+
 * Run database migrations with this command
     ```
     python3 manage.py migrate
     ```
+
 * Run server to ensure everything is working fine.
     ```
     python3 manage.py runserver

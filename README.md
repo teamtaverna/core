@@ -33,21 +33,30 @@ Next,
     ```
     mkvirtualenv <envname>
     ```
+
 * Use the flag `-p python3` if you also have python 2 installed
     ```
     mkvirtualenv -p python3 <envname>
     ```
+
 * Install requirements in the virtual environment created
     ```
     pip install -r requirements.txt
     ```
+
 * Create a database with PostgreSQL.
 * Create a `.env` file and copy the contents of `.env.example` file to it.
-* Replace the `DB_NAME` with the name of your database, `DB_USER` with your database user name, `DB_PASSWORD` with your database password, and `SECRET_KEY` with the value gotten when you run this script in the terminal `python3 scripts/secret_key_gen.py`.
+* Replace
+  - `DB_NAME` with the name of your database,
+  - `DB_USER` with your database user name,
+  - `DB_PASSWORD` with your database password,
+  - `SECRET_KEY` with the value gotten when you run this script in the terminal `python3 scripts/secret_key_gen.py`.
+
 * Run database migrations with this command
     ```
     python3 manage.py migrate
     ```
+
 * Run server to ensure everything is working fine.
     ```
     python3 manage.py runserver

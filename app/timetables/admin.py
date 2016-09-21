@@ -1,36 +1,37 @@
 from django.contrib import admin
 
-from . import models
+from .models import (Weekday, MealOption, Course, Meal, Timetable,
+                     Dish, Admin, MenuItem)
 
 
-@admin.register(models.Weekday, models.MealOption, models.Course)
+@admin.register(Weekday, MealOption, Course)
 class DefaultAdmin(admin.ModelAdmin):
     """Default admin for models with just name and slug fields."""
     readonly_fields = ('slug',)
 
 
-@admin.register(models.Meal)
+@admin.register(Meal)
 class MealAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'start_time', 'end_time')
 
 
 class AdminsInline(admin.TabularInline):
-    model = models.Timetable.admins.through
+    model = Timetable.admins.through
 
 
-@admin.register(models.Timetable)
+@admin.register(Timetable)
 class TimetableAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
               'current_cycle_day', 'description')
     inlines = (AdminsInline,)
 
 
-@admin.register(models.Dish)
+@admin.register(Dish)
 class DishAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'description')
 
 
 admin.site.empty_value_display = ''
 
-other_models = [models.Admin, models.MenuItem]
+other_models = [Admin, MenuItem]
 admin.site.register(other_models)

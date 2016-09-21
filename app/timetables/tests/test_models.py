@@ -3,17 +3,18 @@ from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from app.timetables import models
+from app.timetables.models import (Weekday, Meal, MealOption, Course,
+                                   Timetable, Dish, MenuItem)
 
 
 class WeekdayTest(TestCase):
     """Tests the Weekday model."""
 
     def setUp(self):
-        models.Weekday.objects.create(name='monday')
+        Weekday.objects.create(name='monday')
 
     def test_duplicate_weekday_name_cannot_be_saved(self):
-        day = models.Weekday(name='Monday')
+        day = Weekday(name='Monday')
 
         self.assertRaises(ValidationError, day.save)
 
@@ -22,14 +23,14 @@ class MealTest(TestCase):
     """Tests the Meal model."""
 
     def setUp(self):
-        models.Meal.objects.create(
+        Meal.objects.create(
             name='Breakfast',
             start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
         )
 
     def test_duplicate_meal_name_cannot_be_saved(self):
-        meal = models.Meal(
+        meal = Meal(
             name='breakfast',
             start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
@@ -38,7 +39,7 @@ class MealTest(TestCase):
         self.assertRaises(ValidationError, meal.save)
 
     def test_meal_end_time_less_than_start_time_cannot_be_saved(self):
-        meal = models.Meal(
+        meal = Meal(
             name='lunch',
             start_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('9:7:9', '%H:%M:%S'))
@@ -47,7 +48,7 @@ class MealTest(TestCase):
         self.assertRaises(ValidationError, meal.save)
 
     def test_meal_end_time_same_with_start_time_cannot_be_saved(self):
-        meal = models.Meal(
+        meal = Meal(
             name='lunch',
             start_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('10:7:9', '%H:%M:%S'))
@@ -60,10 +61,10 @@ class MealOptionTest(TestCase):
     """Tests the MealOption model."""
 
     def setUp(self):
-        models.MealOption.objects.create(name='Lunch')
+        MealOption.objects.create(name='Lunch')
 
     def test_duplicate_mealoption_cannot_be_saved(self):
-        option = models.MealOption(name='lunch')
+        option = MealOption(name='lunch')
 
         self.assertRaises(ValidationError, option.save)
 
@@ -72,10 +73,10 @@ class CourseTest(TestCase):
     """Tests the Course model."""
 
     def setUp(self):
-        models.Course.objects.create(name='test')
+        Course.objects.create(name='test')
 
     def test_duplicate_course_name_cannot_be_saved(self):
-        course = models.Course(name='Test')
+        course = Course(name='Test')
 
         self.assertRaises(ValidationError, course.save)
 
@@ -84,7 +85,7 @@ class TimetableTest(TestCase):
     """Tests the Timetable model."""
 
     def setUp(self):
-        models.Timetable.objects.create(
+        Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
             api_key='419223',
@@ -95,7 +96,7 @@ class TimetableTest(TestCase):
         )
 
     def test_duplicate_timetable_name_cannot_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable-Item',
             code='FB23212',
             api_key='41923',
@@ -108,7 +109,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, timetable.save)
 
     def test_duplicate_timetable_code_cannot_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable-value',
             code='FBI23212',
             api_key='41923',
@@ -121,7 +122,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, timetable.save)
 
     def test_duplicate_api_key_cannot_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable',
             code='FBI232123',
             api_key='419223',
@@ -134,7 +135,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, timetable.save)
 
     def test_current_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable',
             code='FBI232123',
             api_key='4192237',
@@ -147,7 +148,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, timetable.save)
 
     def test_cycle_length_and_current_cycle_day_of_zero_cant_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable',
             code='FBI232123',
             api_key='4192237',
@@ -160,7 +161,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, timetable.save)
 
     def test_cycle_length_and_current_cycle_day_of_negative_value_cant_be_saved(self):
-        timetable = models.Timetable(
+        timetable = Timetable(
             name='timtable',
             code='FBI232123',
             api_key='4192237',
@@ -177,7 +178,7 @@ class DishTest(TestCase):
     """Tests the Dish model."""
 
     def setUp(self):
-        models.Dish.objects.create(
+        Dish.objects.create(
             name='eba',
             description='eba and garri. Make eba for your wedding day.',
             date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
@@ -185,7 +186,7 @@ class DishTest(TestCase):
         )
 
     def test_duplicate_dish_name_cannot_be_saved(self):
-        dish = models.Dish(name='Eba')
+        dish = Dish(name='Eba')
 
         self.assertRaises(ValidationError, dish.save)
 
@@ -194,7 +195,7 @@ class MenuItemTest(TestCase):
     """Tests the MenuItem model."""
 
     def setUp(self):
-        self.timetable_object = models.Timetable.objects.create(
+        self.timetable_object = Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
             api_key='419223',
@@ -204,13 +205,13 @@ class MenuItemTest(TestCase):
             date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
         )
 
-        self.meal_object = models.Meal.objects.create(
+        self.meal_object = Meal.objects.create(
             name='breakfast',
             start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
         )
 
-        self.meal_option = models.MealOption.objects.create(name='lunch')
+        self.meal_option = MealOption.objects.create(name='lunch')
 
         self.menu_item_object = {
             'timetable': self.timetable_object,
@@ -219,15 +220,15 @@ class MenuItemTest(TestCase):
             'meal_option': self.meal_option
         }
 
-        models.MenuItem.objects.create(**self.menu_item_object)
+        MenuItem.objects.create(**self.menu_item_object)
 
     def test_duplicates_of_all_cannot_be_saved(self):
-        menu_item_two = models.MenuItem(**self.menu_item_object)
+        menu_item_two = MenuItem(**self.menu_item_object)
 
         self.assertRaises(ValidationError, menu_item_two.save)
 
     def test_zero_cycle_day_value_cannot_be_saved(self):
-        menu_item_three = models.MenuItem(
+        menu_item_three = MenuItem(
             cycle_day=0,
             meal=self.meal_object,
             meal_option=self.meal_option,

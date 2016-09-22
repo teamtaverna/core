@@ -3,8 +3,9 @@ from datetime import date, datetime, timedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from app.timetables.models import (Weekday, Meal, MealOption, Course,
-                                   Timetable, Dish, MenuItem)
+from app.timetables.models import (
+                                Event, Weekday, Meal, MealOption,
+                                Course, Timetable, Dish, MenuItem)
 
 
 class WeekdayTest(TestCase):

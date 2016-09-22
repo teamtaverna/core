@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from django.test import TestCase
-from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 
-from app.timetables.models import Course, Meal, MealOption, Weekday, Timetable, Dish, MenuItem
+from app.timetables.models import (Weekday, Meal, MealOption, Course,
+                                   Timetable, Dish, MenuItem)
 
 
 class WeekdayTest(TestCase):
@@ -13,15 +13,10 @@ class WeekdayTest(TestCase):
     def setUp(self):
         Weekday.objects.create(name='monday')
 
-    def test_weekday_name_should_be_capitalized_on_save(self):
-        day = Weekday.objects.get(name__iexact='monday')
-
-        self.assertEqual(day.name, 'Monday')
-
     def test_duplicate_weekday_name_cannot_be_saved(self):
         day = Weekday(name='Monday')
 
-        self.assertRaises(IntegrityError, day.save)
+        self.assertRaises(ValidationError, day.save)
 
 
 class MealTest(TestCase):
@@ -29,24 +24,19 @@ class MealTest(TestCase):
 
     def setUp(self):
         Meal.objects.create(
-            name='breakfast',
-            start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
-            end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
-        )
-
-    def test_meal_name_should_be_capitalized_on_save(self):
-        meal = Meal.objects.get(name__iexact="breakfast")
-
-        self.assertEqual(meal.name, 'Breakfast')
-
-    def test_duplicate_meal_name_cannot_be_saved(self):
-        meal = Meal(
             name='Breakfast',
             start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
             end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
         )
 
-        self.assertRaises(IntegrityError, meal.save)
+    def test_duplicate_meal_name_cannot_be_saved(self):
+        meal = Meal(
+            name='breakfast',
+            start_time=datetime.time(datetime.strptime('5:7:9', '%H:%M:%S')),
+            end_time=datetime.time(datetime.strptime('6:7:9', '%H:%M:%S'))
+        )
+
+        self.assertRaises(ValidationError, meal.save)
 
     def test_meal_end_time_less_than_start_time_cannot_be_saved(self):
         meal = Meal(
@@ -71,17 +61,12 @@ class MealOptionTest(TestCase):
     """Tests the MealOption model."""
 
     def setUp(self):
-        MealOption.objects.create(name='lunch')
+        MealOption.objects.create(name='Lunch')
 
-    def test_mealoption_name_should_be_capitalized_on_save(self):
-        option = MealOption.objects.get(name__iexact='lunch')
-
-        self.assertEqual(option.name, 'Lunch')
-
-    def test_duplicate_mealoption_name_cannot_be_saved(self):
+    def test_duplicate_mealoption_cannot_be_saved(self):
         option = MealOption(name='lunch')
 
-        self.assertRaises(IntegrityError, option.save)
+        self.assertRaises(ValidationError, option.save)
 
 
 class CourseTest(TestCase):
@@ -90,15 +75,10 @@ class CourseTest(TestCase):
     def setUp(self):
         Course.objects.create(name='test')
 
-    def test_course_name_should_be_capitalized_on_save(self):
-        course = Course.objects.get(name__iexact='test')
-
-        self.assertEqual(course.name, 'Test')
-
     def test_duplicate_course_name_cannot_be_saved(self):
-        course = Course(name='test')
+        course = Course(name='Test')
 
-        self.assertRaises(IntegrityError, course.save)
+        self.assertRaises(ValidationError, course.save)
 
 
 class TimetableTest(TestCase):
@@ -117,7 +97,7 @@ class TimetableTest(TestCase):
 
     def test_duplicate_timetable_name_cannot_be_saved(self):
         timetable = Timetable(
-            name='timtable-item',
+            name='timtable-Item',
             code='FB23212',
             api_key='41923',
             cycle_length=14,
@@ -206,16 +186,15 @@ class DishTest(TestCase):
         )
 
     def test_duplicate_dish_name_cannot_be_saved(self):
-        dish = Dish(name='eba')
+        dish = Dish(name='Eba')
 
-        self.assertRaises(IntegrityError, dish.save)
+        self.assertRaises(ValidationError, dish.save)
 
 
 class MenuItemTest(TestCase):
     """Tests the MenuItem model."""
 
     def setUp(self):
-
         self.timetable_object = Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
@@ -241,18 +220,18 @@ class MenuItemTest(TestCase):
             'meal_option': self.meal_option
         }
 
-        self.menu_item = MenuItem.objects.create(**self.menu_item_object)
+        MenuItem.objects.create(**self.menu_item_object)
 
     def test_duplicates_of_all_cannot_be_saved(self):
         menu_item_two = MenuItem(**self.menu_item_object)
 
-        self.assertRaises(IntegrityError, menu_item_two.save)
+        self.assertRaises(ValidationError, menu_item_two.save)
 
-    def test_cycle_day_cannot_be_less_than_one(self):
+    def test_zero_cycle_day_value_cannot_be_saved(self):
         menu_item_three = MenuItem(
-            cycle_day=-1,
+            cycle_day=0,
             meal=self.meal_object,
             meal_option=self.meal_option,
             timetable=self.timetable_object)
 
-        self.assertRaises(IntegrityError, menu_item_three.save)
+        self.assertRaises(ValidationError, menu_item_three.save)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -235,3 +235,47 @@ class MenuItemTest(TestCase):
             timetable=self.timetable_object)
 
         self.assertRaises(ValidationError, menu_item_three.save)
+
+
+class EventTest(TestCase):
+    """Tests the Event model."""
+
+    def setUp(self):
+        self.timetable = Timetable.objects.create(
+            name='timtable-item',
+            code='FBI23212',
+            api_key='419223',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
+            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+        )
+        self.future_date = date.today() + timedelta(days=25)
+        self.today_date = date.today()
+
+    def test_event_create(self):
+        Event.objects.create(
+            timetable=self.timetable,
+            start_date=self.today_date,
+            end_date=self.future_date,
+        )
+        evt = Event.objects.get(timetable=self.timetable)
+        self.assertEqual(evt.timetable.id, self.timetable.id)
+
+    def test_event_end_time_less_than_start_time_cannot_be_saved(self):
+        evt = Event(
+            timetable=self.timetable,
+            start_date=self.future_date,
+            end_date=self.today_date
+        )
+
+        self.assertRaises(ValidationError, evt.save)
+
+    def test_event_end_time_same_with_start_time_cannot_be_saved(self):
+        evt = Event(
+            timetable=self.timetable,
+            start_date=self.today_date,
+            end_date=self.today_date
+        )
+
+        self.assertRaises(ValidationError, evt.save)

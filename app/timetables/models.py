@@ -175,3 +175,27 @@ class MenuItem(TimestampMixin):
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
+
+
+class Event(TimestampMixin):
+    """
+    Model representing a date or range of dates to which a
+    specific action can be assigned.
+    """
+
+    timetable = models.ForeignKey(Timetable)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def clean(self):
+        if self.start_date >= self.end_date:
+            raise ValidationError(_('start_date must be less than end_date.'))
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.timetable.name

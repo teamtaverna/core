@@ -4,10 +4,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.db.utils import IntegrityError
 
-
 from app.timetables.models import (
-    Event, Weekday, Meal, MealOption,
-    Course, Timetable, Dish, MenuItem
+    Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem
 )
 
 

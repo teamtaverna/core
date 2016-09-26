@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import (Event, Weekday, MealOption, Course, Meal,
-                     Timetable, Dish, Admin, MenuItem)
+from .models import (
+    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin, MenuItem
+)
 
 
 @admin.register(Weekday, MealOption, Course)

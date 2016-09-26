@@ -1,8 +1,8 @@
 from datetime import date, datetime, timedelta
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.db.utils import IntegrityError
+from django.test import TestCase
 
 from app.timetables.models import (
     Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem
@@ -257,6 +257,7 @@ class EventTest(TestCase):
 
     def test_event_end_time_less_than_start_time_cannot_be_saved(self):
         evt = Event(
+            name='Special',
             timetable=self.timetable,
             start_date=self.future_date,
             end_date=self.today_date
@@ -265,21 +266,23 @@ class EventTest(TestCase):
         self.assertRaises(ValidationError, evt.save)
 
     def test_event_end_time_same_with_start_time_cannot_be_saved(self):
-        evt = Event(
+        event = Event(
+            name='Special',
             timetable=self.timetable,
             start_date=self.today_date,
             end_date=self.today_date
         )
 
-        self.assertRaises(ValidationError, evt.save)
+        self.assertRaises(ValidationError, event.save)
 
-    def test_event_contrains(self):
+    def test_event_uniqueness(self):
         event_data = {
+            'name': 'Special',
             'timetable': self.timetable,
             'start_date': self.today_date,
             'end_date': self.future_date,
         }
         Event.objects.create(**event_data)
-        evt2 = Event(**event_data)
+        event = Event(**event_data)
 
-        self.assertRaises(IntegrityError, evt2.save)
+        self.assertRaises(IntegrityError, event.save)

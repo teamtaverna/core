@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Weekday, MealOption, Course, Meal, Timetable,
-                     Dish, Admin, MenuItem)
+                     Dish, Admin, MenuItem, Vendor)
 
 
 @admin.register(Weekday, MealOption, Course)
@@ -29,6 +29,11 @@ class TimetableAdmin(DefaultAdmin):
 @admin.register(Dish)
 class DishAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'description')
+
+
+@admin.register(Vendor)
+class VendorAdmin(DefaultAdmin):
+    fields = ('name', 'slug', 'info')
 
 
 admin.site.empty_value_display = ''

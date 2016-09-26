@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from app.timetables.models import (Weekday, Meal, MealOption, Course,
-                                   Timetable, Dish, MenuItem, Vendor)
+                                   Timetable, Dish, MenuItem)
 
 
 class WeekdayTest(TestCase):
@@ -235,20 +235,3 @@ class MenuItemTest(TestCase):
             timetable=self.timetable_object)
 
         self.assertRaises(ValidationError, menu_item_three.save)
-
-
-class VendorTest(TestCase):
-    """Test the Vendor model."""
-
-    def setUp(self):
-        Vendor.objects.create(
-            name='Spicy Foods',
-            info='Reach us at info@spicy-foods.com',
-            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
-            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
-        )
-
-    def test_duplicate_vendor_name_cannot_be_saved(self):
-        vendor = Vendor(name='spicy foods')
-
-        self.assertRaises(ValidationError, vendor.save)

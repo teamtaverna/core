@@ -175,16 +175,3 @@ class MenuItem(TimestampMixin):
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
-
-
-class Vendor(SlugifyMixin, TimestampMixin):
-    """Model representing food service-provider"""
-
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, editable=False)
-    info = models.TextField(blank=True)
-
-    slugify_field = 'name'
-
-    def __str__(self):
-        return self.name

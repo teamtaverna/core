@@ -30,4 +30,4 @@ deploy:
     master: taverna-core
     staging: taverna-core-staging
   run:
-    - "python manage.py migrate"
+    - "python manage.py migrate --noinput"

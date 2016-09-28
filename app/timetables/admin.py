@@ -11,6 +11,11 @@ class DefaultAdmin(admin.ModelAdmin):
     readonly_fields = ('slug',)
 
 
+class CommonReadOnlyFieldsAdmin(admin.ModelAdmin):
+    """Admin class for models with common readonly fields."""
+    readonly_fields = ('slug', 'date_created', 'date_modified')
+
+
 @admin.register(Meal)
 class MealAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'start_time', 'end_time')
@@ -21,15 +26,21 @@ class AdminsInline(admin.TabularInline):
 
 
 @admin.register(Timetable)
-class TimetableAdmin(DefaultAdmin):
+class TimetableAdmin(CommonReadOnlyFieldsAdmin):
     fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
-              'current_cycle_day', 'description')
+              'current_cycle_day', 'description', 'date_created', 'date_modified')
     inlines = (AdminsInline,)
 
 
 @admin.register(Dish)
-class DishAdmin(DefaultAdmin):
-    fields = ('name', 'slug', 'description')
+class DishAdmin(CommonReadOnlyFieldsAdmin):
+    fields = ('name', 'slug', 'description', 'date_created', 'date_modified')
+
+
+@admin.register(MenuItem)
+class MenuItemAdmin(admin.ModelAdmin):
+    readonly_fields = ('date_created', 'date_modified')
+    fields = ('timetable', 'cycle_day', 'meal', 'meal_option', 'date_created', 'date_modified')
 
 
 admin.site.empty_value_display = ''

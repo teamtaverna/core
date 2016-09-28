@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -243,24 +243,34 @@ class EventTest(TestCase):
     """Tests the Event model."""
 
     def setUp(self):
+        self.future_date = datetime.strptime('07 08 2016 05 30', '%d %m %Y %H %M')
+        self.earlier_date = datetime.strptime('06 07 2016 05 30', '%d %m %Y %H %M')
         self.timetable = Timetable.objects.create(
             name='timtable-item',
             code='FBI23212',
             api_key='419223',
             cycle_length=14,
             current_cycle_day=2,
-            date_created=datetime.strptime('05 07 2016', '%d %m %Y'),
-            date_modified=datetime.strptime('06 08 2016', '%d %m %Y')
+            date_created=self.earlier_date,
+            date_modified=self.future_date
         )
-        self.future_date = date.today() + timedelta(days=25)
-        self.today_date = date.today()
+
+    def test_event_create(self):
+        Event.objects.create(
+            name='some event',
+            timetable=self.timetable,
+            start_date=self.earlier_date,
+            end_date=self.future_date,
+        )
+        evt = Event.objects.get(timetable=self.timetable)
+        self.assertEqual(evt.timetable.id, self.timetable.id)
 
     def test_event_end_time_less_than_start_time_cannot_be_saved(self):
         evt = Event(
             name='Special',
             timetable=self.timetable,
             start_date=self.future_date,
-            end_date=self.today_date
+            end_date=self.earlier_date
         )
 
         self.assertRaises(ValidationError, evt.save)
@@ -269,8 +279,8 @@ class EventTest(TestCase):
         event = Event(
             name='Special',
             timetable=self.timetable,
-            start_date=self.today_date,
-            end_date=self.today_date
+            start_date=self.earlier_date,
+            end_date=self.earlier_date
         )
 
         self.assertRaises(ValidationError, event.save)
@@ -279,7 +289,7 @@ class EventTest(TestCase):
         event_data = {
             'name': 'Special',
             'timetable': self.timetable,
-            'start_date': self.today_date,
+            'start_date': self.earlier_date,
             'end_date': self.future_date,
         }
         Event.objects.create(**event_data)

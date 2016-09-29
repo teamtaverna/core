@@ -254,26 +254,28 @@ class EventTest(TestCase):
             date_created=self.earlier_date,
             date_modified=self.future_date
         )
+        self.event_data = {
+            'name': 'some event',
+            'timetable': self.timetable,
+            'start_date': self.earlier_date,
+            'end_date': self.future_date,
+        }
+        Event.objects.create(**self.event_data)
 
-    def test_event_create(self):
-        Event.objects.create(
-            name='some event',
-            timetable=self.timetable,
-            start_date=self.earlier_date,
-            end_date=self.future_date,
-        )
-        evt = Event.objects.get(timetable=self.timetable)
-        self.assertEqual(evt.timetable.id, self.timetable.id)
+    def test_event_was_created(self):
+        event = Event.objects.get(timetable=self.timetable)
+
+        self.assertEqual(event.timetable.id, self.timetable.id)
 
     def test_event_end_time_less_than_start_time_cannot_be_saved(self):
-        evt = Event(
+        event = Event(
             name='Special',
             timetable=self.timetable,
             start_date=self.future_date,
             end_date=self.earlier_date
         )
 
-        self.assertRaises(ValidationError, evt.save)
+        self.assertRaises(ValidationError, event.save)
 
     def test_event_end_time_same_with_start_time_cannot_be_saved(self):
         event = Event(
@@ -286,13 +288,6 @@ class EventTest(TestCase):
         self.assertRaises(ValidationError, event.save)
 
     def test_event_uniqueness(self):
-        event_data = {
-            'name': 'Special',
-            'timetable': self.timetable,
-            'start_date': self.earlier_date,
-            'end_date': self.future_date,
-        }
-        Event.objects.create(**event_data)
-        event = Event(**event_data)
+        event = Event(**self.event_data)
 
         self.assertRaises(IntegrityError, event.save)

@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import dotenv
+
+from django.contrib.admin import AdminSite
+
 dotenv.load()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -130,3 +133,7 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
+
+# Admin site settings
+AdminSite.site_header = 'Taverna Admin'
+AdminSite.index_title = 'Platform administration'

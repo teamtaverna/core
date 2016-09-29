@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
+from django.utils.translation import ugettext_lazy as _
 
 
 class TimestampMixin(models.Model):
@@ -28,10 +29,12 @@ class SlugifyMixin():
 
     def clean(self):
         if hasattr(self, 'slugify_field') and hasattr(self, 'slug'):
-            self.slug = slugify(getattr(self, self.slugify_field))
+            slugify_field_value = getattr(self, self.slugify_field)
+            self.slug = slugify(slugify_field_value)
 
             if self.__class__.objects.filter(slug=self.slug).exists():
-                raise ValidationError("This object already exists.")
+                raise ValidationError(_("Entry with {0} - {1} already exists.".format(
+                                        self.slugify_field, slugify_field_value)))
 
     def save(self, *args, **kwargs):
         self.clean()

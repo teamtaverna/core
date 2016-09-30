@@ -26,6 +26,9 @@ class SlugifyMixin():
     called slugify_field.
     Slug field in the model should be named slug.
     """
+    def raise_validation_error(self, value):
+        raise ValidationError(_("Entry with {0} - {1} already exists.".format(
+                                self.slugify_field, value)))
 
     def clean(self):
         if hasattr(self, 'slugify_field') and hasattr(self, 'slug'):
@@ -33,8 +36,15 @@ class SlugifyMixin():
             self.slug = slugify(slugify_field_value)
 
             if self.__class__.objects.filter(slug=self.slug).exists():
-                raise ValidationError(_("Entry with {0} - {1} already exists.".format(
-                                        self.slugify_field, slugify_field_value)))
+                # If pk exists, object exists in db and is being edited by user.
+                if self.pk:
+                    try:
+                        self.validate_unique()
+                    except ValidationError:
+                        self.raise_validation_error(slugify_field_value)
+
+                else:
+                    self.raise_validation_error(slugify_field_value)
 
     def save(self, *args, **kwargs):
         self.clean()

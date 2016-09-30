@@ -37,8 +37,10 @@ class Meal(SlugifyMixin, models.Model):
     slugify_field = 'name'
 
     def clean(self):
-        if self.start_time >= self.end_time:
-            raise ValidationError(_('start_time must be less than end_time.'))
+        # Ensure start time and end time are not None before compare
+        if self.start_time and self.end_time:
+            if self.start_time >= self.end_time:
+                raise ValidationError(_('start_time must be less than end_time.'))
 
         super().clean()
 

@@ -191,8 +191,9 @@ class Event(TimestampMixin):
     end_date = models.DateTimeField()
 
     def clean(self):
-        if self.start_date >= self.end_date:
-            raise ValidationError(_('Start date must be less than end date.'))
+        if self.start_date and self.end_date:
+            if self.start_date >= self.end_date:
+                raise ValidationError(_('Start date must be less than end date.'))
         super().clean()
 
     def save(self, *args, **kwargs):

@@ -1,10 +1,12 @@
 from datetime import datetime
 
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from app.timetables.models import (Weekday, Meal, MealOption, Course,
-                                   Timetable, Dish, MenuItem)
+from app.timetables.models import (
+    Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem
+)
 
 
 class WeekdayTest(TestCase):
@@ -235,3 +237,57 @@ class MenuItemTest(TestCase):
             timetable=self.timetable_object)
 
         self.assertRaises(ValidationError, menu_item_three.save)
+
+
+class EventTest(TestCase):
+    """Tests the Event model."""
+
+    def setUp(self):
+        self.future_date = datetime.strptime('07 08 2016 05 30', '%d %m %Y %H %M')
+        self.earlier_date = datetime.strptime('06 07 2016 05 30', '%d %m %Y %H %M')
+        self.timetable = Timetable.objects.create(
+            name='timtable-item',
+            code='FBI23212',
+            api_key='419223',
+            cycle_length=14,
+            current_cycle_day=2,
+            date_created=self.earlier_date,
+            date_modified=self.future_date
+        )
+        self.event_data = {
+            'name': 'some event',
+            'timetable': self.timetable,
+            'start_date': self.earlier_date,
+            'end_date': self.future_date,
+        }
+        Event.objects.create(**self.event_data)
+
+    def test_event_was_created(self):
+        event = Event.objects.get(timetable=self.timetable)
+
+        self.assertEqual(event.timetable.id, self.timetable.id)
+
+    def test_event_end_time_less_than_start_time_cannot_be_saved(self):
+        event = Event(
+            name='Special',
+            timetable=self.timetable,
+            start_date=self.future_date,
+            end_date=self.earlier_date
+        )
+
+        self.assertRaises(ValidationError, event.save)
+
+    def test_event_end_time_same_with_start_time_cannot_be_saved(self):
+        event = Event(
+            name='Special',
+            timetable=self.timetable,
+            start_date=self.earlier_date,
+            end_date=self.earlier_date
+        )
+
+        self.assertRaises(ValidationError, event.save)
+
+    def test_event_uniqueness(self):
+        event = Event(**self.event_data)
+
+        self.assertRaises(IntegrityError, event.save)

@@ -175,3 +175,33 @@ class MenuItem(TimestampMixin):
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
+
+
+class Event(TimestampMixin):
+    """
+    Model representing event
+
+    Event represent a date or range of dates to which a
+    specific timetable will be active or functional.
+    """
+
+    name = models.CharField(max_length=150)
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    def clean(self):
+        if self.start_date and self.end_date:
+            if self.start_date >= self.end_date:
+                raise ValidationError(_('Start date must be less than end date.'))
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        unique_together = ('name', 'start_date', 'end_date')

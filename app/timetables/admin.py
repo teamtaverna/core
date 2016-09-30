@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import (Weekday, MealOption, Course, Meal, Timetable,
-                     Dish, Admin, MenuItem)
+from .models import (
+    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin, MenuItem
+)
 
 
 @admin.register(Weekday, MealOption, Course)
@@ -33,5 +34,5 @@ class DishAdmin(DefaultAdmin):
 
 admin.site.empty_value_display = ''
 
-other_models = [Admin, MenuItem]
+other_models = [Event, Admin, MenuItem]
 admin.site.register(other_models)

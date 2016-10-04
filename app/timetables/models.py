@@ -200,10 +200,38 @@ class Event(TimestampMixin):
 
     def save(self, *args, **kwargs):
         self.clean()
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
     class Meta:
         unique_together = ('name', 'start_date', 'end_date')
+
+
+class Vendor(SlugifyMixin, models.Model):
+    """Model representing food service-provider"""
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, editable=False)
+    info = models.TextField(blank=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    slugify_field = 'name'
+
+    def clean(self):
+        if self.end_date <= self.start_date:
+            raise ValidationError(
+                _('Ensure end date is not less than or equal to start date.')
+            )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name

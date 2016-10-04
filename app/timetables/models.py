@@ -220,7 +220,7 @@ class Vendor(SlugifyMixin, models.Model):
     slugify_field = 'name'
 
     def clean(self):
-        if self.end_date <= self.start_date:
+        if self.start_date and self.end_date and self.end_date <= self.start_date:
             raise ValidationError(
                 _('Ensure end date is not less than or equal to start date.')
             )

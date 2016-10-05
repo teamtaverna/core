@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 from .models import (
-    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin,
-    MenuItem
+    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin, MenuItem,
+    Vendor
 )
 
 
@@ -65,6 +65,11 @@ class EventAdmin(TimeStampAdmin):
 
     fields = ('name', 'timetable', 'start_date', 'end_date', 'date_created',
               'date_modified')
+
+
+@admin.register(Vendor)
+class VendorAdmin(DefaultAdmin):
+    fields = ('name', 'slug', 'info', 'start_date', 'end_date')
 
 
 admin.site.empty_value_display = ''

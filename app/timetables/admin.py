@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from .models import (
-    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin, MenuItem
+    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, Admin,
+    MenuItem
 )
 
 
@@ -37,7 +38,8 @@ class TimetableAdmin(admin.ModelAdmin):
 
     readonly_fields = ('slug', 'date_created', 'date_modified')
     fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
-              'current_cycle_day', 'description')
+              'current_cycle_day', 'description', 'date_created',
+              'date_modified')
     inlines = (AdminsInline,)
 
 
@@ -53,14 +55,16 @@ class DishAdmin(admin.ModelAdmin):
 class MenuItemAdmin(TimeStampAdmin):
     """Admin customisation for MenuItem model."""
 
-    fields = ('timetable', 'cycle_day', 'meal', 'meal_option', 'date_created', 'date_modified')
+    fields = ('timetable', 'cycle_day', 'meal', 'meal_option', 'date_created',
+              'date_modified')
 
 
 @admin.register(Event)
 class EventAdmin(TimeStampAdmin):
     """Admin customisation for Event model."""
 
-    fields = ('name', 'timetable', 'start_date', 'end_date', 'date_created', 'date_modified')
+    fields = ('name', 'timetable', 'start_date', 'end_date', 'date_created',
+              'date_modified')
 
 
 admin.site.empty_value_display = ''

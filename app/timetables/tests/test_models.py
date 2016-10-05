@@ -305,7 +305,7 @@ class VendorTest(TestCase):
             end_date=timezone.make_aware(timezone.datetime(2017, 7, 5, 13, 0, 0))
         )
 
-    def test_uniqueness_of_vendor_name(self):
+    def test_enforcement_of_uniqueness_of_vendor_name(self):
         vendor = Vendor(
             name='spicy foods',
             start_date=timezone.make_aware(timezone.datetime(2016, 8, 5, 13, 0, 0)),
@@ -314,7 +314,7 @@ class VendorTest(TestCase):
 
         self.assertRaises(ValidationError, vendor.save)
 
-    def test_vendor_end_date_is_later_than_start_date(self):
+    def test_enforcement_of_vendor_start_date_being_less_than_its_end_date(self):
         # test for start_date == end_date
         vendor = Vendor(
             name='Fresh Foods',

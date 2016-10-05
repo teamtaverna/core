@@ -3,9 +3,10 @@ from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from app.timetables.models import (
-    Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem
+    Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem, Vendor
 )
 
 
@@ -291,3 +292,37 @@ class EventTest(TestCase):
         event = Event(**self.event_data)
 
         self.assertRaises(IntegrityError, event.save)
+
+
+class VendorTest(TestCase):
+    """Test the Vendor model."""
+
+    def setUp(self):
+        Vendor.objects.create(
+            name='Spicy Foods',
+            info='Reach us at info@spicy-foods.com',
+            start_date=timezone.make_aware(timezone.datetime(2016, 7, 5, 13, 0, 0)),
+            end_date=timezone.make_aware(timezone.datetime(2017, 7, 5, 13, 0, 0))
+        )
+
+    def test_enforcement_of_uniqueness_of_vendor_name(self):
+        vendor = Vendor(
+            name='spicy foods',
+            start_date=timezone.make_aware(timezone.datetime(2016, 8, 5, 13, 0, 0)),
+            end_date=timezone.make_aware(timezone.datetime(2017, 8, 5, 13, 0, 0))
+        )
+
+        self.assertRaises(ValidationError, vendor.save)
+
+    def test_enforcement_of_vendor_start_date_being_less_than_its_end_date(self):
+        # test for start_date == end_date
+        vendor = Vendor(
+            name='Fresh Foods',
+            start_date=timezone.make_aware(timezone.datetime(2016, 8, 5, 13, 0, 0)),
+            end_date=timezone.make_aware(timezone.datetime(2016, 8, 5, 13, 0, 0))
+        )
+        self.assertRaises(ValidationError, vendor.save)
+
+        # test for start_date >= end_date
+        vendor.end_date = timezone.make_aware(timezone.datetime(2015, 8, 5, 13, 0, 0))
+        self.assertRaises(ValidationError, vendor.save)

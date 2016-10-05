@@ -21,26 +21,18 @@ class AdminsInline(admin.TabularInline):
 
 
 @admin.register(Timetable)
-class TimetableAdmin(admin.ModelAdmin):
-    readonly_fields = ('slug', 'date_created', 'date_modified')
+class TimetableAdmin(DefaultAdmin):
     fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
-              'current_cycle_day', 'description', 'date_created', 'date_modified')
+              'current_cycle_day', 'description')
     inlines = (AdminsInline,)
 
 
 @admin.register(Dish)
-class DishAdmin(admin.ModelAdmin):
-    readonly_fields = ('slug', 'date_created', 'date_modified')
-    fields = ('name', 'slug', 'description', 'date_created', 'date_modified')
-
-
-@admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):
-    readonly_fields = ('date_created', 'date_modified')
-    fields = ('timetable', 'cycle_day', 'meal', 'meal_option', 'date_created', 'date_modified')
+class DishAdmin(DefaultAdmin):
+    fields = ('name', 'slug', 'description')
 
 
 admin.site.empty_value_display = ''
 
-other_models = [Event, Admin]
+other_models = [Event, Admin, MenuItem]
 admin.site.register(other_models)

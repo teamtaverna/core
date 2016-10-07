@@ -93,6 +93,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     )
     description = models.TextField(blank=True)
     admins = models.ManyToManyField(User, through='Admin')
+    inactive_weekdays = models.ManyToManyField(Weekday)
 
     slugify_field = 'name'
 
@@ -139,7 +140,7 @@ class Dish(SlugifyMixin, TimestampMixin):
 
 
 class Admin(models.Model):
-    """Model representing timetables' administratorship"""
+    """Model representing timetables' administratorship."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
@@ -181,7 +182,7 @@ class MenuItem(TimestampMixin):
 
 class Event(TimestampMixin):
     """
-    Model representing event
+    Model representing event.
 
     Event represent a date or range of dates to which a
     specific timetable will be active or functional.
@@ -210,7 +211,7 @@ class Event(TimestampMixin):
 
 
 class Vendor(SlugifyMixin, models.Model):
-    """Model representing food service-provider"""
+    """Model representing food service-provider."""
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, editable=False)

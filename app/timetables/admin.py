@@ -75,6 +75,8 @@ class EventAdmin(TimeStampAdmin):
 
 @admin.register(Vendor)
 class VendorAdmin(DefaultAdmin):
+    """Admin customisation for Vendor model."""
+
     fields = ('name', 'slug', 'info', 'start_date', 'end_date')
 
 

@@ -174,7 +174,9 @@ class MenuItem(TimestampMixin):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return '{0} {1}'.format(self.cycle_day, self.meal)
+        return 'Cycle {} {} option {} for timetable {}'.format(
+            self.cycle_day, self.meal, self.meal_option, self.timetable
+        )
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')

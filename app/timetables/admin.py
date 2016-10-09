@@ -81,6 +81,7 @@ class VendorAdmin(DefaultAdmin):
 @admin.register(Serving)
 class ServingAdmin(TimeStampAdmin):
     """Admin customisation for Serving model."""
+
     fields = ('menu_item', 'date_served')
 
 

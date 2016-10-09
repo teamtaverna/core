@@ -241,6 +241,7 @@ class Vendor(SlugifyMixin, models.Model):
 
 class Serving(TimestampMixin):
     """Model representing already served menu."""
+
     menu_item = models.OneToOneField(MenuItem, on_delete=models.CASCADE)
     date_served = models.DateTimeField()
 

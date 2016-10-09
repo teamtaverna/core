@@ -237,3 +237,12 @@ class Vendor(SlugifyMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Serving(TimestampMixin):
+    """Model representing already served menu."""
+    menu_item = models.OneToOneField(MenuItem, on_delete=models.CASCADE)
+    date_served = models.DateTimeField()
+
+    def __str__(self):
+        return '{} served on {}'.format(self.menu_item, self.date_served)

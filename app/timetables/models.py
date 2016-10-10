@@ -139,7 +139,6 @@ class Dish(SlugifyMixin, TimestampMixin):
         verbose_name_plural = 'Dishes'
 
 
-
 class TimetableManagement(models.Model):
     """Model representing timetables' administratorship"""
 

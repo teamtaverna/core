@@ -77,6 +77,8 @@ class TimetableFactory(DjangoModelFactory):
     cycle_length = 14
     current_cycle_day = 2
     description = 'Some random description'
+    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class AdminFactory(DjangoModelFactory):
@@ -99,3 +101,16 @@ class UserWithTimetableFactory(DjangoModelFactory):
     """
 
     admins = factory.RelatedFactory(AdminFactory, 'user')
+
+
+class DishFactory(DjangoModelFactory):
+    """Dish model factory."""
+
+    class Meta:
+        model = models.Dish
+
+    name = 'Coconut rice'
+    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
+    description = 'Some random description'
+    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)

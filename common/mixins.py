@@ -16,7 +16,7 @@ class TimestampMixin(models.Model):
         abstract = True
 
 
-class SlugifyMixin():
+class SlugifyMixin:
     """
     Slugify specific field and pass as value to slug field in the model.
 
@@ -26,6 +26,7 @@ class SlugifyMixin():
     called slugify_field.
     Slug field in the model should be named slug.
     """
+
     def raise_validation_error(self, value):
         raise ValidationError(_("Entry with {0} - {1} already exists.".format(
                                 self.slugify_field, value)))

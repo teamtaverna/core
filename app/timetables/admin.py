@@ -32,6 +32,12 @@ class AdminsInline(admin.TabularInline):
     model = Timetable.admins.through
 
 
+class WeekdaysInline(admin.TabularInline):
+    """Tabular inline setting for Timetable inactive weekdays."""
+
+    model = Timetable.inactive_weekdays.through
+
+
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
     """Admin customisation for Timetable model."""
@@ -40,7 +46,7 @@ class TimetableAdmin(admin.ModelAdmin):
     fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
               'current_cycle_day', 'description', 'date_created',
               'date_modified')
-    inlines = (AdminsInline,)
+    inlines = (WeekdaysInline, AdminsInline,)
 
 
 @admin.register(Dish)

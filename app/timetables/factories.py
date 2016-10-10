@@ -1,7 +1,7 @@
 import datetime
 
 import factory
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from factory.django import DjangoModelFactory
 
@@ -50,21 +50,18 @@ class CourseFactory(DjangoModelFactory):
     slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
 
 
-# Continue from here
 class UserFactory(DjangoModelFactory):
+    """Django admin user model factory."""
+
     class Meta:
-        model = User
+        model = get_user_model()
+        django_get_or_create = ('username', 'email', 'password')
 
-    name = "John Doe"
-
-
-class AdminFactory(DjangoModelFactory):
-    class Meta:
-        model = models.Admin
-
-    user = ''
-    timetable = ''
-    is_super = True
+    username = 'admin'
+    email = 'admin@admin.com'
+    password = 'adminpassword'
+    is_superuser = True
+    is_active = True
 
 
 class TimetableFactory(DjangoModelFactory):
@@ -80,15 +77,25 @@ class TimetableFactory(DjangoModelFactory):
     cycle_length = 14
     current_cycle_day = 2
     description = 'Some random description'
-    admins = ''
 
 
-#     admins = models.ManyToManyField(User, through='Admin')
+class AdminFactory(DjangoModelFactory):
+    """Admin model factory."""
+
+    class Meta:
+        model = models.Admin
+
+    user = factory.SubFactory(UserFactory)
+    timetable = factory.SubFactory(TimetableFactory)
+    is_super = True
 
 
-# class Admin(models.Model):
-#     """Model representing timetables' administratorship"""
+class UserWithTimetableFactory(DjangoModelFactory):
+    """
+    Factory specifying many-to-many through relationship.
 
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-#     is_super = models.BooleanField()
+    The 'admin' field in Timetable model is a many-to-many relationship
+    to User model through Admin model.
+    """
+
+    admins = factory.RelatedFactory(AdminFactory, 'user')

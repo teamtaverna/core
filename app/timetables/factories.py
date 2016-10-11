@@ -6,6 +6,18 @@ from django.utils.text import slugify
 from factory.django import DjangoModelFactory
 
 from . import models
+from common.mixins import TimestampMixin
+
+
+class TimestampFactory(DjangoModelFactory):
+    """TimestampMixin model factory."""
+
+    class Meta:
+        model = TimestampMixin
+        abstract = True
+
+    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class WeekdayFactory(DjangoModelFactory):
@@ -64,7 +76,7 @@ class UserFactory(DjangoModelFactory):
     is_active = True
 
 
-class TimetableFactory(DjangoModelFactory):
+class TimetableFactory(TimestampFactory):
     """Timetable model factory."""
 
     class Meta:
@@ -77,8 +89,6 @@ class TimetableFactory(DjangoModelFactory):
     cycle_length = 14
     current_cycle_day = 2
     description = 'Some random description'
-    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class AdminFactory(DjangoModelFactory):
@@ -103,7 +113,7 @@ class UserWithTimetableFactory(DjangoModelFactory):
     admins = factory.RelatedFactory(AdminFactory, 'user')
 
 
-class DishFactory(DjangoModelFactory):
+class DishFactory(TimestampFactory):
     """Dish model factory."""
 
     class Meta:
@@ -112,5 +122,40 @@ class DishFactory(DjangoModelFactory):
     name = 'Coconut rice'
     slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
     description = 'Some random description'
-    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+class MenuItem(TimestampFactory):
+    """MenuItem model factory."""
+
+    class Meta:
+        model = models.MenuItem
+
+    timetable = factory.SubFactory(TimetableFactory)
+    cycle_day = 2
+    meal = factory.SubFactory(MealFactory)
+    meal_option = factory.SubFactory(MealOptionFactory)
+
+
+class EventFactory(TimestampFactory):
+    """Event model factory."""
+
+    class Meta:
+        model = models.Event
+
+    name = 'Christmas'
+    timetable = factory.SubFactory(TimetableFactory)
+    start_date = datetime.datetime(2008, 12, 23, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    end_date = datetime.datetime(2008, 12, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+class VendorFactory(DjangoModelFactory):
+    """Vendor model Factory."""
+
+    class Meta:
+        model = models.Vendor
+
+    name = 'Mama Taverna'
+    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
+    info = 'Some random info'
+    start_date = datetime.datetime(2008, 1, 23, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    end_date = datetime.datetime(2008, 12, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)

@@ -89,5 +89,4 @@ class ServingAdmin(TimeStampAdmin):
 
 admin.site.empty_value_display = ''
 
-other_models = [TimetableManagement]
-admin.site.register(other_models)
+admin.site.register(TimetableManagement)

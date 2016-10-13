@@ -1,8 +1,8 @@
 import datetime
 
-import factory
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+import factory
 from factory.django import DjangoModelFactory
 
 from . import models

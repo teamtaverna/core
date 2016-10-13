@@ -9,12 +9,14 @@ from app.timetables.models import (
     Event, Weekday, Meal, MealOption, Course, Timetable, Dish, MenuItem, Vendor
 )
 
+from app.timetables.factories import WeekdayFactory
+
 
 class WeekdayTest(TestCase):
     """Tests the Weekday model."""
 
     def setUp(self):
-        Weekday.objects.create(name='monday')
+        WeekdayFactory.create()
 
     def test_duplicate_weekday_name_cannot_be_saved(self):
         day = Weekday(name='Monday')

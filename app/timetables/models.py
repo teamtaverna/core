@@ -174,7 +174,9 @@ class MenuItem(TimestampMixin):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return '{0} {1}'.format(self.cycle_day, self.meal)
+        return 'Cycle {} {} option {} for timetable {}'.format(
+            self.cycle_day, self.meal, self.meal_option, self.timetable
+        )
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
@@ -237,3 +239,13 @@ class Vendor(SlugifyMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Serving(TimestampMixin):
+    """Model representing already served menu."""
+
+    menu_item = models.OneToOneField(MenuItem, on_delete=models.CASCADE)
+    date_served = models.DateTimeField()
+
+    def __str__(self):
+        return '{} served on {}'.format(self.menu_item, self.date_served)

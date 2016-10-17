@@ -95,7 +95,7 @@ class AdminFactory(DjangoModelFactory):
     """Admin model factory."""
 
     class Meta:
-        model = models.Admin
+        model = models.TimetableManagement
 
     user = factory.SubFactory(UserFactory)
     timetable = factory.SubFactory(TimetableFactory)

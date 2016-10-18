@@ -91,8 +91,8 @@ class TimetableFactory(TimestampFactory):
     description = 'Some random description'
 
 
-class AdminFactory(DjangoModelFactory):
-    """Admin model factory."""
+class TimetableManagementFactory(DjangoModelFactory):
+    """Timetablemanagement model factory."""
 
     class Meta:
         model = models.TimetableManagement
@@ -110,7 +110,7 @@ class UserWithTimetableFactory(DjangoModelFactory):
     to User model through Admin model.
     """
 
-    admins = factory.RelatedFactory(AdminFactory, 'user')
+    admins = factory.RelatedFactory(TimetableManagementFactory, 'user')
 
 
 class DishFactory(TimestampFactory):

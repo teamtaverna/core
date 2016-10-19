@@ -92,7 +92,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
         validators=[MinValueValidator(1)]
     )
     description = models.TextField(blank=True)
-    admins = models.ManyToManyField(User, through='Admin')
+    admins = models.ManyToManyField(User, through='TimetableManagement')
     inactive_weekdays = models.ManyToManyField(Weekday)
 
     slugify_field = 'name'
@@ -139,8 +139,8 @@ class Dish(SlugifyMixin, TimestampMixin):
         verbose_name_plural = 'Dishes'
 
 
-class Admin(models.Model):
-    """Model representing timetables' administratorship."""
+class TimetableManagement(models.Model):
+    """Model representing timetables' administratorship"""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)

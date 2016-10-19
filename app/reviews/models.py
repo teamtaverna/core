@@ -8,18 +8,20 @@ from app.timetables.models import Serving
 
 
 class Review(TimestampMixin):
-    """
-    Model representing ratings and comments
-    submitted by users for menu item
-    they had on a particular day of the cycle.
-    """
+    """Model representing ratings and comments on served menu items."""
+
+    EXCELLENT = 5
+    GOOD = 4
+    FAIR = 3
+    POOR = 2
+    TERRIBLE = 1
 
     RATINGS = (
-        (5, 'EXCELLENT'),
-        (4, 'GOOD'),
-        (3, 'FAIR'),
-        (2, 'POOR'),
-        (1, 'TERRIBLE')
+        (EXCELLENT, 'EXCELLENT'),
+        (GOOD, 'GOOD'),
+        (FAIR, 'FAIR'),
+        (POOR, 'POOR'),
+        (TERRIBLE, 'TERRIBLE')
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

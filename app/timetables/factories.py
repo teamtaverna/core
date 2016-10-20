@@ -2,6 +2,8 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+from django.utils import timezone
+
 import factory
 from factory.django import DjangoModelFactory
 
@@ -124,7 +126,7 @@ class DishFactory(TimestampFactory):
     description = 'Some random description'
 
 
-class MenuItem(TimestampFactory):
+class MenuItemFactory(TimestampFactory):
     """MenuItem model factory."""
 
     class Meta:
@@ -159,3 +161,13 @@ class VendorFactory(DjangoModelFactory):
     info = 'Some random info'
     start_date = datetime.datetime(2008, 1, 23, 0, 0, 0, tzinfo=datetime.timezone.utc)
     end_date = datetime.datetime(2008, 12, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+class ServingFactory(TimestampFactory):
+    """Serving model factory."""
+
+    class Meta:
+        model = models.Serving
+
+    menu_item = factory.SubFactory(MenuItemFactory)
+    date_served = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))

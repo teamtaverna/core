@@ -50,7 +50,7 @@ class Meal(SlugifyMixin, models.Model):
 
 
 class Course(SlugifyMixin, models.Model):
-    """Model representing the particular dish served as one of the parts of a meal option."""
+    """Model representing the sequence/order of different kind of dishes for a meal."""
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True, null=True, editable=False)
@@ -96,7 +96,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     Central model of the platform.
 
     It represents/encapsulates the entire structure and
-    scheduling of meals, menu-items, dishes, courses, options etc,
+    scheduling of meals, menu-items, dishes, courses etc,
     served at a location, to a team or the entire organisation.
     """
 
@@ -143,7 +143,7 @@ class Dish(SlugifyMixin, TimestampMixin):
     Model representing the actual food served.
 
     A dish represents the actual food served as a given
-    course under an option of a meal on a cycle day in a timetable.
+    course of a meal on a cycle day in a timetable.
     E.g, Coconut rice garnished with fish stew and chicken or just
     Ice-cream.
     """
@@ -179,7 +179,7 @@ class MenuItem(TimestampMixin):
     """
     Model representing a Menu Item.
 
-    A MenuItem represents the particular meal combination option that is to be
+    A MenuItem represents the particular meal combination that is to be
     served on a given cycle-day of a particular timetable.
     """
 

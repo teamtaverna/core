@@ -50,6 +50,7 @@ class VendorsInline(admin.TabularInline):
 
     model = Timetable.vendor.through
 
+
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
     """Admin customisation for Timetable model."""

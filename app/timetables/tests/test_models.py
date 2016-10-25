@@ -1,9 +1,6 @@
-from datetime import datetime
-
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
-from django.utils import timezone
 
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,

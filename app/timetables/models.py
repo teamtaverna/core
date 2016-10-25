@@ -61,6 +61,35 @@ class Course(SlugifyMixin, models.Model):
         return self.name
 
 
+class Vendor(SlugifyMixin, models.Model):
+    """Model representing food service-provider."""
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, editable=False)
+    info = models.TextField(blank=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    slugify_field = 'name'
+
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date <= self.start_date:
+            raise ValidationError(
+                _('Ensure end date is not less than or equal to start date.')
+            )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class Timetable(SlugifyMixin, TimestampMixin):
     """
     Central model of the platform.
@@ -80,9 +109,12 @@ class Timetable(SlugifyMixin, TimestampMixin):
     current_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
+    cycle_day_updated = models.DateTimeField()
+    inactive_weekdays = models.ManyToManyField(Weekday)
+    vendor = models.ManyToManyField(Vendor)
+    is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True)
     admins = models.ManyToManyField(User, through='TimetableManagement')
-    inactive_weekdays = models.ManyToManyField(Weekday)
 
     slugify_field = 'name'
 
@@ -201,35 +233,6 @@ class Event(TimestampMixin):
 
     class Meta:
         unique_together = ('name', 'start_date', 'end_date')
-
-
-class Vendor(SlugifyMixin, models.Model):
-    """Model representing food service-provider."""
-
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, editable=False)
-    info = models.TextField(blank=True)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    slugify_field = 'name'
-
-    def clean(self):
-        if self.start_date and self.end_date and self.end_date <= self.start_date:
-            raise ValidationError(
-                _('Ensure end date is not less than or equal to start date.')
-            )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 
 class Serving(TimestampMixin):

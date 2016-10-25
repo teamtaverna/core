@@ -48,18 +48,6 @@ class Meal(SlugifyMixin, models.Model):
         return self.name
 
 
-class MealOption(SlugifyMixin, models.Model):
-    """Model representing course/dish combinations to be served during a given meal."""
-
-    name = models.CharField(max_length=120)
-    slug = models.SlugField(max_length=120, unique=True, null=True, editable=False)
-
-    slugify_field = 'name'
-
-    def __str__(self):
-        return self.name
-
-
 class Course(SlugifyMixin, models.Model):
     """Model representing the particular dish served as one of the parts of a meal option."""
 
@@ -166,7 +154,6 @@ class MenuItem(TimestampMixin):
         validators=[MinValueValidator(1)]
     )
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
-    meal_option = models.ForeignKey(MealOption, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         # Calling full_clean instead of clean to ensure validators are called
@@ -174,12 +161,12 @@ class MenuItem(TimestampMixin):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return 'Cycle {} {} option {} for timetable {}'.format(
-            self.cycle_day, self.meal, self.meal_option, self.timetable
+        return 'Cycle {} {} for timetable {}'.format(
+            self.cycle_day, self.meal, self.timetable
         )
 
     class Meta:
-        unique_together = ('timetable', 'cycle_day', 'meal', 'meal_option')
+        unique_together = ('timetable', 'cycle_day', 'meal')
 
 
 class Event(TimestampMixin):

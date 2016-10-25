@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from uuid import uuid4
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -149,11 +150,14 @@ class MenuItem(TimestampMixin):
     served on a given cycle-day of a particular timetable.
     """
 
+    public_id = models.UUIDField(unique=True, default=uuid4, editable=False)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         # Calling full_clean instead of clean to ensure validators are called
@@ -166,7 +170,7 @@ class MenuItem(TimestampMixin):
         )
 
     class Meta:
-        unique_together = ('timetable', 'cycle_day', 'meal')
+        unique_together = ('timetable', 'cycle_day', 'meal', 'course', 'dish')
 
 
 class Event(TimestampMixin):

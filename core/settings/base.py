@@ -38,10 +38,10 @@ PREREQ_APPS = [
 ]
 
 PROJECT_APPS = [
-    'app.api',
-    'app.accounts',
-    'app.reviews',
-    'app.timetables',
+    'app.api.apps.ApiConfig',
+    'app.accounts.apps.AccountsConfig',
+    'app.reviews.apps.ReviewsConfig',
+    'app.timetables.apps.TimetablesConfig',
 ]
 
 INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS

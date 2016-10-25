@@ -132,7 +132,7 @@ class TimetableManagement(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    is_super = models.BooleanField()
+    is_super = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

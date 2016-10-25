@@ -54,6 +54,7 @@ class Course(SlugifyMixin, models.Model):
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True, null=True, editable=False)
+    sequence_order = models.PositiveSmallIntegerField(unique=True)
 
     slugify_field = 'name'
 

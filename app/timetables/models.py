@@ -213,8 +213,15 @@ class Event(TimestampMixin):
     specific timetable will be active or functional.
     """
 
+    NO_MEAL = 'no-meal'
+
+    ACTION_CHOICES = (
+        (NO_MEAL, 'no meal will be served'),
+    )
+
     name = models.CharField(max_length=150)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255, choices=ACTION_CHOICES)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
 

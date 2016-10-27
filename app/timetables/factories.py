@@ -1,7 +1,6 @@
 import datetime
 
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
 from django.utils import timezone
 
 import factory
@@ -18,8 +17,8 @@ class TimestampFactory(DjangoModelFactory):
         model = TimestampMixin
         abstract = True
 
-    date_created = datetime.datetime(2008, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    date_modified = datetime.datetime(2009, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    date_created = timezone.make_aware(timezone.datetime(2008, 1, 1, 0, 0, 0))
+    date_modified = timezone.make_aware(timezone.datetime(2009, 1, 1, 0, 0, 0))
 
 
 class WeekdayFactory(DjangoModelFactory):
@@ -29,7 +28,6 @@ class WeekdayFactory(DjangoModelFactory):
         model = models.Weekday
 
     name = 'Monday'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
 
 
 class MealFactory(DjangoModelFactory):
@@ -39,19 +37,8 @@ class MealFactory(DjangoModelFactory):
         model = models.Meal
 
     name = 'Breakfast'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
     start_time = datetime.time(5, 7, 9)
     end_time = datetime.time(6, 7, 9)
-
-
-class MealOptionFactory(DjangoModelFactory):
-    """MealOption model factory."""
-
-    class Meta:
-        model = models.MealOption
-
-    name = 'Option A'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
 
 
 class CourseFactory(DjangoModelFactory):
@@ -61,7 +48,7 @@ class CourseFactory(DjangoModelFactory):
         model = models.Course
 
     name = 'Appetizer'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
+    sequence_order = 0
 
 
 class UserFactory(DjangoModelFactory):
@@ -69,7 +56,6 @@ class UserFactory(DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
-        django_get_or_create = ('username', 'email', 'password')
 
     username = 'admin'
     email = 'admin@admin.com'
@@ -85,11 +71,11 @@ class TimetableFactory(TimestampFactory):
         model = models.Timetable
 
     name = 'Fellows Timetable'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
     code = 'FT7876'
     api_key = 'TF78993jTY'
     cycle_length = 14
     current_cycle_day = 2
+    cycle_day_updated = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
     description = 'Some random description'
 
 
@@ -122,7 +108,6 @@ class DishFactory(TimestampFactory):
         model = models.Dish
 
     name = 'Coconut rice'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
     description = 'Some random description'
 
 
@@ -135,7 +120,8 @@ class MenuItemFactory(TimestampFactory):
     timetable = factory.SubFactory(TimetableFactory)
     cycle_day = 2
     meal = factory.SubFactory(MealFactory)
-    meal_option = factory.SubFactory(MealOptionFactory)
+    course = factory.SubFactory(CourseFactory)
+    dish = factory.SubFactory(DishFactory)
 
 
 class EventFactory(TimestampFactory):
@@ -146,8 +132,9 @@ class EventFactory(TimestampFactory):
 
     name = 'Christmas'
     timetable = factory.SubFactory(TimetableFactory)
-    start_date = datetime.datetime(2008, 12, 23, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    end_date = datetime.datetime(2008, 12, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    action = 'no-meal'
+    start_date = timezone.make_aware(timezone.datetime(2008, 12, 23, 0, 0, 0))
+    end_date = timezone.make_aware(timezone.datetime(2008, 12, 28, 0, 0, 0))
 
 
 class VendorFactory(DjangoModelFactory):
@@ -157,10 +144,9 @@ class VendorFactory(DjangoModelFactory):
         model = models.Vendor
 
     name = 'Mama Taverna'
-    slug = factory.LazyAttribute(lambda obj: '%s' % slugify(obj.name))
     info = 'Some random info'
-    start_date = datetime.datetime(2008, 1, 23, 0, 0, 0, tzinfo=datetime.timezone.utc)
-    end_date = datetime.datetime(2008, 12, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)
+    start_date = timezone.make_aware(timezone.datetime(2008, 1, 23, 0, 0, 0))
+    end_date = timezone.make_aware(timezone.datetime(2008, 12, 28, 0, 0, 0))
 
 
 class ServingFactory(TimestampFactory):

@@ -1,12 +1,12 @@
 from django.contrib import admin
 
 from .models import (
-    Event, Weekday, MealOption, Course, Meal, Timetable, Dish, MenuItem,
+    Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
     Vendor, Serving, TimetableManagement
 )
 
 
-@admin.register(Weekday, MealOption, Course)
+@admin.register(Weekday)
 class DefaultAdmin(admin.ModelAdmin):
     """Default admin for models with just name and slug fields."""
 
@@ -17,6 +17,13 @@ class TimeStampAdmin(admin.ModelAdmin):
     """Default admin for models having only readonly fields from TimeStampMixin."""
 
     readonly_fields = ('date_created', 'date_modified')
+
+
+@admin.register(Course)
+class CourseAdmin(DefaultAdmin):
+    """Admin customisation for Course model."""
+
+    fields = ('name', 'slug', 'sequence_order')
 
 
 @admin.register(Meal)
@@ -38,15 +45,23 @@ class WeekdaysInline(admin.TabularInline):
     model = Timetable.inactive_weekdays.through
 
 
+class VendorsInline(admin.TabularInline):
+    """Tabular inline setting for Timetable vendors."""
+
+    model = Timetable.vendor.through
+
+
 @admin.register(Timetable)
 class TimetableAdmin(admin.ModelAdmin):
     """Admin customisation for Timetable model."""
 
     readonly_fields = ('slug', 'date_created', 'date_modified')
-    fields = ('name', 'slug', 'code', 'api_key', 'cycle_length',
-              'current_cycle_day', 'description', 'date_created',
-              'date_modified')
-    inlines = (WeekdaysInline, AdminsInline,)
+    fields = (
+        'name', 'slug', 'code', 'api_key', 'cycle_length',
+        'current_cycle_day', 'description', 'is_active',
+        'cycle_day_updated', 'date_created', 'date_modified'
+    )
+    inlines = (WeekdaysInline, AdminsInline, VendorsInline)
 
 
 @admin.register(Dish)
@@ -58,19 +73,24 @@ class DishAdmin(admin.ModelAdmin):
 
 
 @admin.register(MenuItem)
-class MenuItemAdmin(TimeStampAdmin):
+class MenuItemAdmin(admin.ModelAdmin):
     """Admin customisation for MenuItem model."""
 
-    fields = ('timetable', 'cycle_day', 'meal', 'meal_option', 'date_created',
-              'date_modified')
+    readonly_fields = ('public_id', 'date_created', 'date_modified')
+    fields = (
+        'public_id', 'timetable', 'cycle_day', 'meal',
+        'course', 'dish', 'date_created', 'date_modified'
+    )
 
 
 @admin.register(Event)
 class EventAdmin(TimeStampAdmin):
     """Admin customisation for Event model."""
 
-    fields = ('name', 'timetable', 'start_date', 'end_date', 'date_created',
-              'date_modified')
+    fields = (
+        'name', 'timetable', 'action', 'start_date', 'end_date',
+        'date_created', 'date_modified'
+    )
 
 
 @admin.register(Vendor)

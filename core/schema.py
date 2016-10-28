@@ -1,9 +1,9 @@
 import graphene
 
-import app.api.schema
+from app.api import schema as api_schema
 
 
-class Query(app.api.schema.Query, graphene.ObjectType):
+class Query(api_schema.Query, graphene.ObjectType):
     pass
 
 schema = graphene.Schema(query=Query)

@@ -9,7 +9,10 @@ class ApiTest(TestCase):
         self.endpoint = '/api'
 
     def test_api_endpoint_is_live(self):
-        r = self.client.get(self.endpoint, {'query': ''})
+        response = self.client.get(self.endpoint, {'query': ''})
 
-        self.assertEqual(400, r.status_code)
-        self.assertEqual('Must provide query string.', r.json()['errors'][0]['message'])
+        self.assertEqual(400, response.status_code)
+        self.assertEqual(
+            'Must provide query string.',
+            response.json()['errors'][0]['message']
+        )

@@ -137,3 +137,8 @@ STATICFILES_DIRS = (
 # Admin site settings
 AdminSite.site_header = 'Taverna Admin'
 AdminSite.index_title = 'Platform administration'
+
+# Graphene settings
+GRAPHENE = {
+    'SCHEMA': 'core.schema.schema'
+}

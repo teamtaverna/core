@@ -5,6 +5,7 @@ coveralls==1.1
 decorator==4.0.10
 dj-database-url==0.4.1
 Django==1.10
+django-filter==0.14.0
 django-toolbelt==0.0.1
 docopt==0.6.2
 factory-boy==2.7.0
@@ -12,6 +13,7 @@ fake-factory==0.7.2
 flake8==3.0.4
 gnureadline==6.3.3
 gunicorn==19.6.0
+graphene-django==1.0
 ipython==4.2.0
 ipython-genutils==0.1.0
 mccabe==0.5.2

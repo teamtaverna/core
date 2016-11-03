@@ -31,3 +31,4 @@ six==1.10.0
 static3==0.7.0
 traitlets==4.2.1
 whitenoise==3.2
+django-grappelli==2.8.2

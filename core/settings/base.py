@@ -29,6 +29,7 @@ SECRET_KEY = dotenv.get('SECRET_KEY')
 
 # Application definition
 PREREQ_APPS = [
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -137,8 +138,9 @@ STATICFILES_DIRS = (
 # Admin site settings
 AdminSite.site_header = 'Taverna Admin'
 AdminSite.index_title = 'Platform administration'
-
 # Graphene settings
 GRAPHENE = {
     'SCHEMA': 'core.schema.schema'
 }
+GRAPPELLI_ADMIN_TITLE = AdminSite.site_header
+

@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
-    Vendor, Serving, TimetableManagement
+    Vendor, VendorService, Serving, TimetableManagement
 )
 
 
@@ -48,7 +48,7 @@ class WeekdaysInline(admin.TabularInline):
 class VendorsInline(admin.TabularInline):
     """Tabular inline setting for Timetable vendors."""
 
-    model = Timetable.vendor.through
+    model = Timetable.vendors.through
 
 
 @admin.register(Timetable)
@@ -97,7 +97,7 @@ class EventAdmin(TimeStampAdmin):
 class VendorAdmin(DefaultAdmin):
     """Admin customisation for Vendor model."""
 
-    fields = ('name', 'slug', 'info', 'start_date', 'end_date')
+    fields = ('name', 'slug', 'info')
 
 
 @admin.register(Serving)
@@ -110,4 +110,4 @@ class ServingAdmin(TimeStampAdmin):
 
 admin.site.empty_value_display = ''
 
-admin.site.register(TimetableManagement)
+admin.site.register([TimetableManagement, VendorService])

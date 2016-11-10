@@ -156,4 +156,5 @@ class ServingFactory(TimestampFactory):
         model = models.Serving
 
     menu_item = factory.SubFactory(MenuItemFactory)
+    vendor = factory.SubFactory(VendorFactory)
     date_served = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))

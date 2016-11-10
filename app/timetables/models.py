@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from uuid import uuid4
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -7,6 +6,9 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from hashid_field import HashidField
+
+from .utils import timestamp_seconds
 from common.mixins import SlugifyMixin, TimestampMixin
 
 
@@ -183,7 +185,6 @@ class MenuItem(TimestampMixin):
     served on a given cycle-day of a particular timetable.
     """
 
-    public_id = models.UUIDField(unique=True, default=uuid4, editable=False)
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
@@ -246,8 +247,17 @@ class Event(TimestampMixin):
 class Serving(TimestampMixin):
     """Model representing already served menu."""
 
-    menu_item = models.OneToOneField(MenuItem, on_delete=models.CASCADE)
+    public_id = HashidField(
+        alphabet='0123456789abcdefghijklmnopqrstuvwxyz',
+        default=timestamp_seconds,
+        unique=True
+    )
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     date_served = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('menu_item', 'vendor', 'date_served')
 
     def __str__(self):
         return '{} served on {}'.format(self.menu_item, self.date_served)

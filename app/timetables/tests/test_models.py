@@ -4,11 +4,11 @@ from django.test import TestCase
 
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
-    TimetableFactory, VendorFactory, WeekdayFactory
+    ServingFactory, TimetableFactory, VendorFactory, WeekdayFactory
 )
 
 from app.timetables.models import (
-    Event, Weekday, Meal, Course, Timetable, Dish, MenuItem, Vendor
+    Course, Dish, Event, Meal, MenuItem, Serving, Timetable, Vendor, Weekday
 )
 
 
@@ -218,3 +218,18 @@ class VendorTest(TestCase):
         # test for start_date >= end_date
         self.another_vendor.start_date = self.vendor.end_date
         self.assertRaises(ValidationError, self.another_vendor.save)
+
+
+class ServingTest(TestCase):
+    """Test the Serving model."""
+
+    def setUp(self):
+        self.serving = ServingFactory()
+        self.another_serving = Serving(
+            menu_item=self.serving.menu_item,
+            vendor=self.serving.vendor,
+            date_served=self.serving.date_served
+        )
+
+    def test_enforcement_of_unique_together(self):
+        self.assertRaises(IntegrityError, self.another_serving.save)

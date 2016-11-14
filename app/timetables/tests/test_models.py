@@ -4,11 +4,13 @@ from django.test import TestCase
 
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
-    ServingFactory, TimetableFactory, VendorFactory, WeekdayFactory
+    ServingFactory, TimetableFactory, VendorFactory, VendorServiceFactory,
+    WeekdayFactory
 )
 
 from app.timetables.models import (
-    Course, Dish, Event, Meal, MenuItem, Serving, Timetable, Vendor, Weekday
+    Course, Dish, Event, Meal, MenuItem, Serving, Timetable, Vendor,
+    VendorService, Weekday
 )
 
 
@@ -202,21 +204,10 @@ class VendorTest(TestCase):
     def setUp(self):
         self.vendor = VendorFactory()
         self.another_vendor = Vendor(
-            name='mama Taverna',
-            start_date=self.vendor.start_date,
-            end_date=self.vendor.end_date
+            name='mama Taverna'
         )
 
     def test_enforcement_of_uniqueness_of_vendor_name(self):
-        self.assertRaises(ValidationError, self.another_vendor.save)
-
-    def test_enforcement_of_vendor_start_date_being_less_than_its_end_date(self):
-        # test for start_date == end_date
-        self.another_vendor.end_date = self.vendor.start_date
-        self.assertRaises(ValidationError, self.another_vendor.save)
-
-        # test for start_date >= end_date
-        self.another_vendor.start_date = self.vendor.end_date
         self.assertRaises(ValidationError, self.another_vendor.save)
 
 
@@ -233,3 +224,27 @@ class ServingTest(TestCase):
 
     def test_enforcement_of_unique_together(self):
         self.assertRaises(IntegrityError, self.another_serving.save)
+
+
+class VendorServiceTest(TestCase):
+    """Test the VendorService model"""
+
+    def setUp(self):
+        self.vendor_service = VendorServiceFactory()
+        self.another_vendor_service = VendorService(
+            timetable=self.vendor_service.timetable,
+            vendor=self.vendor_service.vendor
+        )
+
+    def test_enforcement_of_uniqueness_of_timetable_and_vendor_together(self):
+        self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+    def test_enforcement_of_vendor_service_start_date_being_less_than_its_end_date(self):
+        # test for start_date == end_date
+        self.another_vendor_service.start_date = self.vendor_service.start_date
+        self.another_vendor_service.end_date = self.vendor_service.start_date
+        self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+        # test for start_date > end_date
+        self.another_vendor_service.start_date = self.vendor_service.end_date
+        self.assertRaises(ValidationError, self.another_vendor_service.save)

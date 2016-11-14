@@ -76,9 +76,9 @@ class DishAdmin(admin.ModelAdmin):
 class MenuItemAdmin(admin.ModelAdmin):
     """Admin customisation for MenuItem model."""
 
-    readonly_fields = ('public_id', 'date_created', 'date_modified')
+    readonly_fields = ('date_created', 'date_modified')
     fields = (
-        'public_id', 'timetable', 'cycle_day', 'meal',
+        'timetable', 'cycle_day', 'meal',
         'course', 'dish', 'date_created', 'date_modified'
     )
 
@@ -104,7 +104,8 @@ class VendorAdmin(DefaultAdmin):
 class ServingAdmin(TimeStampAdmin):
     """Admin customisation for Serving model."""
 
-    fields = ('menu_item', 'date_served')
+    readonly_fields = ('public_id',)
+    fields = ('public_id', 'menu_item', 'vendor', 'date_served')
 
 
 admin.site.empty_value_display = ''

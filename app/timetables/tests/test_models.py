@@ -240,6 +240,8 @@ class VendorServiceTest(TestCase):
         self.assertRaises(ValidationError, self.another_vendor_service.save)
 
     def test_enforcement_of_vendor_service_start_date_being_less_than_its_end_date(self):
+        self.another_vendor_service.vendor = VendorFactory(name='Papa Taverna')
+
         # test for start_date == end_date
         self.another_vendor_service.start_date = self.vendor_service.start_date
         self.another_vendor_service.end_date = self.vendor_service.start_date

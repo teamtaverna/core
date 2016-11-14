@@ -256,8 +256,8 @@ class Serving(TimestampMixin):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     date_served = models.DateTimeField()
 
-    class Meta:
-        unique_together = ('menu_item', 'vendor', 'date_served')
-
     def __str__(self):
         return '{} served on {}'.format(self.menu_item, self.date_served)
+
+    class Meta:
+        unique_together = ('menu_item', 'vendor', 'date_served')

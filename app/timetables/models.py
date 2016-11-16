@@ -70,24 +70,8 @@ class Vendor(SlugifyMixin, models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, editable=False)
     info = models.TextField(blank=True)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
 
     slugify_field = 'name'
-
-    def clean(self):
-        if self.start_date and self.end_date and self.end_date <= self.start_date:
-            raise ValidationError(
-                _('Ensure end date is not less than or equal to start date.')
-            )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -114,7 +98,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     )
     cycle_day_updated = models.DateTimeField()
     inactive_weekdays = models.ManyToManyField(Weekday)
-    vendor = models.ManyToManyField(Vendor)
+    vendors = models.ManyToManyField(Vendor, through='VendorService')
     is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True)
     admins = models.ManyToManyField(User, through='TimetableManagement')
@@ -261,3 +245,33 @@ class Serving(TimestampMixin):
 
     class Meta:
         unique_together = ('menu_item', 'vendor', 'date_served')
+
+
+class VendorService(models.Model):
+    """Model representing tenure a vendor serves a specific timetable."""
+
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    start_date = models.DateTimeField(default=None, null=True, blank=True)
+    end_date = models.DateTimeField(default=None, null=True, blank=True)
+
+    def clean(self):
+        if self.start_date and self.end_date:
+            if self.end_date <= self.start_date:
+                raise ValidationError(
+                    _('Ensure end date is not less than or equal to start date.')
+                )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return '{} - {}'.format(self.timetable, self.vendor)
+
+    class Meta:
+        unique_together = ('timetable', 'vendor')

@@ -145,8 +145,6 @@ class VendorFactory(DjangoModelFactory):
 
     name = 'Mama Taverna'
     info = 'Some random info'
-    start_date = timezone.make_aware(timezone.datetime(2008, 1, 23, 0, 0, 0))
-    end_date = timezone.make_aware(timezone.datetime(2008, 12, 28, 0, 0, 0))
 
 
 class ServingFactory(TimestampFactory):
@@ -158,3 +156,15 @@ class ServingFactory(TimestampFactory):
     menu_item = factory.SubFactory(MenuItemFactory)
     vendor = factory.SubFactory(VendorFactory)
     date_served = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
+
+
+class VendorServiceFactory(DjangoModelFactory):
+    """VendorService model factory."""
+
+    class Meta:
+        model = models.VendorService
+
+    timetable = factory.SubFactory(TimetableFactory)
+    vendor = factory.SubFactory(VendorFactory)
+    start_date = timezone.make_aware(timezone.datetime(2008, 1, 23, 0, 0, 0))
+    end_date = timezone.make_aware(timezone.datetime(2008, 12, 28, 0, 0, 0))

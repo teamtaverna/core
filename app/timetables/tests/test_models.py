@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
@@ -131,6 +132,16 @@ class TimetableTest(TestCase):
         self.another_timetable.cycle_length = self.timetable.cycle_length
 
         self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_calculate_cycle_day(self):
+        date = timezone.make_aware(timezone.datetime(2016, 11, 23, 12, 30, 0))
+        self.assertEqual(13, self.timetable.calculate_cycle_day(date))
+
+        date = timezone.make_aware(timezone.datetime(2016, 11, 24, 12, 30, 0))
+        self.assertEqual(14, self.timetable.calculate_cycle_day(date))
+
+        date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(1, self.timetable.calculate_cycle_day(date))
 
 
 class DishTest(TestCase):

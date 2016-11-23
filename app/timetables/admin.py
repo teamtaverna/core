@@ -58,8 +58,8 @@ class TimetableAdmin(admin.ModelAdmin):
     readonly_fields = ('slug', 'date_created', 'date_modified')
     fields = (
         'name', 'slug', 'code', 'api_key', 'cycle_length',
-        'current_cycle_day', 'description', 'is_active',
-        'cycle_day_updated', 'date_created', 'date_modified'
+        'ref_cycle_day', 'description', 'is_active',
+        'ref_cycle_date', 'date_created', 'date_modified'
     )
     inlines = (WeekdaysInline, AdminsInline, VendorsInline)
 

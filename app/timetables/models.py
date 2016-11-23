@@ -93,10 +93,10 @@ class Timetable(SlugifyMixin, TimestampMixin):
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    current_cycle_day = models.PositiveSmallIntegerField(
+    ref_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    cycle_day_updated = models.DateTimeField()
+    ref_cycle_date = models.DateTimeField()
     inactive_weekdays = models.ManyToManyField(Weekday)
     vendors = models.ManyToManyField(Vendor, through='VendorService')
     is_active = models.BooleanField(default=True)
@@ -106,11 +106,11 @@ class Timetable(SlugifyMixin, TimestampMixin):
     slugify_field = 'name'
 
     def clean(self):
-        # Ensure current_cycle_day and cycle_length are not None before compare
-        if self.current_cycle_day and self.cycle_length:
-            if self.current_cycle_day > self.cycle_length:
+        # Ensure ref_cycle_day and cycle_length are not None before compare
+        if self.ref_cycle_day and self.cycle_length:
+            if self.ref_cycle_day > self.cycle_length:
                 raise ValidationError(_(
-                    'Ensure Current cycle day is not greater than Cycle length.')
+                    'Ensure Ref cycle day is not greater than Cycle length.')
                 )
 
         super().clean()

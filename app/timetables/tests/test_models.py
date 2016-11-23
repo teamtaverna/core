@@ -143,6 +143,30 @@ class TimetableTest(TestCase):
         date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
         self.assertEqual(1, self.timetable.calculate_cycle_day(date))
 
+    def test_get_vendors(self):
+        vendor_service = VendorServiceFactory(timetable=self.timetable)
+
+        new_vendors = [VendorFactory(name=x) for x in ['Spicy Foods', 'Tantalizer']]
+        start_date = timezone.make_aware(timezone.datetime(2016, 10, 1, 0, 0, 0))
+        end_date = timezone.make_aware(timezone.datetime(2016, 11, 30, 0, 0, 0))
+
+        for new_vendor in new_vendors:
+            VendorServiceFactory(
+                timetable=self.timetable,
+                vendor=new_vendor,
+                start_date=start_date,
+                end_date=end_date
+            )
+
+        date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(new_vendors, self.timetable.get_vendors(date))
+
+        date = timezone.make_aware(timezone.datetime(2008, 2, 23, 0, 0, 0))
+        self.assertEqual([vendor_service.vendor], self.timetable.get_vendors(date))
+
+        date = timezone.make_aware(timezone.datetime(2000, 2, 23, 0, 0, 0))
+        self.assertEqual([], self.timetable.get_vendors(date))
+
 
 class DishTest(TestCase):
     """Tests the Dish model."""

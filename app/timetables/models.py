@@ -123,6 +123,14 @@ class Timetable(SlugifyMixin, TimestampMixin):
     def __str__(self):
         return self.name
 
+    def calculate_cycle_day(self, date_datetime):
+        cycle_day = (((date_datetime - self.ref_cycle_date).days % \
+                    self.cycle_length) + self.ref_cycle_day) % self.cycle_length
+
+        if cycle_day == 0: cycle_day = self.cycle_length
+
+        return cycle_day
+
 
 class Dish(SlugifyMixin, TimestampMixin):
     """

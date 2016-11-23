@@ -131,6 +131,13 @@ class Timetable(SlugifyMixin, TimestampMixin):
 
         return cycle_day
 
+    def get_vendors(self, date_datetime):
+        return [vendor for vendor in Vendor.objects.filter(
+            timetable__slug=self.slug,
+            vendorservice__start_date__lte=date_datetime,
+            vendorservice__end_date__gte=date_datetime
+        )]
+
 
 class Dish(SlugifyMixin, TimestampMixin):
     """

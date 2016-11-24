@@ -143,6 +143,9 @@ class TimetableTest(TestCase):
         date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
         self.assertEqual(1, self.timetable.calculate_cycle_day(date))
 
+        date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
+        self.assertEqual(None, self.timetable.calculate_cycle_day(date))
+
     def test_get_vendors(self):
         vendor_service = VendorServiceFactory(timetable=self.timetable)
 

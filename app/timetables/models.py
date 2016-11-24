@@ -124,11 +124,16 @@ class Timetable(SlugifyMixin, TimestampMixin):
         return self.name
 
     def calculate_cycle_day(self, date_datetime):
-        cycle_day = ((((date_datetime - self.ref_cycle_date).days %
-                      self.cycle_length) + self.ref_cycle_day) % self.cycle_length)
+        days_interval = (date_datetime - self.ref_cycle_date).days
 
-        if cycle_day == 0:
-            cycle_day = self.cycle_length
+        if days_interval < 0:
+            cycle_day = None
+        else:
+            cycle_day = ((days_interval % self.cycle_length) + self.ref_cycle_day) \
+                        % self.cycle_length
+
+            if cycle_day == 0:
+                cycle_day = self.cycle_length
 
         return cycle_day
 

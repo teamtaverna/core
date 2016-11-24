@@ -117,7 +117,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, self.another_timetable.save)
 
         # test for ref_cycle_day == 0
-        self.another_timetable.ref_cycle_day = self.another_timetable.cycle_length
+        self.another_timetable.ref_cycle_day = 0
         self.another_timetable.cycle_length = self.timetable.cycle_length
 
         self.assertRaises(ValidationError, self.another_timetable.save)
@@ -128,7 +128,7 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, self.another_timetable.save)
 
         # test for ref_cycle_day < 0
-        self.another_timetable.ref_cycle_day = self.another_timetable.cycle_length
+        self.another_timetable.ref_cycle_day = -3
         self.another_timetable.cycle_length = self.timetable.cycle_length
 
         self.assertRaises(ValidationError, self.another_timetable.save)

@@ -134,17 +134,17 @@ class TimetableTest(TestCase):
         self.assertRaises(ValidationError, self.another_timetable.save)
 
     def test_calculate_cycle_day(self):
-        date = timezone.make_aware(timezone.datetime(2016, 11, 23, 12, 30, 0))
-        self.assertEqual(13, self.timetable.calculate_cycle_day(date))
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 23, 12, 30, 0))
+        self.assertEqual(13, self.timetable.calculate_cycle_day(test_date))
 
-        date = timezone.make_aware(timezone.datetime(2016, 11, 24, 12, 30, 0))
-        self.assertEqual(14, self.timetable.calculate_cycle_day(date))
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 24, 12, 30, 0))
+        self.assertEqual(14, self.timetable.calculate_cycle_day(test_date))
 
-        date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
-        self.assertEqual(1, self.timetable.calculate_cycle_day(date))
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(1, self.timetable.calculate_cycle_day(test_date))
 
-        date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
-        self.assertEqual(None, self.timetable.calculate_cycle_day(date))
+        test_date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
+        self.assertEqual(None, self.timetable.calculate_cycle_day(test_date))
 
     def test_get_vendors(self):
         vendor_service = VendorServiceFactory(timetable=self.timetable)
@@ -161,14 +161,14 @@ class TimetableTest(TestCase):
                 end_date=end_date
             )
 
-        date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
-        self.assertEqual(new_vendors, self.timetable.get_vendors(date))
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(new_vendors, self.timetable.get_vendors(test_date))
 
-        date = timezone.make_aware(timezone.datetime(2008, 2, 23, 0, 0, 0))
-        self.assertEqual([vendor_service.vendor], self.timetable.get_vendors(date))
+        test_date = timezone.make_aware(timezone.datetime(2008, 2, 23, 0, 0, 0))
+        self.assertEqual([vendor_service.vendor], self.timetable.get_vendors(test_date))
 
-        date = timezone.make_aware(timezone.datetime(2000, 2, 23, 0, 0, 0))
-        self.assertEqual([], self.timetable.get_vendors(date))
+        test_date = timezone.make_aware(timezone.datetime(2000, 2, 23, 0, 0, 0))
+        self.assertEqual([], self.timetable.get_vendors(test_date))
 
 
 class DishTest(TestCase):

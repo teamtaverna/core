@@ -129,8 +129,8 @@ class Timetable(SlugifyMixin, TimestampMixin):
         if days_interval < 0:
             cycle_day = None
         else:
-            cycle_day = ((days_interval % self.cycle_length) + self.ref_cycle_day) \
-                        % self.cycle_length
+            cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
+                         % self.cycle_length)
 
             if cycle_day == 0:
                 cycle_day = self.cycle_length

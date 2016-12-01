@@ -143,6 +143,7 @@ class TimetableTest(TestCase):
         test_date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
         self.assertEqual(1, self.timetable.calculate_cycle_day(test_date))
 
+        # test_date earlier than ref_cycle_date cannot be resolved to a valid cycle_day
         test_date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
         self.assertEqual(None, self.timetable.calculate_cycle_day(test_date))
 

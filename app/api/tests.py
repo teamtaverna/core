@@ -29,7 +29,7 @@ class ApiTest(TestCase):
         response = self.client.get(self.endpoint, {'query': query})
         self.assertEqual(200, response.status_code)
         self.assertRaises(KeyError, lambda: response.json()["errors"])
-        self.assertEqual(response.json()['data'], expected)
+        self.assertEqual(expected, response.json()['data'])
 
     def test_users_query(self):
         query = 'query {users{edges{node{username}}}}'
@@ -58,7 +58,7 @@ class ApiTest(TestCase):
         response = self.client.get(self.endpoint, {'query': query})
         self.assertEqual(200, response.status_code)
         self.assertRaises(KeyError, lambda: response.json()["errors"])
-        self.assertEqual(response.json()['data'], expected)
+        self.assertEqual(expected, response.json()['data'])
 
     def test_create_user_query(self):
         query = '''
@@ -80,7 +80,7 @@ class ApiTest(TestCase):
         response = self.client.post(self.endpoint, {'query': query})
         self.assertEqual(200, response.status_code)
         self.assertRaises(KeyError, lambda: response.json()["errors"])
-        self.assertEqual(response.json()['data'], expected)
+        self.assertEqual(expected, response.json()['data'])
 
     def test_update_user_query(self):
         query = '''
@@ -112,7 +112,7 @@ class ApiTest(TestCase):
         response = self.client.post(self.endpoint, {'query': query})
         self.assertEqual(200, response.status_code)
         self.assertRaises(KeyError, lambda: response.json()["errors"])
-        self.assertEqual(response.json()['data'], expected)
+        self.assertEqual(expected, response.json()['data'])
 
     def test_delete_user_query(self):
         query = '''
@@ -134,4 +134,4 @@ class ApiTest(TestCase):
         response = self.client.post(self.endpoint, {'query': query})
         self.assertEqual(200, response.status_code)
         self.assertRaises(KeyError, lambda: response.json()["errors"])
-        self.assertEqual(response.json()['data'], expected)
+        self.assertEqual(expected, response.json()['data'])

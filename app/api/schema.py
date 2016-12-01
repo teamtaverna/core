@@ -1,9 +1,10 @@
-import graphene
-from graphene import relay, Field, String, Int, Boolean, List
-from graphene_django import DjangoConnectionField, DjangoObjectType
-from graphql_relay.node.node import from_global_id
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+
+import graphene
+from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphql_relay.node.node import from_global_id
+
 
 
 def getErrors(e):
@@ -17,7 +18,7 @@ def getErrors(e):
 
 
 class UserNode(DjangoObjectType):
-    original_id = Int()
+    original_id = graphene.Int()
 
     class Meta:
         model = User
@@ -28,7 +29,7 @@ class UserNode(DjangoObjectType):
         }
         filter_order_by = ['id', '-id', 'username', '-username', 'is_staff',
                            '-is_staff', 'is_active', '-is_active' 'date_joined', '-date_joined']
-        interfaces = (relay.Node, )
+        interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):
         return self.id
@@ -41,19 +42,19 @@ def get_user(relayId, otherwise=None):
         return otherwise
 
 
-class CreateUser(relay.ClientIDMutation):
+class CreateUser(graphene.relay.ClientIDMutation):
 
     class Input:
-        username = String(required=True)
-        first_name = String(required=False)
-        last_name = String(required=False)
-        email = String(required=False)
-        is_staff = Boolean(required=False)
-        is_active = Boolean(required=False)
-        password = String(required=True)
+        username = graphene.String(required=True)
+        first_name = graphene.String(required=False)
+        last_name = graphene.String(required=False)
+        email = graphene.String(required=False)
+        is_staff = graphene.Boolean(required=False)
+        is_active = graphene.Boolean(required=False)
+        password = graphene.String(required=True)
 
-    user = Field(UserNode)
-    errors = List(String)
+    user = graphene.Field(UserNode)
+    errors = graphene.List(graphene.String)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
@@ -74,20 +75,20 @@ class CreateUser(relay.ClientIDMutation):
             return CreateUser(user=None, errors=getErrors(e))
 
 
-class UpdateUser(relay.ClientIDMutation):
+class UpdateUser(graphene.relay.ClientIDMutation):
 
     class Input:
-        id = String(required=True)
-        username = String(required=False)
-        first_name = String(required=False)
-        last_name = String(required=False)
-        email = String(required=False)
-        is_staff = Boolean(required=False)
-        is_active = Boolean(required=False)
-        password = String(required=False)
+        id = graphene.String(required=True)
+        username = graphene.String(required=False)
+        first_name = graphene.String(required=False)
+        last_name = graphene.String(required=False)
+        email = graphene.String(required=False)
+        is_staff = graphene.Boolean(required=False)
+        is_active = graphene.Boolean(required=False)
+        password = graphene.String(required=False)
 
-    user = Field(UserNode)
-    errors = List(String)
+    user = graphene.Field(UserNode)
+    errors = graphene.List(graphene.String)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
@@ -105,13 +106,13 @@ class UpdateUser(relay.ClientIDMutation):
             return UpdateUser(user=user, errors=getErrors(e))
 
 
-class DeleteUser(relay.ClientIDMutation):
+class DeleteUser(graphene.relay.ClientIDMutation):
 
     class Input:
-        id = String(required=True)
+        id = graphene.String(required=True)
 
-    deleted = Boolean()
-    user = Field(UserNode)
+    deleted = graphene.Boolean()
+    user = graphene.Field(UserNode)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
@@ -124,7 +125,7 @@ class DeleteUser(relay.ClientIDMutation):
 
 
 class Query(graphene.AbstractType):
-    user = relay.Node.Field(UserNode)
+    user = graphene.relay.Node.Field(UserNode)
     users = DjangoConnectionField(UserNode)
 
 

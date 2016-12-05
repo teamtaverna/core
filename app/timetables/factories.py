@@ -74,8 +74,8 @@ class TimetableFactory(TimestampFactory):
     code = 'FT7876'
     api_key = 'TF78993jTY'
     cycle_length = 14
-    current_cycle_day = 2
-    cycle_day_updated = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
+    ref_cycle_day = 2
+    ref_cycle_date = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
     description = 'Some random description'
 
 

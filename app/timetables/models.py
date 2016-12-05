@@ -93,10 +93,10 @@ class Timetable(SlugifyMixin, TimestampMixin):
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    current_cycle_day = models.PositiveSmallIntegerField(
+    ref_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    cycle_day_updated = models.DateTimeField()
+    ref_cycle_date = models.DateTimeField()
     inactive_weekdays = models.ManyToManyField(Weekday)
     vendors = models.ManyToManyField(Vendor, through='VendorService')
     is_active = models.BooleanField(default=True)
@@ -106,11 +106,11 @@ class Timetable(SlugifyMixin, TimestampMixin):
     slugify_field = 'name'
 
     def clean(self):
-        # Ensure current_cycle_day and cycle_length are not None before compare
-        if self.current_cycle_day and self.cycle_length:
-            if self.current_cycle_day > self.cycle_length:
+        # Ensure ref_cycle_day and cycle_length are not None before compare
+        if self.ref_cycle_day and self.cycle_length:
+            if self.ref_cycle_day > self.cycle_length:
                 raise ValidationError(_(
-                    'Ensure Current cycle day is not greater than Cycle length.')
+                    'Ensure Ref cycle day is not greater than Cycle length.')
                 )
 
         super().clean()
@@ -122,6 +122,27 @@ class Timetable(SlugifyMixin, TimestampMixin):
 
     def __str__(self):
         return self.name
+
+    def calculate_cycle_day(self, date_datetime):
+        days_interval = (date_datetime - self.ref_cycle_date).days
+
+        if days_interval < 0:
+            cycle_day = None
+        else:
+            cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
+                         % self.cycle_length)
+
+            if cycle_day == 0:
+                cycle_day = self.cycle_length
+
+        return cycle_day
+
+    def get_vendors(self, date_datetime):
+        return [vendor for vendor in Vendor.objects.filter(
+            timetable__slug=self.slug,
+            vendorservice__start_date__lte=date_datetime,
+            vendorservice__end_date__gte=date_datetime
+        )]
 
 
 class Dish(SlugifyMixin, TimestampMixin):

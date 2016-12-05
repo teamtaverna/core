@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
@@ -85,8 +86,8 @@ class TimetableTest(TestCase):
             code='FT7871',
             api_key='TF78993jTA',
             cycle_length=self.timetable.cycle_length,
-            current_cycle_day=self.timetable.current_cycle_day,
-            cycle_day_updated=self.timetable.cycle_day_updated,
+            ref_cycle_day=self.timetable.ref_cycle_day,
+            ref_cycle_date=self.timetable.ref_cycle_date,
             description=self.timetable.description
         )
 
@@ -105,32 +106,70 @@ class TimetableTest(TestCase):
 
         self.assertRaises(ValidationError, self.another_timetable.save)
 
-    def test_current_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
-        self.another_timetable.current_cycle_day = self.timetable.cycle_length + 1
+    def test_ref_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
+        self.another_timetable.ref_cycle_day = self.timetable.cycle_length + 1
 
         self.assertRaises(ValidationError, self.another_timetable.save)
 
-    def test_cycle_length_and_current_cycle_day_of_zero_cant_be_saved(self):
+    def test_cycle_length_and_ref_cycle_day_of_zero_cant_be_saved(self):
         # test for cycle_length == 0
         self.another_timetable.cycle_length = 0
         self.assertRaises(ValidationError, self.another_timetable.save)
 
-        # test for current_cycle_day == 0
-        self.another_timetable.current_cycle_day = self.another_timetable.cycle_length
+        # test for ref_cycle_day == 0
+        self.another_timetable.ref_cycle_day = 0
         self.another_timetable.cycle_length = self.timetable.cycle_length
 
         self.assertRaises(ValidationError, self.another_timetable.save)
 
-    def test_cycle_length_and_current_cycle_day_of_negative_value_cant_be_saved(self):
+    def test_cycle_length_and_ref_cycle_day_of_negative_value_cant_be_saved(self):
         # test for cycle_length < 0
         self.another_timetable.cycle_length = -3
         self.assertRaises(ValidationError, self.another_timetable.save)
 
-        # test for current_cycle_day < 0
-        self.another_timetable.current_cycle_day = self.another_timetable.cycle_length
+        # test for ref_cycle_day < 0
+        self.another_timetable.ref_cycle_day = -3
         self.another_timetable.cycle_length = self.timetable.cycle_length
 
         self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_calculate_cycle_day(self):
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 23, 12, 30, 0))
+        self.assertEqual(13, self.timetable.calculate_cycle_day(test_date))
+
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 24, 12, 30, 0))
+        self.assertEqual(14, self.timetable.calculate_cycle_day(test_date))
+
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(1, self.timetable.calculate_cycle_day(test_date))
+
+        # test_date earlier than ref_cycle_date cannot be resolved to a valid cycle_day
+        test_date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
+        self.assertEqual(None, self.timetable.calculate_cycle_day(test_date))
+
+    def test_get_vendors(self):
+        vendor_service = VendorServiceFactory(timetable=self.timetable)
+
+        new_vendors = [VendorFactory(name=x) for x in ['Spicy Foods', 'Tantalizer']]
+        start_date = timezone.make_aware(timezone.datetime(2016, 10, 1, 0, 0, 0))
+        end_date = timezone.make_aware(timezone.datetime(2016, 11, 30, 0, 0, 0))
+
+        for new_vendor in new_vendors:
+            VendorServiceFactory(
+                timetable=self.timetable,
+                vendor=new_vendor,
+                start_date=start_date,
+                end_date=end_date
+            )
+
+        test_date = timezone.make_aware(timezone.datetime(2016, 11, 25, 12, 30, 0))
+        self.assertEqual(new_vendors, self.timetable.get_vendors(test_date))
+
+        test_date = timezone.make_aware(timezone.datetime(2008, 2, 23, 0, 0, 0))
+        self.assertEqual([vendor_service.vendor], self.timetable.get_vendors(test_date))
+
+        test_date = timezone.make_aware(timezone.datetime(2000, 2, 23, 0, 0, 0))
+        self.assertEqual([], self.timetable.get_vendors(test_date))
 
 
 class DishTest(TestCase):

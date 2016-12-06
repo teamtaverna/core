@@ -17,7 +17,7 @@ class UserNode(DjangoObjectType):
             'is_active': ['exact']
         }
         filter_order_by = ['id', '-id', 'username', '-username', 'is_staff',
-                           '-is_staff', 'is_active', '-is_active' 'date_joined', '-date_joined']
+                           '-is_staff', 'is_active', '-is_active', 'date_joined', '-date_joined']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

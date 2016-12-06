@@ -1,7 +1,7 @@
-from .cruds.user_crud import UserNode, CreateUser, UpdateUser, DeleteUser
-
 import graphene
 from graphene_django.filter import DjangoFilterConnectionField
+
+from .cruds.user_crud import UserNode, CreateUser, UpdateUser, DeleteUser
 
 
 class Query(graphene.AbstractType):

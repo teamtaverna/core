@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+
 from graphql_relay.node.node import from_global_id
 
 

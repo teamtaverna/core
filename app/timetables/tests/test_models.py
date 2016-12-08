@@ -289,3 +289,56 @@ class VendorServiceTest(TestCase):
         # test for start_date > end_date
         self.another_vendor_service.start_date = self.vendor_service.end_date
         self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+
+class ServingAutoUpdateTest(TestCase):
+    """Test the ServingAutoUpdate model."""
+
+    def setUp(self):
+        self.serving_auto_update = ServingAutoUpdateFactory()
+
+    def test_serving_auto_update_entry_has_corresponding_serving_entry(self):
+        timetable = self.serving_auto_update.timetable
+        cycle_day = timetable.calculate_cycle_day(self.serving_auto_update.date)
+
+        menu_item = MenuItem.objects.get(timetable=timetable, cycle_day=cycle_day)
+
+        serving = Serving.objects.get(
+            menu_item=menu_item,
+            vendor=self.serving_auto_update.vendor,
+            date_served=self.serving_auto_update.date
+        )
+
+        self.assertIsInstance(serving, Serving)
+
+    def test_run_update_on_existing_serving_entry(self):
+        kwargs = {
+            'timetable': self.serving_auto_update.timetable,
+            'vendor': self.serving_auto_update.vendor,
+            'date': self.serving_auto_update.date
+        }
+
+        self.assertRaises(IntegrityError, ServingAutoUpdate.run_update, **kwargs)
+
+    def test_run_update_for_new_serving_entry(self):
+        kwargs = {
+            'timetable': self.serving_auto_update.timetable,
+            'vendor': self.serving_auto_update.vendor,
+            'date': timezone.make_aware(timezone.datetime.now())
+        }
+
+        serving = ServingAutoUpdate.run_update(**kwargs)
+
+        self.assertIsInstance(serving, Serving)
+
+    def test_prevention_of_saving_new_entry_similar_to_existing_entry(self):
+        # Note that no uniqueness is enforced at ServingAutoUpdate model layer.
+        # Basically, this is to ensure that IntegrityError at Serving model
+        # prevents new creation of ServingAutoUpdate entry.
+        new_serving_auto_update = ServingAutoUpdate(
+            timetable=self.serving_auto_update.timetable,
+            vendor=self.serving_auto_update.vendor,
+            date=self.serving_auto_update.date
+        )
+
+        self.assertRaises(IntegrityError, new_serving_auto_update.save)

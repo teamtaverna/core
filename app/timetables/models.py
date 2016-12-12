@@ -127,13 +127,15 @@ class Timetable(SlugifyMixin, TimestampMixin):
         days_interval = (date_datetime - self.ref_cycle_date).days
 
         if days_interval < 0:
-            cycle_day = None
-        else:
-            cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
-                         % self.cycle_length)
+            raise ValidationError(
+                _('Supply a date later than %s' % (self.ref_cycle_date))
+            )
 
-            if cycle_day == 0:
-                cycle_day = self.cycle_length
+        cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
+                     % self.cycle_length)
+
+        if cycle_day == 0:
+            cycle_day = self.cycle_length
 
         return cycle_day
 

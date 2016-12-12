@@ -145,7 +145,7 @@ class TimetableTest(TestCase):
 
         # test_date earlier than ref_cycle_date cannot be resolved to a valid cycle_day
         test_date = timezone.make_aware(timezone.datetime(2016, 9, 25, 12, 30, 0))
-        self.assertEqual(None, self.timetable.calculate_cycle_day(test_date))
+        self.assertRaises(ValidationError, self.timetable.calculate_cycle_day, test_date)
 
     def test_get_vendors(self):
         vendor_service = VendorServiceFactory(timetable=self.timetable)

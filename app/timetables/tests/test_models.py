@@ -298,13 +298,13 @@ class ServingAutoUpdateTest(TestCase):
         self.serving_auto_update = ServingAutoUpdateFactory()
 
     def test_serving_auto_update_entry_has_corresponding_serving_entry(self):
-        timetable = self.serving_auto_update.timetable
-        cycle_day = timetable.calculate_cycle_day(self.serving_auto_update.date)
-
-        menu_item = MenuItem.objects.get(timetable=timetable, cycle_day=cycle_day)
+        menu_items = ServingAutoUpdate.get_menu_items(
+            self.serving_auto_update.timetable,
+            self.serving_auto_update.date
+        )
 
         serving = Serving.objects.get(
-            menu_item=menu_item,
+            menu_item=menu_items[0],
             vendor=self.serving_auto_update.vendor,
             date_served=self.serving_auto_update.date
         )
@@ -318,7 +318,7 @@ class ServingAutoUpdateTest(TestCase):
             'date': self.serving_auto_update.date
         }
 
-        self.assertRaises(IntegrityError, ServingAutoUpdate.run_update, **kwargs)
+        self.assertEqual(None, ServingAutoUpdate.run_update(**kwargs))
 
     def test_run_update_for_new_serving_entry(self):
         kwargs = {
@@ -327,14 +327,11 @@ class ServingAutoUpdateTest(TestCase):
             'date': timezone.make_aware(timezone.datetime.now())
         }
 
-        serving = ServingAutoUpdate.run_update(**kwargs)
+        servings = ServingAutoUpdate.run_update(**kwargs)
 
-        self.assertIsInstance(serving, Serving)
+        self.assertIsInstance(servings[0], Serving)
 
-    def test_prevention_of_saving_new_entry_similar_to_existing_entry(self):
-        # Note that no uniqueness is enforced at ServingAutoUpdate model layer.
-        # Basically, this is to ensure that IntegrityError at Serving model
-        # prevents new creation of ServingAutoUpdate entry.
+    def test_enforcement_of_unique_together(self):
         new_serving_auto_update = ServingAutoUpdate(
             timetable=self.serving_auto_update.timetable,
             vendor=self.serving_auto_update.vendor,

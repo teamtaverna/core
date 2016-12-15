@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
@@ -308,27 +308,38 @@ class ServingAutoUpdate(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     date = models.DateTimeField()
 
-    @classmethod
-    def get_servings(cls, timetable, vendor, date):
+    @staticmethod
+    def get_menu_items(timetable, date):
         try:
             cycle_day = timetable.calculate_cycle_day(date)
         except ValidationError:
             raise
 
-        menu_items = MenuItem.objects.filter(
+        return MenuItem.objects.filter(
             timetable=timetable,
             cycle_day=cycle_day,
             meal__start_time__hour=date.hour,
             meal__start_time__minute=date.minute
         )
 
+    @classmethod
+    def get_servings(cls, timetable, vendor, date):
+        try:
+            menu_items = cls.get_menu_items(timetable, date)
+        except ValidationError:
+            raise
+
         kwargs = {
             'timetable': timetable,
             'vendor': vendor,
             'date': date
         }
-        if not cls.objects.filter(**kwargs).exists():
-            cls.run_update(timetable, vendor, date, menu_items)
+        if not cls.objects.filter(**kwargs).exists() and menu_items:
+            cls.objects.create(
+                timetable=timetable,
+                vendor=vendor,
+                date=date
+            )
 
         servings = []
         for menu_item in menu_items:
@@ -342,23 +353,40 @@ class ServingAutoUpdate(models.Model):
         return servings
 
     @classmethod
-    def run_update(cls, timetable, vendor, date, menu_items):
+    def run_update(cls, timetable, vendor, date):
+        try:
+            menu_items = cls.get_menu_items(timetable, date)
+        except ValidationError:
+            raise
+
+        if not menu_items:
+            return
+
         for menu_item in menu_items:
             try:
-                Serving.objects.create(
-                    menu_item=menu_item,
-                    vendor=vendor,
-                    date_served=date
-                )
+                with transaction.atomic():
+                    Serving.objects.create(
+                        menu_item=menu_item,
+                        vendor=vendor,
+                        date_served=date
+                    )
             except IntegrityError:
                 pass
 
-        if menu_items:
-            cls.objects.create(
-                timetable=timetable,
-                vendor=vendor,
-                date=date
+        return True
+
+    def clean(self):
+        if not self.run_update(self.timetable, self.vendor, self.date):
+            raise ValidationError(
+                _('No matching menu_item for this Timetable and Date combination.')
             )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return '{} - {} - {}'.format(self.timetable, self.vendor, self.date)

@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
 from hashid_field import HashidField
@@ -298,3 +299,69 @@ class VendorService(models.Model):
 
     class Meta:
         unique_together = ('timetable', 'vendor')
+
+
+class ServingAutoUpdate(models.Model):
+    """Model representing Automatic Update of Servings."""
+
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    date = models.DateTimeField()
+
+    @classmethod
+    def get_servings(cls, timetable, vendor, date):
+        try:
+            cycle_day = timetable.calculate_cycle_day(date)
+        except ValidationError:
+            raise
+
+        menu_items = MenuItem.objects.filter(
+            timetable=timetable,
+            cycle_day=cycle_day,
+            meal__start_time__hour=date.hour,
+            meal__start_time__minute=date.minute
+        )
+
+        kwargs = {
+            'timetable': timetable,
+            'vendor': vendor,
+            'date': date
+        }
+        if not cls.objects.filter(**kwargs).exists():
+            cls.run_update(timetable, vendor, date, menu_items)
+
+        servings = []
+        for menu_item in menu_items:
+            serving = Serving.objects.get(
+                menu_item=menu_item,
+                vendor=vendor,
+                date_served=date
+            )
+            servings.append(serving)
+
+        return servings
+
+    @classmethod
+    def run_update(cls, timetable, vendor, date, menu_items):
+        for menu_item in menu_items:
+            try:
+                Serving.objects.create(
+                    menu_item=menu_item,
+                    vendor=vendor,
+                    date_served=date
+                )
+            except IntegrityError:
+                pass
+
+        if menu_items:
+            cls.objects.create(
+                timetable=timetable,
+                vendor=vendor,
+                date=date
+            )
+
+    def __str__(self):
+        return '{} - {} - {}'.format(self.timetable, self.vendor, self.date)
+
+    class Meta:
+        unique_together = ('timetable', 'vendor', 'date')

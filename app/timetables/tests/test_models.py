@@ -299,7 +299,7 @@ class ServingAutoUpdateTest(TestCase):
         self.timetable = TimetableFactory()
         self.vendor = VendorFactory()
         self.date = self.timetable.ref_cycle_date
-    
+
         meal = MealFactory()
         course = CourseFactory(name='main')
         dish_names = ['Quaker Oat and Moi-moi', 'Bread and Egg', 'Apples']
@@ -321,23 +321,20 @@ class ServingAutoUpdateTest(TestCase):
             date_served=self.date
         ).count()
 
+    def test_get_menu_items_for_a_date_earlier_than_ref_cycle_date(self):
+        date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))
+        self.assertRaises(ValidationError, ServingAutoUpdate.get_menu_items, self.timetable, date)
+
+    def test_get_menu_items_for_right_combination_of_timetable_and_date(self):
+        menu_items = ServingAutoUpdate.get_menu_items(self.timetable, self.date)
+        self.assertEqual(self.menu_items, list(menu_items))
+
     def test_run_update(self):
         # Before run_update is called
-        kwargs = {
-            'timetable': self.timetable,
-            'vendor': self.vendor,
-            'date': self.date
-        }
-        self.assertRaises(
-            ServingAutoUpdate.DoesNotExist,
-            ServingAutoUpdate.objects.get,
-            **kwargs
-        )
         self.assertEqual(0, self.get_servings_count())
 
         # After run_update is called
-        ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date, self.menu_items)
-        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date)
         self.assertEqual(3, self.get_servings_count())
 
     def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
@@ -370,3 +367,26 @@ class ServingAutoUpdateTest(TestCase):
         self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
         self.assertEqual(3, len(servings))
         self.assertIsInstance(servings[0], Serving)
+
+    def test_manual_creation_of_serving_auto_update(self):
+        # Before creation attempt
+        kwargs = {
+            'timetable': self.timetable,
+            'vendor': self.vendor,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+        self.assertEqual(0, self.get_servings_count())
+
+        # Afetr creat attempt
+        ServingAutoUpdate.objects.create(
+            timetable=self.timetable,
+            vendor=self.vendor,
+            date=self.date
+        )
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, self.get_servings_count())

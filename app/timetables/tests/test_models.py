@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
@@ -10,8 +11,8 @@ from app.timetables.factories import (
 )
 
 from app.timetables.models import (
-    Course, Dish, Event, Meal, MenuItem, Serving, Timetable, Vendor,
-    VendorService, Weekday
+    Course, Dish, Event, Meal, MenuItem, Serving, ServingAutoUpdate, Timetable,
+    Vendor, VendorService, Weekday
 )
 
 
@@ -295,47 +296,77 @@ class ServingAutoUpdateTest(TestCase):
     """Test the ServingAutoUpdate model."""
 
     def setUp(self):
-        self.serving_auto_update = ServingAutoUpdateFactory()
+        self.timetable = TimetableFactory()
+        self.vendor = VendorFactory()
+        self.date = self.timetable.ref_cycle_date
+    
+        meal = MealFactory()
+        course = CourseFactory(name='main')
+        dish_names = ['Quaker Oat and Moi-moi', 'Bread and Egg', 'Apples']
+        self.menu_items = []
+        for dish_name in dish_names:
+            dish = DishFactory(name=dish_name)
+            menu_item = MenuItemFactory(
+                timetable=self.timetable,
+                meal=meal,
+                course=course,
+                dish=dish
+            )
+            self.menu_items.append(menu_item)
 
-    def test_serving_auto_update_entry_has_corresponding_serving_entry(self):
-        menu_items = ServingAutoUpdate.get_menu_items(
-            self.serving_auto_update.timetable,
-            self.serving_auto_update.date
+    def get_servings_count(self):
+        return Serving.objects.filter(
+            menu_item__in=self.menu_items,
+            vendor=self.vendor,
+            date_served=self.date
+        ).count()
+
+    def test_run_update(self):
+        # Before run_update is called
+        kwargs = {
+            'timetable': self.timetable,
+            'vendor': self.vendor,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+        self.assertEqual(0, self.get_servings_count())
+
+        # After run_update is called
+        ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date, self.menu_items)
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, self.get_servings_count())
+
+    def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
+        date = timezone.make_aware(timezone.datetime(2016, 10, 4, 9, 0, 0))
+        self.assertEqual([], ServingAutoUpdate.get_servings(self.timetable, self.vendor, date))
+
+    def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
+        date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))
+        try:
+            with transaction.atomic():
+                ServingAutoUpdate.get_servings(self.timetable, self.vendor, date)
+        except ValidationError as e:
+            self.assertEqual(['Supply a date later than %s' % (self.date)], e.messages)
+
+    def test_get_servings_for_right_combination_of_timetable_and_vendor_and_date(self):
+        # Before get_servings is called
+        kwargs = {
+            'timetable': self.timetable,
+            'vendor': self.vendor,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
         )
 
-        serving = Serving.objects.get(
-            menu_item=menu_items[0],
-            vendor=self.serving_auto_update.vendor,
-            date_served=self.serving_auto_update.date
-        )
-
-        self.assertIsInstance(serving, Serving)
-
-    def test_run_update_on_existing_serving_entry(self):
-        kwargs = {
-            'timetable': self.serving_auto_update.timetable,
-            'vendor': self.serving_auto_update.vendor,
-            'date': self.serving_auto_update.date
-        }
-
-        self.assertEqual(None, ServingAutoUpdate.run_update(**kwargs))
-
-    def test_run_update_for_new_serving_entry(self):
-        kwargs = {
-            'timetable': self.serving_auto_update.timetable,
-            'vendor': self.serving_auto_update.vendor,
-            'date': timezone.make_aware(timezone.datetime.now())
-        }
-
-        servings = ServingAutoUpdate.run_update(**kwargs)
-
+        # After get_servings is called
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.date)
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, len(servings))
         self.assertIsInstance(servings[0], Serving)
-
-    def test_enforcement_of_unique_together(self):
-        new_serving_auto_update = ServingAutoUpdate(
-            timetable=self.serving_auto_update.timetable,
-            vendor=self.serving_auto_update.vendor,
-            date=self.serving_auto_update.date
-        )
-
-        self.assertRaises(IntegrityError, new_serving_auto_update.save)

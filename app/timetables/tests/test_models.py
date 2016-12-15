@@ -339,7 +339,8 @@ class ServingAutoUpdateTest(TestCase):
 
     def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
         date = timezone.make_aware(timezone.datetime(2016, 10, 4, 9, 0, 0))
-        self.assertEqual([], ServingAutoUpdate.get_servings(self.timetable, self.vendor, date))
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, date)
+        self.assertEqual(0, servings.count())
 
     def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
         date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))

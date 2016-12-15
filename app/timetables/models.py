@@ -341,16 +341,11 @@ class ServingAutoUpdate(models.Model):
                 date=date
             )
 
-        servings = []
-        for menu_item in menu_items:
-            serving = Serving.objects.get(
-                menu_item=menu_item,
-                vendor=vendor,
-                date_served=date
-            )
-            servings.append(serving)
-
-        return servings
+        return Serving.objects.filter(
+            menu_item__in=menu_items,
+            vendor=vendor,
+            date_served=date
+        )
 
     @classmethod
     def run_update(cls, timetable, vendor, date):

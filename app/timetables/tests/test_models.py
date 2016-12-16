@@ -363,13 +363,7 @@ class ServingAutoUpdateTest(TestCase):
         # After run_update is called
         ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date)
         self.assertEqual(3, self.get_servings_count())
-
-        # After run_update is called on existing Serving entries
-        try:
-            with transaction.atomic():
-                ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date)
-        except IntegrityError as e:
-            self.assertIsInstance(e, IntegrityError)
+        self.assertTrue(ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date))
 
     def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
         servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.later_date)

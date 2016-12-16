@@ -74,6 +74,11 @@ class Vendor(SlugifyMixin, models.Model):
 
     slugify_field = 'name'
 
+    def is_vendor_serving(self, timetable, date):
+        query = (models.Q(timetable=timetable, vendor=self, end_date__gte=date)
+                 | models.Q(timetable=timetable, vendor=self, end_date=None))
+        return VendorService.objects.filter(query).exists()
+
     def __str__(self):
         return self.name
 
@@ -324,6 +329,12 @@ class ServingAutoUpdate(models.Model):
 
     @classmethod
     def get_servings(cls, timetable, vendor, date):
+        if not vendor.is_vendor_serving(timetable, date):
+            raise ValidationError(
+                _('Ensure the specified Vendor has an active tenure ' +
+                    'for the specified Date on the specified Timetable')
+            )
+
         try:
             menu_items = cls.get_menu_items(timetable, date)
         except ValidationError:
@@ -349,6 +360,12 @@ class ServingAutoUpdate(models.Model):
 
     @classmethod
     def run_update(cls, timetable, vendor, date):
+        if not vendor.is_vendor_serving(timetable, date):
+            raise ValidationError(
+                _('Ensure the specified Vendor has an active tenure ' +
+                    'for the specified Date on the specified Timetable')
+            )
+
         try:
             menu_items = cls.get_menu_items(timetable, date)
         except ValidationError:

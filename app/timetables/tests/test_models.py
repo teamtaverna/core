@@ -296,9 +296,12 @@ class ServingAutoUpdateTest(TestCase):
     """Test the ServingAutoUpdate model."""
 
     def setUp(self):
-        self.timetable = TimetableFactory()
-        self.vendor = VendorFactory()
+        self.vendor_service = VendorServiceFactory(start_date=None, end_date=None)
+        self.timetable = self.vendor_service.timetable
+        self.vendor = self.vendor_service.vendor
         self.date = self.timetable.ref_cycle_date
+        self.earlier_date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))
+        self.later_date = timezone.make_aware(timezone.datetime(2016, 10, 4, 9, 0, 0))
 
         meal = MealFactory()
         course = CourseFactory(name='main')
@@ -322,14 +325,38 @@ class ServingAutoUpdateTest(TestCase):
         ).count()
 
     def test_get_menu_items_for_a_date_earlier_than_ref_cycle_date(self):
-        date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))
-        self.assertRaises(ValidationError, ServingAutoUpdate.get_menu_items, self.timetable, date)
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_menu_items,
+            self.timetable, self.earlier_date
+        )
 
     def test_get_menu_items_for_right_combination_of_timetable_and_date(self):
         menu_items = ServingAutoUpdate.get_menu_items(self.timetable, self.date)
         self.assertEqual(self.menu_items, list(menu_items))
 
-    def test_run_update(self):
+    def test_run_update_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
+        result = ServingAutoUpdate.run_update(self.timetable, self.vendor, self.later_date)
+        self.assertFalse(result)
+
+    def test_run_update_for_a_date_earlier_than_ref_cycle_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.run_update,
+            self.timetable, self.vendor, self.earlier_date
+        )
+
+    def test_run_update_for_dates_vendor_is_not_serving_specified_timetable(self):
+        self.vendor_service.end_date = self.earlier_date
+        self.vendor_service.save()
+
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.run_update,
+            self.timetable, self.vendor, self.date
+        )
+
+    def test_run_update_for_right_combination_of_timetable_and_vendor_and_date(self):
         # Before run_update is called
         self.assertEqual(0, self.get_servings_count())
 
@@ -337,18 +364,33 @@ class ServingAutoUpdateTest(TestCase):
         ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date)
         self.assertEqual(3, self.get_servings_count())
 
+        # After run_update is called on existing Serving entries
+        try:
+            with transaction.atomic():
+                ServingAutoUpdate.run_update(self.timetable, self.vendor, self.date)
+        except IntegrityError as e:
+            self.assertIsInstance(e, IntegrityError)
+
     def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
-        date = timezone.make_aware(timezone.datetime(2016, 10, 4, 9, 0, 0))
-        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, date)
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.later_date)
         self.assertEqual(0, servings.count())
 
     def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
-        date = timezone.make_aware(timezone.datetime(2016, 9, 4, 9, 0, 0))
         try:
             with transaction.atomic():
-                ServingAutoUpdate.get_servings(self.timetable, self.vendor, date)
+                ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.earlier_date)
         except ValidationError as e:
             self.assertEqual(['Supply a date later than %s' % (self.date)], e.messages)
+
+    def test_get_servings_for_dates_vendor_is_not_serving_specified_timetable(self):
+        self.vendor_service.end_date = self.earlier_date
+        self.vendor_service.save()
+
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_servings,
+            self.timetable, self.vendor, self.date
+        )
 
     def test_get_servings_for_right_combination_of_timetable_and_vendor_and_date(self):
         # Before get_servings is called
@@ -383,11 +425,16 @@ class ServingAutoUpdateTest(TestCase):
         )
         self.assertEqual(0, self.get_servings_count())
 
-        # After creation attempt
-        ServingAutoUpdate.objects.create(
+        # After creation attempt with timetable and date combination with no menu_item entry
+        serving_auto_update = ServingAutoUpdate(
             timetable=self.timetable,
             vendor=self.vendor,
-            date=self.date
+            date=self.later_date
         )
+        self.assertRaises(ValidationError, serving_auto_update.save)
+
+        # After creation attempt with right combination of timetable, vendor and date
+        serving_auto_update.date = self.date
+        serving_auto_update.save()
         self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
         self.assertEqual(3, self.get_servings_count())

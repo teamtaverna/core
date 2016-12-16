@@ -383,7 +383,7 @@ class ServingAutoUpdateTest(TestCase):
         )
         self.assertEqual(0, self.get_servings_count())
 
-        # Afetr creat attempt
+        # After creation attempt
         ServingAutoUpdate.objects.create(
             timetable=self.timetable,
             vendor=self.vendor,

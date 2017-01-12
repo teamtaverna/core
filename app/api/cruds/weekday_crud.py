@@ -37,6 +37,6 @@ class CreateWeekday(graphene.relay.ClientIDMutation):
             weekday.name = input.get('name')
             weekday.full_clean()
             weekday.save()
-            return Weekday(weekday=weekday)
+            return CreateWeekday(weekday=weekday)
         except ValidationError as e:
-            return Weekday(weekday=None, errors=get_errors(e))
+            return CreateWeekday(weekday=None, errors=get_errors(e))

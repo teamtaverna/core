@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 
 import graphene
 from graphene_django import DjangoObjectType
@@ -103,5 +104,5 @@ class DeleteUser(graphene.relay.ClientIDMutation):
             user = get_object(User, input.get('id'))
             user.delete()
             return DeleteUser(deleted=True, user=user)
-        except:
+        except ObjectDoesNotExist:
             return DeleteUser(deleted=False, user=None)

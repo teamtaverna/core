@@ -18,3 +18,17 @@ def get_user(relayId, otherwise=None):
         return User.objects.get(pk=from_global_id(relayId)[1])
     except:
         return otherwise
+
+
+def get_object(object_name, relayId, otherwise=None):
+    try:
+        return object_name.objects.get(pk=from_global_id(relayId)[1])
+    except:
+        return otherwise
+
+
+def load_object(instance, args):
+    for key, value in args.items():
+        if getattr(instance, key) and key != "id":
+            setattr(instance, key, value)
+    return instance

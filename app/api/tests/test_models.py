@@ -1,14 +1,12 @@
-from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-from django.test import TestCase
-from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from ..models import ApiKey
 
 class ApiKeyTest(TestCase):
     """Tests the ApiKey model."""
-    
+
     def test_only_superuser_can_create_api_key(self):
         # Using normal users.
         normal_user = User.objects.create_user('user1', 'user1@taverna.com', 'qwerty123')

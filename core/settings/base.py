@@ -139,8 +139,12 @@ STATICFILES_DIRS = (
 # Admin site settings
 AdminSite.site_header = 'Taverna Admin'
 AdminSite.index_title = 'Platform administration'
+
 # Graphene settings
 GRAPHENE = {
     'SCHEMA': 'core.schema.schema'
 }
 GRAPPELLI_ADMIN_TITLE = AdminSite.site_header
+
+# Hashid settings
+HASHID_FIELD_SALT = dotenv.get('HASHID_FIELD_SALT')

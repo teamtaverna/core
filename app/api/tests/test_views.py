@@ -34,19 +34,25 @@ class ApiViewTest(TestCase):
 
         # POST Request without Authorization header
         response = self.client.post(endpoint).json()
-        self.assertEqual('Use Basic Auth and supply your username and password.', response['message'])
+        self.assertEqual(
+            'Use Basic Auth and supply your username and password.',
+            response['message']
+        )
 
         # POST Request with invalid Authorization header
         response = self.client.post(
             endpoint,
             **{'HTTP_AUTHORIZATION': 'YWRtaW46a25pZ2h0MTg='}
         ).json()
-        self.assertEqual('Use Basic Auth and supply your username and password.', response['message'])
+        self.assertEqual(
+            'Use Basic Auth and supply your username and password.',
+            response['message']
+        )
 
         # POST Request with invalid credentials
         response = self.client.post(
             endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty123')}
+            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty')}
         ).json()
         self.assertEqual('Invalid Credentials.', response['message'])
 
@@ -82,19 +88,25 @@ class ApiViewTest(TestCase):
 
         # DELETE Request without Authorization header
         response = self.client.delete(endpoint).json()
-        self.assertEqual('Use Basic Auth and supply your username and password.', response['message'])
+        self.assertEqual(
+            'Use Basic Auth and supply your username and password.',
+            response['message']
+        )
 
         # DELETE Request with invalid Authorization header
         response = self.client.delete(
             endpoint,
             **{'HTTP_AUTHORIZATION': 'YWRtaW46a25pZ2h0MTg='}
         ).json()
-        self.assertEqual('Use Basic Auth and supply your username and password.', response['message'])
+        self.assertEqual(
+            'Use Basic Auth and supply your username and password.',
+            response['message']
+        )
 
         # DELETE Request with invalid credentials
         response = self.client.delete(
             endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty123')}
+            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty')}
         ).json()
         self.assertEqual('Invalid Credentials.', response['message'])
 

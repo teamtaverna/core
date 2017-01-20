@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from ..models import ApiKey
 
+
 class ApiKeyTest(TestCase):
     """Tests the ApiKey model."""
 

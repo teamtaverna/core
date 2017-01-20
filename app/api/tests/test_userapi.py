@@ -1,3 +1,6 @@
+from base64 import b64encode
+
+from django.contrib.auth.models import User
 from django.test import Client, TestCase
 
 
@@ -7,9 +10,27 @@ class UserApiTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.endpoint = '/api'
+        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
+        self.create_admin_account()
+        self.header = {'HTTP_X_TAVERNATOKEN': self.obtain_api_key()}
 
         response = self.create_user('oakeem', 'oatman')
         self.first_user = response['data']['createUser']['user']
+
+    def obtain_api_key(self):
+        credentials = '{}:{}'.format(
+            self.admin_test_credentials[0],
+            self.admin_test_credentials[2]
+        )
+        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
+
+        return self.client.post(
+            '/api/api_key',
+            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
+        ).json()['api_key']
+
+    def create_admin_account(self):
+        User.objects.create_superuser(*self.admin_test_credentials)
 
     def create_user(self, username, password):
         query = '''
@@ -24,7 +45,7 @@ class UserApiTest(TestCase):
             }
         ''' % (username, password)
 
-        return self.client.post(self.endpoint, {'query': query}).json()
+        return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_multiple_users(self):
         new_users = (
@@ -38,9 +59,9 @@ class UserApiTest(TestCase):
         return new_users
 
     def retrieve_user(self, user_id):
-        query = 'query {user(id: "%s" ) {username}}' % (user_id)
+        query = 'query {user(id: "%s") {username}}' % (user_id)
 
-        return self.client.post(self.endpoint, data={'query': query}).json()
+        return self.client.get(self.endpoint, data={'query': query}).json()
 
     def ordering_test_helper(self, ordering_param, users):
         # For ascending ordering
@@ -67,21 +88,26 @@ class UserApiTest(TestCase):
                     'node': {
                         'username': users[3]
                     }
+                  },
+                  {
+                    'node': {
+                        'username': users[4]
+                    }
                   }
                 ]
             }
         }
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
         self.assertEqual(expected, response['data'])
 
         # For descending ordering
         query = 'query {users(orderBy: "-%s") {edges{node{username}}}}' % (ordering_param)
         expected['users']['edges'].reverse()
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
         self.assertEqual(expected, response['data'])
 
     def test_api_endpoint_is_live(self):
-        response = self.client.post(self.endpoint, {'query': ''})
+        response = self.client.get(self.endpoint, {'query': ''})
 
         self.assertEqual(400, response.status_code)
         self.assertEqual(
@@ -133,6 +159,11 @@ class UserApiTest(TestCase):
                 'edges': [
                   {
                     'node': {
+                        'username': self.admin_test_credentials[0]
+                    }
+                  },
+                  {
+                    'node': {
                         'username': self.first_user['username']
                     }
                   },
@@ -155,7 +186,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
 
         self.assertEqual(expected, response['data'])
 
@@ -181,7 +212,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
 
         self.assertEqual(expected, response['data'])
 
@@ -192,11 +223,17 @@ class UserApiTest(TestCase):
 
         expected = {
             'users': {
-                'edges': []
+                'edges': [
+                    {
+                      'node': {
+                          'username': self.admin_test_credentials[0]
+                      }
+                    }
+                ]
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
 
         self.assertEqual(expected, response['data'])
 
@@ -207,17 +244,24 @@ class UserApiTest(TestCase):
 
         expected = {
             'users': {
-                'edges': []
+                'edges': [
+                    {
+                      'node': {
+                          'username': self.admin_test_credentials[0]
+                      }
+                    }
+                ]
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.get(self.endpoint, {'query': query}).json()
 
         self.assertEqual(expected, response['data'])
 
     def test_retrieval_of_multiple_user_objects_ordering_by_id(self):
         new_users = self.create_multiple_users()
         users = [
+            self.admin_test_credentials[0],
             self.first_user['username'],
             new_users[0][0],
             new_users[1][0],
@@ -229,6 +273,7 @@ class UserApiTest(TestCase):
     def test_retrieval_of_multiple_user_objects_ordering_by_username(self):
         new_users = self.create_multiple_users()
         users = [
+            self.admin_test_credentials[0],
             new_users[0][0],
             self.first_user['username'],
             new_users[1][0],
@@ -240,6 +285,7 @@ class UserApiTest(TestCase):
     def test_retrieval_of_multiple_user_objects_ordering_by_date_joined(self):
         new_users = self.create_multiple_users()
         users = [
+            self.admin_test_credentials[0],
             self.first_user['username'],
             new_users[0][0],
             new_users[1][0],
@@ -286,7 +332,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
         self.assertEqual(expected, response['data'])
 
@@ -309,7 +355,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.client.post(self.endpoint, data={'query': query}, **self.header).json()
         self.assertEqual(expected, response['data'])
 
         response = self.retrieve_user(self.first_user['id'])

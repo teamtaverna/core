@@ -12,7 +12,7 @@ class WeekdayApiTest(TestCase):
         query = '''
                 mutation{
                     createWeekday(input: {name: "%s"}){
-                        user{
+                        weekday{
                             id,
                             originalId,
                             name
@@ -24,14 +24,17 @@ class WeekdayApiTest(TestCase):
         return self.client.post(self.endpoint, {'query': query}).json()
 
     def test_creation_of_weekday_object(self):
-        response = self.create_weekday('tuesday')
+        credentials = {
+            'name': 'tuesday'
+        }
+        response = self.create_weekday(credentials['name'])
 
         expected = {
             'createWeekday': {
                 'weekday': {
                     'id': response['data']['createWeekday']['weekday']['id'],
                     'originalId': response['data']['createWeekday']['weekday']['originalId'],
-                    'username': 'tuesday'
+                    'name': credentials['name']
                 }
             }
         }

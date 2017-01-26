@@ -374,7 +374,10 @@ class ServingAutoUpdateTest(TestCase):
             with transaction.atomic():
                 ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.earlier_date)
         except ValidationError as e:
-            self.assertEqual(['Supply a date later than {}'.format(self.date)], e.messages)
+            self.assertEqual(
+                ['Supply a date later than or equal to {}'.format(self.date)],
+                e.messages
+            )
 
     def test_get_servings_for_dates_vendor_is_not_serving_specified_timetable(self):
         self.vendor_service.end_date = self.earlier_date

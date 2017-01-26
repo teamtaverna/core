@@ -322,9 +322,7 @@ class ServingAutoUpdate(models.Model):
 
         return MenuItem.objects.filter(
             timetable=timetable,
-            cycle_day=cycle_day,
-            meal__start_time__hour=date.hour,
-            meal__start_time__minute=date.minute
+            cycle_day=cycle_day
         )
 
     @classmethod

@@ -387,16 +387,11 @@ class ServingAutoUpdate(models.Model):
 
         return True
 
-    def clean(self):
+    def save(self, *args, **kwargs):
         if not self.run_update(self.timetable, self.vendor, self.date):
             raise ValidationError(
                 _('No matching menu_item for this Timetable and Date combination.')
             )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
 
         return super().save(*args, **kwargs)
 

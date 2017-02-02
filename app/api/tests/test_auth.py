@@ -40,26 +40,29 @@ class ApiAuthTest(TestCase):
         response = self.sample_view(self.request)
         return json.loads(response.content.decode('utf-8'))
 
-    def test_authorization_is_not_required_on_get_requests(self):
+    def test_api_get_request(self):
         self.request.method = 'GET'
         response = self.make_request()
 
         self.assertEqual('Success.', response['message'])
 
-    def test_authorization_is_required_on_post_requests(self):
+    def test_api_post_request_without_api_key_header(self):
         self.request.method = 'POST'
-
-        # Request without api_key header
         response = self.make_request()
+
         self.assertEqual('Set your api_key in X-TavernaToken header.', response['message'])
 
-        # Request with invalid api_key header
+    def test_api_post_request_with_invalid_api_key_header(self):
+        self.request.method = 'POST'
         self.request.META['HTTP_X_TAVERNATOKEN'] = 'a49d7536849be9da859a67bae2d7256f'
         response = self.make_request()
+
         self.assertEqual('Invalid Token.', response['message'])
 
-        # Request with valid api_key header
+    def test_api_post_request_with_valid_api_key_header(self):
+        self.request.method = 'POST'
         self.create_admin_account()
         self.request.META['HTTP_X_TAVERNATOKEN'] = self.obtain_api_key()
         response = self.make_request()
+
         self.assertEqual('Success.', response['message'])

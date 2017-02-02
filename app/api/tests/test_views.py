@@ -15,6 +15,12 @@ class ApiViewTest(TestCase):
         self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
         self.create_user_account()
         self.create_admin_account()
+        self.api_key = self.create_api_key()
+        self.api_key_issuance_endpoint = '/api/api_key'
+        self.api_key_revocation_endpoint = '{}/{}'.format(
+            self.api_key_issuance_endpoint,
+            self.api_key
+        )
 
     @classmethod
     def b64encode_credentials(cls, username, password):
@@ -29,73 +35,80 @@ class ApiViewTest(TestCase):
     def create_admin_account(self):
         User.objects.create_superuser(*self.admin_test_credentials)
 
-    def test_api_key_issuance_handler(self):
-        endpoint = '/api/api_key'
+    def create_api_key(self):
+        uname, email, passwd = self.admin_test_credentials
+        admin = User.objects.get(username=uname)
 
-        # POST Request without Authorization header
-        response = self.client.post(endpoint).json()
+        return ApiKey.objects.create(owner=admin, revoked=False).token.hashid
+
+    def test_api_key_issuance_handler_without_authorization_header(self):
+        response = self.client.post(self.api_key_issuance_endpoint).json()
+
         self.assertEqual(
             'Use Basic Auth and supply your username and password.',
             response['message']
         )
 
-        # POST Request with invalid Authorization header
+    def test_api_key_issuance_handler_with_invalid_authorization_header(self):
         response = self.client.post(
-            endpoint,
+            self.api_key_issuance_endpoint,
             **{'HTTP_AUTHORIZATION': 'YWRtaW46a25pZ2h0MTg='}
         ).json()
+
         self.assertEqual(
             'Use Basic Auth and supply your username and password.',
             response['message']
         )
 
-        # POST Request with invalid credentials
+    def test_api_key_issuance_handler_with_invalid_credentials(self):
         response = self.client.post(
-            endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty')}
+            self.api_key_issuance_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(
+                self.b64encode_credentials('support', 'qwerty')
+            )}
         ).json()
+
         self.assertEqual('Invalid Credentials.', response['message'])
 
-        # POST Request with normal user credentials
+    def test_api_key_issuance_handler_with_normal_user_credentials(self):
         uname, email, passwd = self.user_test_credentials
         response = self.client.post(
-            endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            self.api_key_issuance_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
+
         self.assertEqual('Unauthorized.', response['message'])
 
-        # POST Request with admin user credentials
+    def test_api_key_issuance_handler_with_admin_user_credentials(self):
         uname, email, passwd = self.admin_test_credentials
         response = self.client.post(
-            endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            self.api_key_issuance_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
         issued_api_key = ApiKey.objects.get(owner__username=uname, revoked=False)
+
         self.assertEqual(issued_api_key.token.hashid, response['api_key'])
 
-        # POST Request with url ending with api_key
+    def test_api_key_issuance_handler_with_url_ending_with_api_key(self):
+        uname, email, passwd = self.admin_test_credentials
         response = self.client.post(
-            '%s/%s' % (endpoint, response['api_key']),
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            self.api_key_revocation_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
+
         self.assertEqual('Bad Request.', response['message'])
 
-    def test_api_key_revocation_handler(self):
-        admin = User.objects.get(username='admin')
-        api_key = ApiKey.objects.create(owner=admin, revoked=False)
-        endpoint_without_token = '/api/api_key'
-        endpoint = '%s/%s' % (endpoint_without_token, api_key.token.hashid)
+    def test_api_key_revocation_handler_without_authorization_header(self):
+        response = self.client.delete(self.api_key_revocation_endpoint).json()
 
-        # DELETE Request without Authorization header
-        response = self.client.delete(endpoint).json()
         self.assertEqual(
             'Use Basic Auth and supply your username and password.',
             response['message']
         )
 
-        # DELETE Request with invalid Authorization header
+    def test_api_key_revocation_handler_with_invalid_authorization_header(self):
         response = self.client.delete(
-            endpoint,
+            self.api_key_revocation_endpoint,
             **{'HTTP_AUTHORIZATION': 'YWRtaW46a25pZ2h0MTg='}
         ).json()
         self.assertEqual(
@@ -103,31 +116,39 @@ class ApiViewTest(TestCase):
             response['message']
         )
 
-        # DELETE Request with invalid credentials
+    def test_api_key_revocation_handler_with_invalid_credentials(self):
         response = self.client.delete(
-            endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials('support', 'qwerty')}
+            self.api_key_revocation_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(
+                self.b64encode_credentials('support', 'qwerty')
+            )}
         ).json()
+
         self.assertEqual('Invalid Credentials.', response['message'])
 
-        # DELETE Request with admin user credentials
+    def test_api_key_revocation_handler_with_admin_user_credentials(self):
         uname, email, passwd = self.admin_test_credentials
         response = self.client.delete(
-            endpoint,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            self.api_key_revocation_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
-        self.assertEqual('%s was revoked.' % api_key.token.hashid, response['message'])
 
-        # DELETE Request with invalid api_key
+        self.assertEqual('%s was revoked.' % self.api_key, response['message'])
+
+    def test_api_key_revocation_handler_with_invalid_api_key(self):
+        uname, email, passwd = self.admin_test_credentials
         response = self.client.delete(
-            '%s/%s' % (endpoint_without_token, 'a49d7536849be9da859a67bae2d7256e'),
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            '%s/%s' % (self.api_key_issuance_endpoint, 'a49d7536849be9da859a67bae2d7256e'),
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
+
         self.assertEqual('Bad Request.', response['message'])
 
-        # DELETE Request with url without api_key
+    def test_api_key_revocation_handler_with_url_without_api_key(self):
+        uname, email, passwd = self.admin_test_credentials
         response = self.client.delete(
-            endpoint_without_token,
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % self.b64encode_credentials(uname, passwd)}
+            self.api_key_issuance_endpoint,
+            **{'HTTP_AUTHORIZATION': 'Basic {}'.format(self.b64encode_credentials(uname, passwd))}
         ).json()
+
         self.assertEqual('Bad Request.', response['message'])

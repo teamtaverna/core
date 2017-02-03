@@ -4,13 +4,13 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-import app.timetables.utils
+import common.utils
 
 
 def populate_public_id_field(apps, schema_editor):
     Serving = apps.get_model('timetables', 'Serving')
     for row in Serving.objects.all():
-        row.public_id = app.timetables.utils.timestamp_seconds()
+        row.public_id = common.utils.timestamp_seconds()
         row.save()
 
 

@@ -8,8 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from hashid_field import HashidField
 
-from .utils import timestamp_seconds
 from common.mixins import SlugifyMixin, TimestampMixin
+from common.utils import timestamp_seconds
 
 
 class Weekday(SlugifyMixin, models.Model):

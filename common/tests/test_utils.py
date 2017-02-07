@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from app.timetables.utils import timestamp_seconds
+from ..utils import timestamp_seconds
 
 
 class UtilsTest(TestCase):

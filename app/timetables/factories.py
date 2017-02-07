@@ -37,8 +37,8 @@ class MealFactory(DjangoModelFactory):
         model = models.Meal
 
     name = 'Breakfast'
-    start_time = datetime.time(5, 7, 9)
-    end_time = datetime.time(6, 7, 9)
+    start_time = datetime.time(9, 0, 0)
+    end_time = datetime.time(10, 0, 0)
 
 
 class CourseFactory(DjangoModelFactory):

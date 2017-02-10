@@ -1,3 +1,6 @@
+from base64 import b64encode
+
+from django.contrib.auth.models import User
 from django.test import Client, TestCase
 
 
@@ -16,6 +19,27 @@ class DishApiTest(TestCase):
             ('Coconut rice', 'qwerty123'),
             ('plantain', 'qwerty123'),
         )
+        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
+        self.create_admin_account()
+        self.header = {'HTTP_X_TAVERNATOKEN': self.obtain_api_key()}
+
+    def obtain_api_key(self):
+        credentials = '{}:{}'.format(
+            self.admin_test_credentials[0],
+            self.admin_test_credentials[2]
+        )
+        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
+
+        return self.client.post(
+            '/api/api_key',
+            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
+        ).json()['api_key']
+
+    def create_admin_account(self):
+        User.objects.create_superuser(*self.admin_test_credentials)
+
+    def make_request(self, query):
+        return self.client.post(self.endpoint, {'query': query}, **self.header).json()
 
     def create_dish(self, name, description):
         query = '''
@@ -30,7 +54,7 @@ class DishApiTest(TestCase):
             }
         ''' % (name, description)
 
-        return self.client.post(self.endpoint, {'query': query}).json()
+        return self.make_request(query)
 
     def create_multiple_dishes(self):
         return [self.create_dish(name, description) for name, description in self.dishes]
@@ -38,7 +62,7 @@ class DishApiTest(TestCase):
     def retrieve_dish(self, id):
         query = 'query {dish(id: "%s" ) {name}}' % (id)
 
-        return self.client.post(self.endpoint, data={'query': query}).json()
+        return self.make_request(query)
 
     def test_creation_of_dish_object(self):
         response = self.create_dish(self.data['name'], self.data['description'])
@@ -92,7 +116,7 @@ class DishApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -117,7 +141,7 @@ class DishApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -149,7 +173,7 @@ class DishApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -173,7 +197,7 @@ class DishApiTest(TestCase):
             }
         }
 
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
         self.assertEqual(expected, response['data'])
 
         response = self.retrieve_dish(create_response['data']['createDish']['dish']['id'])
@@ -203,13 +227,13 @@ class DishApiTest(TestCase):
                 ]
             }
         }
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
         self.assertEqual(expected, response['data'])
 
         # For descending ordering
         query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
         expected['dishes']['edges'].reverse()
-        response = self.client.post(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
         self.assertEqual(expected, response['data'])
 
     def test_retrieval_of_multiple_dish_objects_ordering_by_id(self):

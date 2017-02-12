@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models, transaction
-from django.db.utils import IntegrityError
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from hashid_field import HashidField
@@ -74,11 +73,6 @@ class Vendor(SlugifyMixin, models.Model):
 
     slugify_field = 'name'
 
-    def is_vendor_serving(self, timetable, date):
-        query = (models.Q(timetable=timetable, vendor=self, end_date__gte=date)
-                 | models.Q(timetable=timetable, vendor=self, end_date=None))
-        return VendorService.objects.filter(query).exists()
-
     def __str__(self):
         return self.name
 
@@ -133,15 +127,13 @@ class Timetable(SlugifyMixin, TimestampMixin):
         days_interval = (date_datetime - self.ref_cycle_date).days
 
         if days_interval < 0:
-            raise ValidationError(
-                _('Supply a date later than or equal to {}'.format(self.ref_cycle_date))
-            )
+            cycle_day = None
+        else:
+            cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
+                         % self.cycle_length)
 
-        cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
-                     % self.cycle_length)
-
-        if cycle_day == 0:
-            cycle_day = self.cycle_length
+            if cycle_day == 0:
+                cycle_day = self.cycle_length
 
         return cycle_day
 
@@ -304,97 +296,3 @@ class VendorService(models.Model):
 
     class Meta:
         unique_together = ('timetable', 'vendor')
-
-
-class ServingAutoUpdate(models.Model):
-    """Model representing Automatic Update of Servings."""
-
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    date = models.DateTimeField()
-
-    @staticmethod
-    def get_menu_items(timetable, date):
-        try:
-            cycle_day = timetable.calculate_cycle_day(date)
-        except ValidationError:
-            raise
-
-        return MenuItem.objects.filter(
-            timetable=timetable,
-            cycle_day=cycle_day
-        )
-
-    @classmethod
-    def get_servings(cls, timetable, vendor, date):
-        if not vendor.is_vendor_serving(timetable, date):
-            raise ValidationError(
-                _('Ensure the specified Vendor has an active tenure ' +
-                    'for the specified Date on the specified Timetable')
-            )
-
-        try:
-            menu_items = cls.get_menu_items(timetable, date)
-        except ValidationError:
-            raise
-
-        kwargs = {
-            'timetable': timetable,
-            'vendor': vendor,
-            'date': date
-        }
-        if not cls.objects.filter(**kwargs).exists() and menu_items:
-            cls.objects.create(
-                timetable=timetable,
-                vendor=vendor,
-                date=date
-            )
-
-        return Serving.objects.filter(
-            menu_item__in=menu_items,
-            vendor=vendor,
-            date_served=date
-        )
-
-    @classmethod
-    def run_update(cls, timetable, vendor, date):
-        if not vendor.is_vendor_serving(timetable, date):
-            raise ValidationError(
-                _('Ensure the specified Vendor has an active tenure ' +
-                    'for the specified Date on the specified Timetable')
-            )
-
-        try:
-            menu_items = cls.get_menu_items(timetable, date)
-        except ValidationError:
-            raise
-
-        if not menu_items:
-            return
-
-        for menu_item in menu_items:
-            try:
-                with transaction.atomic():
-                    Serving.objects.create(
-                        menu_item=menu_item,
-                        vendor=vendor,
-                        date_served=date
-                    )
-            except IntegrityError:
-                pass
-
-        return True
-
-    def save(self, *args, **kwargs):
-        if not self.run_update(self.timetable, self.vendor, self.date):
-            raise ValidationError(
-                _('No matching menu_item for this Timetable and Date combination.')
-            )
-
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return '{} - {} - {}'.format(self.timetable, self.vendor, self.date)
-
-    class Meta:
-        unique_together = ('timetable', 'vendor', 'date')

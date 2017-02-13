@@ -37,8 +37,8 @@ class MealFactory(DjangoModelFactory):
         model = models.Meal
 
     name = 'Breakfast'
-    start_time = datetime.time(5, 7, 9)
-    end_time = datetime.time(6, 7, 9)
+    start_time = datetime.time(9, 0, 0)
+    end_time = datetime.time(10, 0, 0)
 
 
 class CourseFactory(DjangoModelFactory):
@@ -75,7 +75,7 @@ class TimetableFactory(TimestampFactory):
     api_key = 'TF78993jTY'
     cycle_length = 14
     ref_cycle_day = 2
-    ref_cycle_date = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
+    ref_cycle_date = datetime.date(2016, 10, 1)
     description = 'Some random description'
 
 
@@ -155,7 +155,7 @@ class ServingFactory(TimestampFactory):
 
     menu_item = factory.SubFactory(MenuItemFactory)
     vendor = factory.SubFactory(VendorFactory)
-    date_served = timezone.make_aware(timezone.datetime(2016, 10, 1, 9, 0, 0))
+    date_served = datetime.date(2016, 10, 1)
 
 
 class VendorServiceFactory(DjangoModelFactory):
@@ -166,5 +166,5 @@ class VendorServiceFactory(DjangoModelFactory):
 
     timetable = factory.SubFactory(TimetableFactory)
     vendor = factory.SubFactory(VendorFactory)
-    start_date = timezone.make_aware(timezone.datetime(2008, 1, 23, 0, 0, 0))
-    end_date = timezone.make_aware(timezone.datetime(2008, 12, 28, 0, 0, 0))
+    start_date = datetime.date(2008, 1, 23)
+    end_date = datetime.date(2008, 12, 28)

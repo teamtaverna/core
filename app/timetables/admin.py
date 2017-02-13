@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
-    Vendor, VendorService, Serving, ServingAutoUpdate, TimetableManagement
+    Vendor, VendorService, Serving, TimetableManagement
 )
 
 
@@ -110,4 +110,4 @@ class ServingAdmin(TimeStampAdmin):
 
 admin.site.empty_value_display = ''
 
-admin.site.register([TimetableManagement, VendorService, ServingAutoUpdate])
+admin.site.register([TimetableManagement, VendorService])

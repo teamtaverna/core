@@ -1,391 +1,473 @@
-from __future__ import unicode_literals
+import datetime
 
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
-from django.db import models, transaction
+from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.translation import ugettext_lazy as _
+from django.test import TestCase
 
-from hashid_field import HashidField
+from app.timetables.factories import (
+    CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
+    ServingFactory, TimetableFactory, VendorFactory, VendorServiceFactory,
+    WeekdayFactory
+)
 
-from common.mixins import SlugifyMixin, TimestampMixin
-from common.utils import timestamp_seconds
-
-
-class Weekday(SlugifyMixin, models.Model):
-    """Model representing the day of the week."""
-
-    name = models.CharField(max_length=60)
-    slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
-
-    slugify_field = 'name'
-
-    def __str__(self):
-        return self.name
+from app.timetables.models import (
+    Course, Dish, Event, Meal, MenuItem, Serving, ServingAutoUpdate, Timetable,
+    Vendor, VendorService, Weekday
+)
 
 
-class Meal(SlugifyMixin, models.Model):
-    """
-    Model representing food occasions.
+class WeekdayTest(TestCase):
+    """Tests the Weekday model."""
 
-    This represents an occasion during the day that food
-    is scheduled to be served. E.g breakfast, lunch, etc.
-    """
+    def setUp(self):
+        WeekdayFactory()
 
-    name = models.CharField(max_length=60)
-    slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    def test_duplicate_weekday_name_cannot_be_saved(self):
+        day = Weekday(name='Monday')
 
-    slugify_field = 'name'
-
-    def clean(self):
-        # Ensure start time and end time are not None before compare
-        if self.start_time and self.end_time:
-            if self.start_time >= self.end_time:
-                raise ValidationError(_('start_time must be less than end_time.'))
-
-        super().clean()
-
-    def __str__(self):
-        return self.name
+        self.assertRaises(ValidationError, day.save)
 
 
-class Course(SlugifyMixin, models.Model):
-    """Model representing the sequence/order of different kind of dishes for a meal."""
+class MealTest(TestCase):
+    """Tests the Meal model."""
 
-    name = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150, unique=True, null=True, editable=False)
-    sequence_order = models.PositiveSmallIntegerField(unique=True)
+    def setUp(self):
+        self.meal = MealFactory()
 
-    slugify_field = 'name'
-
-    def __str__(self):
-        return self.name
-
-
-class Vendor(SlugifyMixin, models.Model):
-    """Model representing food service-provider."""
-
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, editable=False)
-    info = models.TextField(blank=True)
-
-    slugify_field = 'name'
-
-    def is_vendor_serving(self, timetable, date):
-        query = (models.Q(timetable=timetable, vendor=self, end_date__gte=date)
-                 | models.Q(timetable=timetable, vendor=self, end_date=None))
-        return VendorService.objects.filter(query).exists()
-
-    def __str__(self):
-        return self.name
-
-
-class Timetable(SlugifyMixin, TimestampMixin):
-    """
-    Central model of the platform.
-
-    It represents/encapsulates the entire structure and
-    scheduling of meals, menu-items, dishes, courses etc,
-    served at a location, to a team or the entire organisation.
-    """
-
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
-    code = models.CharField(max_length=60, unique=True)
-    api_key = models.CharField(max_length=255, unique=True)
-    cycle_length = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1)]
-    )
-    ref_cycle_day = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1)]
-    )
-    ref_cycle_date = models.DateField()
-    inactive_weekdays = models.ManyToManyField(Weekday)
-    vendors = models.ManyToManyField(Vendor, through='VendorService')
-    is_active = models.BooleanField(default=True)
-    description = models.TextField(blank=True)
-    admins = models.ManyToManyField(User, through='TimetableManagement')
-
-    slugify_field = 'name'
-
-    def clean(self):
-        # Ensure ref_cycle_day and cycle_length are not None before compare
-        if self.ref_cycle_day and self.cycle_length:
-            if self.ref_cycle_day > self.cycle_length:
-                raise ValidationError(_(
-                    'Ensure Ref cycle day is not greater than Cycle length.')
-                )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-    def calculate_cycle_day(self, date):
-        days_interval = (date - self.ref_cycle_date).days
-
-        if days_interval < 0:
-            raise ValidationError(
-                _('Supply a date later than or equal to {}'.format(self.ref_cycle_date))
-            )
-
-        cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
-                     % self.cycle_length)
-
-        if cycle_day == 0:
-            cycle_day = self.cycle_length
-
-        return cycle_day
-
-    def get_vendors(self, date):
-        return [vendor for vendor in Vendor.objects.filter(
-            timetable__slug=self.slug,
-            vendorservice__start_date__lte=date,
-            vendorservice__end_date__gte=date
-        )]
-
-
-class Dish(SlugifyMixin, TimestampMixin):
-    """
-    Model representing the actual food served.
-
-    A dish represents the actual food served as a given
-    course of a meal on a cycle day in a timetable.
-    E.g, Coconut rice garnished with fish stew and chicken or just
-    Ice-cream.
-    """
-
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
-    description = models.TextField(blank=True)
-
-    slugify_field = 'name'
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name_plural = 'Dishes'
-
-
-class TimetableManagement(models.Model):
-    """Model representing timetables' administratorship"""
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    is_super = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.user.username
-
-    class Meta:
-        unique_together = ('user', 'timetable')
-
-
-class MenuItem(TimestampMixin):
-    """
-    Model representing a Menu Item.
-
-    A MenuItem represents the particular meal combination that is to be
-    served on a given cycle-day of a particular timetable.
-    """
-
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    cycle_day = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1)]
-    )
-    meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return 'Cycle {} {} for timetable {}'.format(
-            self.cycle_day, self.meal, self.timetable
+    def test_duplicate_meal_name_cannot_be_saved(self):
+        meal = Meal(
+            name='breakfast',
+            start_time=self.meal.start_time,
+            end_time=self.meal.end_time
         )
 
-    class Meta:
-        unique_together = ('timetable', 'cycle_day', 'meal', 'course', 'dish')
+        self.assertRaises(ValidationError, meal.save)
 
-
-class Event(TimestampMixin):
-    """
-    Model representing event.
-
-    Event represent a date or range of dates to which a
-    specific timetable will be active or functional.
-    """
-
-    NO_MEAL = 'no-meal'
-
-    ACTION_CHOICES = (
-        (NO_MEAL, 'no meal will be served'),
-    )
-
-    name = models.CharField(max_length=150)
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    action = models.CharField(max_length=255, choices=ACTION_CHOICES)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    def clean(self):
-        if self.start_date and self.end_date:
-            if self.start_date >= self.end_date:
-                raise ValidationError(_('Start date must be less than end date.'))
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        unique_together = ('name', 'start_date', 'end_date')
-
-
-class Serving(TimestampMixin):
-    """Model representing already served menu."""
-
-    public_id = HashidField(
-        alphabet='0123456789abcdefghijklmnopqrstuvwxyz',
-        default=timestamp_seconds,
-        unique=True
-    )
-    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    date_served = models.DateField()
-
-    def __str__(self):
-        return '{} served on {}'.format(self.menu_item, self.date_served)
-
-    class Meta:
-        unique_together = ('menu_item', 'vendor', 'date_served')
-
-
-class VendorService(models.Model):
-    """Model representing tenure a vendor serves a specific timetable."""
-
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    start_date = models.DateField(default=None, null=True, blank=True)
-    end_date = models.DateField(default=None, null=True, blank=True)
-
-    def clean(self):
-        if self.start_date and self.end_date:
-            if self.end_date <= self.start_date:
-                raise ValidationError(
-                    _('Ensure end date is not less than or equal to start date.')
-                )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return '{} - {}'.format(self.timetable, self.vendor)
-
-    class Meta:
-        unique_together = ('timetable', 'vendor')
-
-
-class ServingAutoUpdate(models.Model):
-    """Model representing Automatic Update of Servings."""
-
-    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    date = models.DateField()
-
-    @staticmethod
-    def get_menu_items(timetable, date):
-        cycle_day = timetable.calculate_cycle_day(date)
-        menu_items = MenuItem.objects.filter(
-            timetable=timetable,
-            cycle_day=cycle_day
+    def test_meal_end_time_less_than_start_time_cannot_be_saved(self):
+        meal = Meal(
+            name='lunch',
+            start_time=self.meal.end_time,
+            end_time=self.meal.start_time
         )
 
-        if not menu_items:
-            raise ValidationError(
-                _('No matching menu_item for this Timetable and Date combination.')
+        self.assertRaises(ValidationError, meal.save)
+
+    def test_meal_end_time_same_with_start_time_cannot_be_saved(self):
+        meal = Meal(
+            name='lunch',
+            start_time=self.meal.start_time,
+            end_time=self.meal.start_time
+        )
+
+        self.assertRaises(ValidationError, meal.save)
+
+
+class CourseTest(TestCase):
+    """Tests the Course model."""
+
+    def setUp(self):
+        CourseFactory()
+
+    def test_duplicate_course_name_cannot_be_saved(self):
+        course = Course(
+            name='appetizer',
+            sequence_order=2
+        )
+
+        self.assertRaises(ValidationError, course.save)
+
+
+class TimetableTest(TestCase):
+    """Tests the Timetable model."""
+
+    def setUp(self):
+        self.timetable = TimetableFactory()
+        self.another_timetable = Timetable(
+            name='timetable',
+            code='FT7871',
+            api_key='TF78993jTA',
+            cycle_length=self.timetable.cycle_length,
+            ref_cycle_day=self.timetable.ref_cycle_day,
+            ref_cycle_date=self.timetable.ref_cycle_date,
+            description=self.timetable.description
+        )
+
+    def test_duplicate_timetable_name_cannot_be_saved(self):
+        self.another_timetable.name = 'fellows timetable'
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_duplicate_timetable_code_cannot_be_saved(self):
+        self.another_timetable.code = self.timetable.code
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_duplicate_api_key_cannot_be_saved(self):
+        self.another_timetable.api_key = self.timetable.api_key
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_ref_cycle_day_greater_than_cycle_length_cannot_be_saved(self):
+        self.another_timetable.ref_cycle_day = self.timetable.cycle_length + 1
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_cycle_length_and_ref_cycle_day_of_zero_cant_be_saved(self):
+        # test for cycle_length == 0
+        self.another_timetable.cycle_length = 0
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+        # test for ref_cycle_day == 0
+        self.another_timetable.ref_cycle_day = 0
+        self.another_timetable.cycle_length = self.timetable.cycle_length
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_cycle_length_and_ref_cycle_day_of_negative_value_cant_be_saved(self):
+        # test for cycle_length < 0
+        self.another_timetable.cycle_length = -3
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+        # test for ref_cycle_day < 0
+        self.another_timetable.ref_cycle_day = -3
+        self.another_timetable.cycle_length = self.timetable.cycle_length
+
+        self.assertRaises(ValidationError, self.another_timetable.save)
+
+    def test_calculate_cycle_day(self):
+        test_date = datetime.date(2016, 11, 23)
+        self.assertEqual(13, self.timetable.calculate_cycle_day(test_date))
+
+        test_date = datetime.date(2016, 11, 24)
+        self.assertEqual(14, self.timetable.calculate_cycle_day(test_date))
+
+        test_date = datetime.date(2016, 11, 25)
+        self.assertEqual(1, self.timetable.calculate_cycle_day(test_date))
+
+        # test_date equal to ref_cycle_date
+        test_date = self.timetable.ref_cycle_date
+        cycle_day = self.timetable.ref_cycle_day
+        self.assertEqual(cycle_day, self.timetable.calculate_cycle_day(test_date))
+
+        # test_date earlier than ref_cycle_date cannot be resolved to a valid cycle_day
+        test_date = datetime.date(2016, 9, 25)
+        self.assertRaises(ValidationError, self.timetable.calculate_cycle_day, test_date)
+
+    def test_get_vendors(self):
+        vendor_service = VendorServiceFactory(timetable=self.timetable)
+
+        new_vendors = [VendorFactory(name=x) for x in ['Spicy Foods', 'Tantalizer']]
+        start_date = datetime.date(2016, 10, 1)
+        end_date = datetime.date(2016, 11, 30)
+
+        for new_vendor in new_vendors:
+            VendorServiceFactory(
+                timetable=self.timetable,
+                vendor=new_vendor,
+                start_date=start_date,
+                end_date=end_date
             )
 
-        return menu_items
+        test_date = datetime.date(2016, 11, 25)
+        self.assertEqual(new_vendors, self.timetable.get_vendors(test_date))
 
-    @staticmethod
-    def verify_vendor_is_serving(timetable, vendor, date):
-        if not vendor.is_vendor_serving(timetable, date):
-            raise ValidationError(
-                _('Ensure the specified Vendor has an active tenure ' +
-                    'for the specified Date on the specified Timetable')
+        test_date = datetime.date(2008, 2, 23)
+        self.assertEqual([vendor_service.vendor], self.timetable.get_vendors(test_date))
+
+        test_date = datetime.date(2000, 2, 23)
+        self.assertEqual([], self.timetable.get_vendors(test_date))
+
+
+class DishTest(TestCase):
+    """Tests the Dish model."""
+
+    def setUp(self):
+        self.dish = DishFactory()
+
+    def test_duplicate_dish_name_cannot_be_saved(self):
+        dish = Dish(
+            name='Coconut Rice',
+            description=self.dish.description
+        )
+
+        self.assertRaises(ValidationError, dish.save)
+
+
+class MenuItemTest(TestCase):
+    """Tests the MenuItem model."""
+
+    def setUp(self):
+        self.menu_item = MenuItemFactory()
+        self.another_menu_item = MenuItem(
+            timetable=self.menu_item.timetable,
+            cycle_day=self.menu_item.cycle_day,
+            meal=self.menu_item.meal,
+            course=self.menu_item.course,
+            dish=self.menu_item.dish
+        )
+
+    def test_duplicates_of_all_cannot_be_saved(self):
+        self.assertRaises(ValidationError, self.another_menu_item.save)
+
+    def test_zero_cycle_day_value_cannot_be_saved(self):
+        self.another_menu_item.cycle_day = 0
+
+        self.assertRaises(ValidationError, self.another_menu_item.save)
+
+
+class EventTest(TestCase):
+    """Tests the Event model."""
+
+    def setUp(self):
+        self.event = EventFactory()
+        self.another_event = Event(
+            name=self.event.name,
+            timetable=self.event.timetable,
+            action=self.event.action,
+            start_date=self.event.start_date,
+            end_date=self.event.end_date
+        )
+
+    def test_event_uniqueness(self):
+        self.assertRaises(IntegrityError, self.another_event.save)
+
+    def test_event_end_time_less_than_start_time_cannot_be_saved(self):
+        self.another_event.start_date = self.event.end_date
+        self.another_event.end_date = self.event.start_date
+
+        self.assertRaises(ValidationError, self.another_event.save)
+
+    def test_event_end_time_same_with_start_time_cannot_be_saved(self):
+        self.another_event.end_date = self.event.start_date
+
+        self.assertRaises(ValidationError, self.another_event.save)
+
+
+class VendorTest(TestCase):
+    """Test the Vendor model."""
+
+    def setUp(self):
+        self.vendor = VendorFactory()
+        self.another_vendor = Vendor(
+            name='mama Taverna'
+        )
+
+    def test_enforcement_of_uniqueness_of_vendor_name(self):
+        self.assertRaises(ValidationError, self.another_vendor.save)
+
+
+class ServingTest(TestCase):
+    """Test the Serving model."""
+
+    def setUp(self):
+        self.serving = ServingFactory()
+        self.another_serving = Serving(
+            menu_item=self.serving.menu_item,
+            vendor=self.serving.vendor,
+            date_served=self.serving.date_served
+        )
+
+    def test_enforcement_of_unique_together(self):
+        self.assertRaises(IntegrityError, self.another_serving.save)
+
+
+class VendorServiceTest(TestCase):
+    """Test the VendorService model"""
+
+    def setUp(self):
+        self.vendor_service = VendorServiceFactory()
+        self.another_vendor_service = VendorService(
+            timetable=self.vendor_service.timetable,
+            vendor=self.vendor_service.vendor
+        )
+
+    def test_enforcement_of_uniqueness_of_timetable_and_vendor_together(self):
+        self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+    def test_enforcement_of_vendor_service_start_date_being_less_than_its_end_date(self):
+        self.another_vendor_service.vendor = VendorFactory(name='Papa Taverna')
+
+        # test for start_date == end_date
+        self.another_vendor_service.start_date = self.vendor_service.start_date
+        self.another_vendor_service.end_date = self.vendor_service.start_date
+        self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+        # test for start_date > end_date
+        self.another_vendor_service.start_date = self.vendor_service.end_date
+        self.assertRaises(ValidationError, self.another_vendor_service.save)
+
+
+class ServingAutoUpdateTest(TestCase):
+    """Test the ServingAutoUpdate model."""
+
+    def setUp(self):
+        self.vendor_service = VendorServiceFactory(start_date=None, end_date=None)
+        self.timetable = self.vendor_service.timetable
+        self.vendor = self.vendor_service.vendor
+        self.date = self.timetable.ref_cycle_date
+        self.earlier_date = datetime.date(2016, 9, 4)
+        self.later_date = datetime.date(2016, 10, 4)
+
+        meal = MealFactory()
+        course = CourseFactory(name='main')
+        dish_names = ['Quaker Oat and Moi-moi', 'Bread and Egg', 'Apples']
+        self.menu_items = []
+        for dish_name in dish_names:
+            dish = DishFactory(name=dish_name)
+            menu_item = MenuItemFactory(
+                timetable=self.timetable,
+                meal=meal,
+                course=course,
+                dish=dish
             )
+            self.menu_items.append(menu_item)
 
-    @classmethod
-    def get_servings(cls, timetable, vendor, date):
-        cls.verify_vendor_is_serving(timetable, vendor, date)
-        menu_items = cls.get_menu_items(timetable, date)
-
-        kwargs = {
-            'timetable': timetable,
-            'vendor': vendor,
-            'date': date
-        }
-        if not cls.objects.filter(**kwargs).exists():
-            cls.objects.create(
-                timetable=timetable,
-                vendor=vendor,
-                date=date
-            )
-
+    def get_servings_count(self):
         return Serving.objects.filter(
-            menu_item__in=menu_items,
-            vendor=vendor,
-            date_served=date
+            menu_item__in=self.menu_items,
+            vendor=self.vendor,
+            date_served=self.date
+        ).count()
+
+    def test_get_menu_items_for_a_date_earlier_than_ref_cycle_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_menu_items,
+            self.timetable, self.earlier_date
         )
 
-    @classmethod
-    def create_servings_if_not_exist(cls, timetable, vendor, date):
-        cls.verify_vendor_is_serving(timetable, vendor, date)
-        menu_items = cls.get_menu_items(timetable, date)
+    def test_get_menu_items_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_menu_items,
+            self.timetable, self.earlier_date
+        )
 
-        for menu_item in menu_items:
-            try:
-                with transaction.atomic():
-                    Serving.objects.create(
-                        menu_item=menu_item,
-                        vendor=vendor,
-                        date_served=date
-                    )
-            except IntegrityError:
-                pass
+    def test_get_menu_items_for_right_combination_of_timetable_and_date(self):
+        menu_items = ServingAutoUpdate.get_menu_items(self.timetable, self.date)
+        self.assertEqual(self.menu_items, list(menu_items))
 
-    def clean(self):
-        # This is called here instead of save() in order to handle ValidationError
-        self.create_servings_if_not_exist(self.timetable, self.vendor, self.date)
+    def test_verify_vendor_is_serving_for_dates_vendor_is_not_serving_specified_timetable(self):
+        self.vendor_service.end_date = self.earlier_date
+        self.vendor_service.save()
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.verify_vendor_is_serving,
+            self.timetable, self.vendor, self.later_date
+        )
 
-        return super().save(*args, **kwargs)
+    def test_verify_vendor_is_serving_for_dates_vendor_serves_specified_timetable(self):
+        result = ServingAutoUpdate.verify_vendor_is_serving(
+            self.timetable,
+            self.vendor,
+            self.earlier_date
+        )
+        self.assertEqual(None, result)
 
-    def __str__(self):
-        return '{} - {} - {}'.format(self.timetable, self.vendor, self.date)
+    def test_create_servings_if_not_exist_with_no_menu_item_entry_for_the_timetable_and_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.create_servings_if_not_exist,
+            self.timetable, self.vendor, self.earlier_date
+        )
 
-    class Meta:
-        unique_together = ('timetable', 'vendor', 'date')
+    def test_create_servings_if_not_exist_for_a_date_earlier_than_ref_cycle_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.create_servings_if_not_exist,
+            self.timetable, self.vendor, self.earlier_date
+        )
+
+    def test_create_servings_if_not_exist_for_dates_vendor_is_not_serving_specified_timetable(self):
+        self.vendor_service.end_date = self.earlier_date
+        self.vendor_service.save()
+
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.create_servings_if_not_exist,
+            self.timetable, self.vendor, self.date
+        )
+
+    def test_create_servings_if_not_exist_for_right_combination_of_timetable_vendor_date(self):
+        # Before create_servings_if_not_exist is called
+        self.assertEqual(0, self.get_servings_count())
+
+        # After create_servings_if_not_exist is called
+        ServingAutoUpdate.create_servings_if_not_exist(self.timetable, self.vendor, self.date)
+        self.assertEqual(3, self.get_servings_count())
+
+    def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_servings,
+            self.timetable, self.vendor, self.later_date
+        )
+
+    def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
+        try:
+            with transaction.atomic():
+                ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.earlier_date)
+        except ValidationError as e:
+            self.assertEqual(
+                ['Supply a date later than or equal to {}'.format(self.date)],
+                e.messages
+            )
+
+    def test_get_servings_for_dates_vendor_is_not_serving_specified_timetable(self):
+        self.vendor_service.end_date = self.earlier_date
+        self.vendor_service.save()
+
+        self.assertRaises(
+            ValidationError,
+            ServingAutoUpdate.get_servings,
+            self.timetable, self.vendor, self.date
+        )
+
+    def test_get_servings_for_right_combination_of_timetable_and_vendor_and_date(self):
+        # Before get_servings is called
+        kwargs = {
+            'timetable': self.timetable,
+            'vendor': self.vendor,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+
+        # After get_servings is called
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.date)
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, len(servings))
+        self.assertIsInstance(servings[0], Serving)
+
+    def test_manual_creation_of_serving_auto_update(self):
+        # Before creation attempt
+        kwargs = {
+            'timetable': self.timetable,
+            'vendor': self.vendor,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+        self.assertEqual(0, self.get_servings_count())
+
+        # After creation attempt with timetable and date combination with no menu_item entry
+        serving_auto_update = ServingAutoUpdate(
+            timetable=self.timetable,
+            vendor=self.vendor,
+            date=self.later_date
+        )
+        self.assertRaises(ValidationError, serving_auto_update.save)
+
+        # After creation attempt with right combination of timetable, vendor and date
+        serving_auto_update.date = self.date
+        serving_auto_update.save()
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, self.get_servings_count())

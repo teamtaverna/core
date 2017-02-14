@@ -32,7 +32,7 @@ class CreateWeekday(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         weekday = Weekday(
-            input.get('name')
+            name=input.get('name')
         )
         weekday.save()
         return CreateWeekday(weekday=weekday)

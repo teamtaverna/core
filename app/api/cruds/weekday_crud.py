@@ -1,10 +1,11 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
 from graphql_relay.node.node import from_global_id
 
 from app.timetables.models import Weekday
+from .utils import get_errors
 
 
 class WeekdayNode(DjangoObjectType):
@@ -31,11 +32,14 @@ class CreateWeekday(graphene.relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
-        weekday = Weekday(
-            name=input.get('name')
-        )
-        weekday.save()
-        return CreateWeekday(weekday=weekday)
+        try:
+            weekday = Weekday(
+                name=input.get('name')
+            )
+            weekday.save()
+            return CreateWeekday(weekday=weekday)
+        except ValidationError as e:
+            return CreateWeekday(weekday=None, errors=get_errors(e))
 
 
 class UpdateWeekday(graphene.relay.ClientIDMutation):
@@ -50,8 +54,11 @@ class UpdateWeekday(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, input, context, info):
         weekday = Weekday.objects.get(pk=from_global_id(input.get('id'))[1])
         weekday.name = input.get('name')
-        weekday.save()
-        return UpdateWeekday(weekday=weekday)
+        try:
+            weekday.save()
+            return UpdateWeekday(weekday=weekday)
+        except ValidationError as e:
+            return UpdateWeekday(weekday=weekday, errors=get_errors(e))
 
 
 class DeleteWeekday(graphene.relay.ClientIDMutation):

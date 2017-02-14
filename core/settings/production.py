@@ -2,7 +2,6 @@ from .base import *
 
 import dj_database_url
 
-DEBUG = dotenv.get('DEBUG')
 ALLOWED_HOSTS = ['*']
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()

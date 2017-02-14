@@ -15,9 +15,9 @@ class DishApiTest(TestCase):
             'description': 'white rice'
         }
         self.dishes = (
-            ('rice', 'qwerty123'),
-            ('Coconut rice', 'qwerty123'),
-            ('plantain', 'qwerty123'),
+            ('rice', 'white rice'),
+            ('Coconut rice', 'rice with coconut flavor'),
+            ('plantain', 'fried plantain'),
         )
         self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
         self.create_admin_account()

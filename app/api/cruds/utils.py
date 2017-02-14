@@ -1,5 +1,3 @@
-from django.contrib.auth.models import User
-
 from graphql_relay.node.node import from_global_id
 
 
@@ -13,13 +11,6 @@ def get_errors(e):
     return errors
 
 
-def get_user(relayId, otherwise=None):
-    try:
-        return User.objects.get(pk=from_global_id(relayId)[1])
-    except:
-        return otherwise
-
-
 def get_object(object_name, relayId, otherwise=None):
     try:
         return object_name.objects.get(pk=from_global_id(relayId)[1])
@@ -27,8 +18,8 @@ def get_object(object_name, relayId, otherwise=None):
         return otherwise
 
 
-def load_object(instance, args):
+def load_object(instance, args, exception=['id']):
     for key, value in args.items():
-        if getattr(instance, key) and key != "id":
+        if getattr(instance, key) and key not in exception:
             setattr(instance, key, value)
     return instance

@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 import graphene
 from graphene_django import DjangoObjectType
 
-from .utils import get_user, get_errors
+from .utils import get_object, get_errors
 
 
 class UserNode(DjangoObjectType):
@@ -75,7 +75,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
-        user = get_user(input.get('id'))
+        user = get_object(User, input.get('id'))
         for key, value in input.items():
             if key == 'password':
                 user.set_password(input.get('password'))
@@ -100,7 +100,7 @@ class DeleteUser(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         try:
-            user = get_user(input.get('id'))
+            user = get_object(User, input.get('id'))
             user.delete()
             return DeleteUser(deleted=True, user=user)
         except:

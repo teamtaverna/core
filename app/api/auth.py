@@ -6,9 +6,6 @@ from .models import ApiKey
 def authorization_required(func=None):
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
-            if request.method == 'GET':
-                return view_func(request, *args, **kwargs)
-
             api_key = 'HTTP_X_TAVERNATOKEN'
             if api_key not in request.META:
                 data = {'message': 'Set your api_key in X-TavernaToken header.'}

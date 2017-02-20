@@ -89,6 +89,14 @@ class DishApiTest(TestCase):
 
         self.assertEqual(expected, response['data'])
 
+    def test_retrieval_of_one_dish_object_with_wrong_id(self):
+        expected = {
+            'dish': None
+        }
+        response = self.retrieve_dish(2)
+
+        self.assertEqual(expected, response['data'])
+
     def test_retrieval_of_multiple_dish_objects_without_filtering(self):
         self.create_multiple_dishes()
 

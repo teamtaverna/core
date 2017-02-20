@@ -10,5 +10,5 @@ urlpatterns = [
     url(r'^api/', include('app.api.urls')),
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^api$', csrf_exempt(authorization_required(GraphQLView.as_view(graphiql=True)))),
+    url(r'^api$', csrf_exempt(authorization_required(GraphQLView.as_view()))),
 ]

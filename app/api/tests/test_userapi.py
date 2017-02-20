@@ -17,104 +17,6 @@ class UserApiTest(TestCase):
         response = self.create_user('oakeem', 'oatman')
         self.first_user = response['data']['createUser']['user']
 
-    def obtain_api_key(self):
-        credentials = '{}:{}'.format(
-            self.admin_test_credentials[0],
-            self.admin_test_credentials[2]
-        )
-        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
-
-        return self.client.post(
-            '/api/api_key',
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
-        ).json()['api_key']
-
-    def create_admin_account(self):
-        User.objects.create_superuser(*self.admin_test_credentials)
-
-    def create_user(self, username, password):
-        query = '''
-            mutation{
-              createUser(input: {username: "%s", password: "%s"}){
-                user{
-                  id,
-                  originalId,
-                  username
-                }
-              }
-            }
-        ''' % (username, password)
-
-        return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
-
-    def create_multiple_users(self):
-        new_users = (
-            ('john', 'qwerty123'),
-            ('raphael', 'qwerty123'),
-            ('samson', 'qwerty123'),
-        )
-
-        [self.create_user(username, password) for username, password in new_users]
-
-        return new_users
-
-    def retrieve_user(self, user_id):
-        query = 'query {user(id: "%s") {username}}' % (user_id)
-
-        return self.client.get(self.endpoint, data={'query': query}).json()
-
-    def ordering_test_helper(self, ordering_param, users):
-        # For ascending ordering
-        query = 'query{users(orderBy: "%s") {edges{node{username}}}}' % (ordering_param)
-        expected = {
-            'users': {
-                'edges': [
-                  {
-                    'node': {
-                        'username': users[0]
-                    }
-                  },
-                  {
-                    'node': {
-                        'username': users[1]
-                    }
-                  },
-                  {
-                    'node': {
-                        'username': users[2]
-                    }
-                  },
-                  {
-                    'node': {
-                        'username': users[3]
-                    }
-                  },
-                  {
-                    'node': {
-                        'username': users[4]
-                    }
-                  }
-                ]
-            }
-        }
-        response = self.client.get(self.endpoint, {'query': query}).json()
-        self.assertEqual(expected, response['data'])
-
-        # For descending ordering
-        query = 'query {users(orderBy: "-%s") {edges{node{username}}}}' % (ordering_param)
-        expected['users']['edges'].reverse()
-        response = self.client.get(self.endpoint, {'query': query}).json()
-        self.assertEqual(expected, response['data'])
-
-    def test_api_endpoint_is_live(self):
-        response = self.client.get(self.endpoint, {'query': ''})
-
-        self.assertEqual(400, response.status_code)
-        self.assertEqual(
-            'Must provide query string.',
-            response.json()['errors'][0]['message']
-        )
-
     def test_creation_of_user_object(self):
         credentials = {
             'username': 'tom_dick',
@@ -186,7 +88,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.get(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -212,7 +114,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.get(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -233,7 +135,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.get(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -254,7 +156,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        response = self.client.get(self.endpoint, {'query': query}).json()
+        response = self.make_request(query)
 
         self.assertEqual(expected, response['data'])
 
@@ -360,3 +262,95 @@ class UserApiTest(TestCase):
 
         response = self.retrieve_user(self.first_user['id'])
         self.assertEqual(None, response['data']['user'])
+
+    def obtain_api_key(self):
+        credentials = '{}:{}'.format(
+            self.admin_test_credentials[0],
+            self.admin_test_credentials[2]
+        )
+        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
+
+        return self.client.post(
+            '/api/api_key',
+            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
+        ).json()['api_key']
+
+    def create_admin_account(self):
+        User.objects.create_superuser(*self.admin_test_credentials)
+
+    def create_user(self, username, password):
+        query = '''
+            mutation{
+              createUser(input: {username: "%s", password: "%s"}){
+                user{
+                  id,
+                  originalId,
+                  username
+                }
+              }
+            }
+        ''' % (username, password)
+
+        return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
+
+    def create_multiple_users(self):
+        new_users = (
+            ('john', 'qwerty123'),
+            ('raphael', 'qwerty123'),
+            ('samson', 'qwerty123'),
+        )
+
+        [self.create_user(username, password) for username, password in new_users]
+
+        return new_users
+
+    def retrieve_user(self, user_id):
+        query = 'query {user(id: "%s") {username}}' % (user_id)
+
+        return self.make_request(query)
+
+    def make_request(self, query):
+        return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
+
+    def ordering_test_helper(self, ordering_param, users):
+        # For ascending ordering
+        query = 'query{users(orderBy: "%s") {edges{node{username}}}}' % (ordering_param)
+        expected = {
+            'users': {
+                'edges': [
+                  {
+                    'node': {
+                        'username': users[0]
+                    }
+                  },
+                  {
+                    'node': {
+                        'username': users[1]
+                    }
+                  },
+                  {
+                    'node': {
+                        'username': users[2]
+                    }
+                  },
+                  {
+                    'node': {
+                        'username': users[3]
+                    }
+                  },
+                  {
+                    'node': {
+                        'username': users[4]
+                    }
+                  }
+                ]
+            }
+        }
+        response = self.make_request(query)
+        self.assertEqual(expected, response['data'])
+
+        # For descending ordering
+        query = 'query {users(orderBy: "-%s") {edges{node{username}}}}' % (ordering_param)
+        expected['users']['edges'].reverse()
+        response = self.make_request(query)
+        self.assertEqual(expected, response['data'])

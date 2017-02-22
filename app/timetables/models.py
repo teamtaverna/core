@@ -347,11 +347,7 @@ class ServingAutoUpdate(models.Model):
             'date': date
         }
         if not cls.objects.filter(**kwargs).exists():
-            cls.objects.create(
-                timetable=timetable,
-                vendor=vendor,
-                date=date
-            )
+            cls.objects.create(**kwargs)
 
         return Serving.objects.filter(
             menu_item__in=menu_items,

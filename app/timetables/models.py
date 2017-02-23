@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
+from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
 from hashid_field import HashidField
@@ -73,6 +74,11 @@ class Vendor(SlugifyMixin, models.Model):
 
     slugify_field = 'name'
 
+    def is_vendor_serving(self, timetable, date):
+        query = (models.Q(timetable=timetable, vendor=self, end_date__gte=date)
+                 | models.Q(timetable=timetable, vendor=self, end_date=None))
+        return VendorService.objects.filter(query).exists()
+
     def __str__(self):
         return self.name
 
@@ -96,7 +102,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     ref_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
-    ref_cycle_date = models.DateTimeField()
+    ref_cycle_date = models.DateField()
     inactive_weekdays = models.ManyToManyField(Weekday)
     vendors = models.ManyToManyField(Vendor, through='VendorService')
     is_active = models.BooleanField(default=True)
@@ -123,25 +129,27 @@ class Timetable(SlugifyMixin, TimestampMixin):
     def __str__(self):
         return self.name
 
-    def calculate_cycle_day(self, date_datetime):
-        days_interval = (date_datetime - self.ref_cycle_date).days
+    def calculate_cycle_day(self, date):
+        days_interval = (date - self.ref_cycle_date).days
 
         if days_interval < 0:
-            cycle_day = None
-        else:
-            cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
-                         % self.cycle_length)
+            raise ValidationError(
+                _('Supply a date later than or equal to {}'.format(self.ref_cycle_date))
+            )
 
-            if cycle_day == 0:
-                cycle_day = self.cycle_length
+        cycle_day = (((days_interval % self.cycle_length) + self.ref_cycle_day)
+                     % self.cycle_length)
+
+        if cycle_day == 0:
+            cycle_day = self.cycle_length
 
         return cycle_day
 
-    def get_vendors(self, date_datetime):
+    def get_vendors(self, date):
         return [vendor for vendor in Vendor.objects.filter(
             timetable__slug=self.slug,
-            vendorservice__start_date__lte=date_datetime,
-            vendorservice__end_date__gte=date_datetime
+            vendorservice__start_date__lte=date,
+            vendorservice__end_date__gte=date
         )]
 
 
@@ -259,7 +267,7 @@ class Serving(TimestampMixin):
     )
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    date_served = models.DateTimeField()
+    date_served = models.DateField()
 
     def __str__(self):
         return '{} served on {}'.format(self.menu_item, self.date_served)
@@ -273,8 +281,8 @@ class VendorService(models.Model):
 
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    start_date = models.DateTimeField(default=None, null=True, blank=True)
-    end_date = models.DateTimeField(default=None, null=True, blank=True)
+    start_date = models.DateField(default=None, null=True, blank=True)
+    end_date = models.DateField(default=None, null=True, blank=True)
 
     def clean(self):
         if self.start_date and self.end_date:
@@ -296,3 +304,84 @@ class VendorService(models.Model):
 
     class Meta:
         unique_together = ('timetable', 'vendor')
+
+
+class ServingAutoUpdate(models.Model):
+    """Model representing Automatic Update of Servings."""
+
+    timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE)
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    date = models.DateField()
+
+    @staticmethod
+    def get_menu_items(timetable, date):
+        cycle_day = timetable.calculate_cycle_day(date)
+        menu_items = MenuItem.objects.filter(
+            timetable=timetable,
+            cycle_day=cycle_day
+        )
+
+        if not menu_items:
+            raise ValidationError(
+                _('No matching menu_item for this Timetable and Date combination.')
+            )
+
+        return menu_items
+
+    @staticmethod
+    def verify_vendor_is_serving(timetable, vendor, date):
+        if not vendor.is_vendor_serving(timetable, date):
+            raise ValidationError(
+                _('Ensure the specified Vendor has an active tenure ' +
+                    'for the specified Date on the specified Timetable')
+            )
+
+    @classmethod
+    def get_servings(cls, timetable, vendor, date):
+        cls.verify_vendor_is_serving(timetable, vendor, date)
+        menu_items = cls.get_menu_items(timetable, date)
+
+        kwargs = {
+            'timetable': timetable,
+            'vendor': vendor,
+            'date': date
+        }
+        if not cls.objects.filter(**kwargs).exists():
+            cls.objects.create(**kwargs)
+
+        return Serving.objects.filter(
+            menu_item__in=menu_items,
+            vendor=vendor,
+            date_served=date
+        )
+
+    @classmethod
+    def create_servings_if_not_exist(cls, timetable, vendor, date):
+        cls.verify_vendor_is_serving(timetable, vendor, date)
+        menu_items = cls.get_menu_items(timetable, date)
+
+        for menu_item in menu_items:
+            try:
+                with transaction.atomic():
+                    Serving.objects.create(
+                        menu_item=menu_item,
+                        vendor=vendor,
+                        date_served=date
+                    )
+            except IntegrityError:
+                pass
+
+    def clean(self):
+        # This is called here instead of save() in order to handle ValidationError
+        self.create_servings_if_not_exist(self.timetable, self.vendor, self.date)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return '{} - {} - {}'.format(self.timetable, self.vendor, self.date)
+
+    class Meta:
+        unique_together = ('timetable', 'vendor', 'date')

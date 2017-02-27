@@ -59,8 +59,9 @@ class UpdateDish(graphene.relay.ClientIDMutation):
         dish = get_object(Dish, input.get('id'))
         dish = load_object(dish, input)
         try:
-            dish.full_clean()
-            dish.save()
+            if dish:
+                dish.full_clean()
+                dish.save()
             return UpdateDish(dish=dish)
         except ValidationError as e:
             return UpdateDish(dish=dish, errors=get_errors(e))

@@ -185,6 +185,34 @@ class DishApiTest(TestCase):
 
         self.assertEqual(expected, response['data'])
 
+    def test_update_of_dish_object_with_wrong_id(self):
+        query = '''
+            mutation{
+                updateDish(
+                    input: {
+                        id: "%s",
+                        name: "rice edited"
+                    }
+                )
+                {
+                    dish{
+                        id,
+                        name
+                    }
+                }
+            }
+        ''' % ("wrong-id")
+
+        expected = {
+            'updateDish': {
+                'dish': None
+            }
+        }
+
+        response = self.make_request(query)
+
+        self.assertEqual(expected, response['data'])
+
     def test_deletion_of_dish_object(self):
         create_response = self.create_dish(self.data['name'], self.data['description'])
         query = '''
@@ -210,6 +238,26 @@ class DishApiTest(TestCase):
 
         response = self.retrieve_dish(create_response['data']['createDish']['dish']['id'])
         self.assertEqual(None, response['data']['dish'])
+
+    def test_deletion_of_dish_object_with_wrong_id(self):
+        query = '''
+            mutation{
+                deleteDish(input: {id: "%s"}){
+                    dish{
+                        name
+                    }
+                }
+            }
+        ''' % ("wrong-id")
+
+        expected = {
+            "deleteDish": {
+                "dish": None
+            }
+        }
+
+        response = self.make_request(query)
+        self.assertEqual(expected, response['data'])
 
     def ordering_test_helper(self, ordering_param, records):
         # For ascending ordering

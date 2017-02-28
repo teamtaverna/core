@@ -148,3 +148,4 @@ GRAPPELLI_ADMIN_TITLE = AdminSite.site_header
 
 # Hashid settings
 HASHID_FIELD_SALT = dotenv.get('HASHID_FIELD_SALT')
+DEBUG = dotenv.get('DEBUG')

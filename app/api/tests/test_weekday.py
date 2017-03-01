@@ -15,6 +15,9 @@ class WeekdayApiTest(TestCase):
         self.create_admin_account()
         self.header = {'HTTP_X_TAVERNATOKEN': self.obtain_api_key()}
 
+        response = self.create_weekday('day1')
+        self.first_weekday = response['data']['createWeekday']['weekday']
+
     def create_weekday(self, name):
         query = '''
                 mutation{
@@ -30,6 +33,13 @@ class WeekdayApiTest(TestCase):
 
         return self.client.post(
             self.endpoint, {'query': query}, **self.header
+        ).json()
+
+    def retrieve_weekday(self, weekday_id):
+        query = 'query {weekday(id: "%s") {name}}' % (weekday_id)
+
+        return self.client.get(
+            self.endpoint, data={'query': query}, **self.header
         ).json()
 
     def obtain_api_key(self):
@@ -63,12 +73,21 @@ class WeekdayApiTest(TestCase):
         self.assertEqual(expected, response['data'])
 
     def test_weekday_object_duplicate(self):
-        self.create_weekday('day1')
         response = self.create_weekday('day1')
         expected = {
             'createWeekday': {
                 'weekday': None
             }
         }
+
+        self.assertEqual(expected, response['data'])
+
+    def test_retrieve_weekday_object(self):
+        expected = {
+            'weekday': {
+                'name': self.first_weekday['name']
+            }
+        }
+        response = self.retrieve_weekday(self.first_weekday['id'])
 
         self.assertEqual(expected, response['data'])

@@ -66,7 +66,9 @@ class WeekdayApiTest(TestCase):
         self.create_weekday('day1')
         response = self.create_weekday('day1')
         expected = {
-            'createWeekday': None
+            'createWeekday': {
+                'weekday': None
+            }
         }
 
         self.assertEqual(expected, response['data'])

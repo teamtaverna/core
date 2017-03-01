@@ -73,7 +73,9 @@ class DeleteWeekday(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         try:
-            weekday = Weekday.objects.get(pk=from_global_id(input.get('id'))[1])
+            weekday = Weekday.objects.get(
+                pk=from_global_id(input.get('id'))[1]
+            )
             weekday.delete()
             return DeleteWeekday(deleted=True, weekday=weekday)
         except ObjectDoesNotExist:

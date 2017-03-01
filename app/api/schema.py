@@ -3,7 +3,8 @@ from graphene_django.filter import DjangoFilterConnectionField
 
 from .cruds.user_crud import UserNode, CreateUser, UpdateUser, DeleteUser
 from .cruds.dish_crud import DishNode, CreateDish, UpdateDish, DeleteDish
-from .cruds.weekday_crud import WeekdayNode, CreateWeekday, UpdateWeekday, DeleteWeekday
+from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
+                                 DeleteWeekday,)
 
 
 class Query(graphene.AbstractType):
@@ -21,7 +22,6 @@ class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
     delete_user = DeleteUser.Field()
-
 
     create_dish = CreateDish.Field()
     update_dish = UpdateDish.Field()

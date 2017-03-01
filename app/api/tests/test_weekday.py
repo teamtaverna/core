@@ -10,7 +10,8 @@ class WeekdayApiTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
+        self.admin_test_credentials = ('admin', 'admin@taverna.com',
+                                       'qwerty123')
         self.create_admin_account()
         self.header = {'HTTP_X_TAVERNATOKEN': self.obtain_api_key()}
 
@@ -27,7 +28,9 @@ class WeekdayApiTest(TestCase):
                 }
                 ''' % (name)
 
-        return self.client.post(self.endpoint, {'query': query}, **self.header).json()
+        return self.client.post(
+            self.endpoint, {'query': query}, **self.header
+        ).json()
 
     def obtain_api_key(self):
         credentials = '{}:{}'.format(
@@ -45,19 +48,25 @@ class WeekdayApiTest(TestCase):
         User.objects.create_superuser(*self.admin_test_credentials)
 
     def test_creation_of_weekday_object(self):
-        credentials = {
-            'name': 'tuesday'
-        }
-        response = self.create_weekday(credentials['name'])
+        response = self.create_weekday('day2')
 
         expected = {
             'createWeekday': {
                 'weekday': {
                     'id': response['data']['createWeekday']['weekday']['id'],
                     'originalId': response['data']['createWeekday']['weekday']['originalId'],
-                    'name': credentials['name']
+                    'name': 'day2'
                 }
             }
+        }
+
+        self.assertEqual(expected, response['data'])
+
+    def test_weekday_object_duplicate(self):
+        self.create_weekday('day1')
+        response = self.create_weekday('day1')
+        expected = {
+            'createWeekday': None
         }
 
         self.assertEqual(expected, response['data'])

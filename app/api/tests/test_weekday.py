@@ -59,7 +59,6 @@ class WeekdayApiTest(TestCase):
 
     def test_creation_of_weekday_object(self):
         response = self.create_weekday('day2')
-
         expected = {
             'createWeekday': {
                 'weekday': {
@@ -83,11 +82,85 @@ class WeekdayApiTest(TestCase):
         self.assertEqual(expected, response['data'])
 
     def test_retrieve_weekday_object(self):
+        response = self.retrieve_weekday(self.first_weekday['id'])
         expected = {
             'weekday': {
                 'name': self.first_weekday['name']
             }
         }
-        response = self.retrieve_weekday(self.first_weekday['id'])
 
         self.assertEqual(expected, response['data'])
+
+    def test_update_weekday_object(self):
+        query = '''
+                mutation{
+                    updateWeekday(
+                        input: {
+                            id: "%s",
+                            name: "day3"
+                        }
+                    )
+                    {
+                        weekday{
+                            id,
+                            originalId,
+                            name
+                        }
+                    }
+                }
+                ''' % (self.first_weekday['id'])
+
+        response = self.client.post(
+            self.endpoint,
+            data={
+                'query': query
+            },
+            **self.header
+        ).json()
+
+        expected = {
+            'updateWeekday': {
+                'weekday': {
+                    'id': self.first_weekday['id'],
+                    'originalId': self.first_weekday['originalId'],
+                    'name': 'day3'
+                }
+            }
+        }
+
+        self.assertEqual(expected, response['data'])
+
+    def test_deletion_weekday_object(self):
+        query = '''
+            mutation{
+                deleteWeekday(input: {id: "%s"}){
+                    weekday{
+                        name
+                    }
+                }
+            }
+        ''' % (self.first_weekday['id'])
+
+        response = self.client.post(
+            self.endpoint,
+            data={
+                'query': query
+            },
+            **self.header
+        ).json()
+
+        expected = {
+            "deleteWeekday": {
+                "weekday": {
+                    "name": self.first_weekday['name']
+                }
+            }
+        }
+
+        self.assertEqual(expected, response['data'])
+
+        # Verify that the object does not exist anymore
+        response = self.retrieve_weekday(self.first_weekday['id'])
+        self.assertEqual(
+            None, response['data']['weekday']
+        )

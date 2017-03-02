@@ -20,6 +20,8 @@ class WeekdayApiTest(TestCase):
             )
         }
 
+        self.weekdays = ('weekday1', 'weekday2',)
+
         response = self.create_weekday('day1')
         self.first_weekday = response['data']['createWeekday']['weekday']
 
@@ -47,6 +49,9 @@ class WeekdayApiTest(TestCase):
         query = 'query {weekday(id: "%s") {name}}' % (weekday_id)
 
         return self.make_request(query)
+
+    def create_multiple_weekdays(self):
+        return [self.create_weekday(name) for name in self.weekdays]
 
     def test_creation_of_weekday_object(self):
         response = self.create_weekday('day2')
@@ -90,6 +95,64 @@ class WeekdayApiTest(TestCase):
 
         self.assertEqual(expected, response['data'])
 
+    def test_retrieve_multiple_weekdays_without_filtering(self):
+        self.create_multiple_weekdays()
+
+        query = 'query {weekdays{edges{node{name}}}}'
+
+        expected = {
+            'weekdays': {
+                'edges': [
+                    {
+                        'node': {
+                            'name': self.first_weekday['name']
+
+                        }
+                    },
+                    {
+                        'node': {
+                            'name': self.weekdays[0]
+
+                        }
+                    },
+                    {
+                        'node': {
+                            'name': self.weekdays[1]
+
+                        }
+                    }
+                ]
+            }
+        }
+        response = self.make_request(query)
+
+        self.assertEqual(expected, response['data'])
+
+    def test_retrieve_multiple_users_filter_by_name(self):
+        self.create_multiple_weekdays()
+        query = 'query {weekdays(name_Icontains: "day1") {edges{node{name}}}}'
+
+        expected = {
+            'weekdays': {
+                'edges': [
+                    {
+                        'node': {
+                            'name': self.first_weekday['name']
+
+                        }
+                    },
+                    {
+                        'node': {
+                            'name': self.weekdays[0]
+
+                        }
+                    }
+                ]
+            }
+        }
+        response = self.make_request(query)
+
+        self.assertEqual(expected, response['data'])
 
     def test_update_weekday_object(self):
         query = '''

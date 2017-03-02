@@ -23,6 +23,11 @@ class WeekdayApiTest(TestCase):
         response = self.create_weekday('day1')
         self.first_weekday = response['data']['createWeekday']['weekday']
 
+    def make_request(self, query):
+        return self.client.post(
+            self.endpoint, {'query': query}, **self.header
+        ).json()
+
     def create_weekday(self, name):
         query = '''
                 mutation{
@@ -36,16 +41,12 @@ class WeekdayApiTest(TestCase):
                 }
                 ''' % (name)
 
-        return self.client.post(
-            self.endpoint, {'query': query}, **self.header
-        ).json()
+        return self.make_request(query)
 
     def retrieve_weekday(self, weekday_id):
         query = 'query {weekday(id: "%s") {name}}' % (weekday_id)
 
-        return self.client.get(
-            self.endpoint, data={'query': query}, **self.header
-        ).json()
+        return self.make_request(query)
 
     def test_creation_of_weekday_object(self):
         response = self.create_weekday('day2')
@@ -81,6 +82,15 @@ class WeekdayApiTest(TestCase):
 
         self.assertEqual(expected, response['data'])
 
+        # Retrieve with wrong id
+        response = self.retrieve_weekday(100)
+        expected = {
+            'weekday': None
+        }
+
+        self.assertEqual(expected, response['data'])
+
+
     def test_update_weekday_object(self):
         query = '''
                 mutation{
@@ -100,13 +110,7 @@ class WeekdayApiTest(TestCase):
                 }
                 ''' % (self.first_weekday['id'])
 
-        response = self.client.post(
-            self.endpoint,
-            data={
-                'query': query
-            },
-            **self.header
-        ).json()
+        response = self.make_request(query)
 
         expected = {
             'updateWeekday': {
@@ -131,13 +135,7 @@ class WeekdayApiTest(TestCase):
             }
         ''' % (self.first_weekday['id'])
 
-        response = self.client.post(
-            self.endpoint,
-            data={
-                'query': query
-            },
-            **self.header
-        ).json()
+        response = self.make_request(query)
 
         expected = {
             "deleteWeekday": {

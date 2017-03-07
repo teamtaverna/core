@@ -39,9 +39,9 @@ class CreateDish(graphene.relay.ClientIDMutation):
             dish.description = input.get('description', '')
             dish.full_clean()
             dish.save()
-            return CreateDish(dish=dish)
+            return cls(dish=dish)
         except ValidationError as e:
-            return CreateDish(dish=None, errors=get_errors(e))
+            return cls(dish=None, errors=get_errors(e))
 
 
 class UpdateDish(graphene.relay.ClientIDMutation):
@@ -62,9 +62,9 @@ class UpdateDish(graphene.relay.ClientIDMutation):
             if dish:
                 dish.full_clean()
                 dish.save()
-            return UpdateDish(dish=dish)
+            return cls(dish=dish)
         except ValidationError as e:
-            return UpdateDish(dish=dish, errors=get_errors(e))
+            return cls(dish=dish, errors=get_errors(e))
 
 
 class DeleteDish(graphene.relay.ClientIDMutation):
@@ -80,6 +80,6 @@ class DeleteDish(graphene.relay.ClientIDMutation):
         try:
             dish = get_object(Dish, input.get('id'))
             dish.delete()
-            return DeleteDish(deleted=True, dish=dish)
+            return cls(deleted=True, dish=dish)
         except:
-            return DeleteDish(deleted=False, dish=None)
+            return cls(deleted=False, dish=None)

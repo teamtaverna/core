@@ -5,7 +5,7 @@ from graphene_django import DjangoObjectType
 from graphql_relay.node.node import from_global_id
 
 from app.timetables.models import Weekday
-from .utils import get_errors
+from .utils import get_errors, get_object
 
 
 class WeekdayNode(DjangoObjectType):
@@ -38,9 +38,9 @@ class CreateWeekday(graphene.relay.ClientIDMutation):
             )
             weekday.full_clean()
             weekday.save()
-            return CreateWeekday(weekday=weekday)
+            return cls(weekday=weekday)
         except ValidationError as e:
-            return CreateWeekday(weekday=None, errors=get_errors(e))
+            return cls(weekday=None, errors=get_errors(e))
 
 
 class UpdateWeekday(graphene.relay.ClientIDMutation):
@@ -53,14 +53,14 @@ class UpdateWeekday(graphene.relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
-        weekday = Weekday.objects.get(pk=from_global_id(input.get('id'))[1])
+        weekday = get_object(Weekday, input.get('id'))
         weekday.name = input.get('name')
         try:
             weekday.full_clean()
             weekday.save()
-            return UpdateWeekday(weekday=weekday)
+            return cls(weekday=weekday)
         except ValidationError as e:
-            return UpdateWeekday(weekday=weekday, errors=get_errors(e))
+            return cls(weekday=weekday, errors=get_errors(e))
 
 
 class DeleteWeekday(graphene.relay.ClientIDMutation):
@@ -77,6 +77,6 @@ class DeleteWeekday(graphene.relay.ClientIDMutation):
                 pk=from_global_id(input.get('id'))[1]
             )
             weekday.delete()
-            return DeleteWeekday(deleted=True, weekday=weekday)
+            return cls(deleted=True, weekday=weekday)
         except ObjectDoesNotExist:
-            return DeleteWeekday(deleted=False, weekday=None)
+            return cls(deleted=False, weekday=None)

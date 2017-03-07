@@ -2,7 +2,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
-from graphql_relay.node.node import from_global_id
 
 from app.timetables.models import Weekday
 from .utils import get_errors, get_object, load_object

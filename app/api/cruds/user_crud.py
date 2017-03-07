@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 
 import graphene
 from graphene_django import DjangoObjectType
@@ -53,9 +54,9 @@ class CreateUser(graphene.relay.ClientIDMutation):
                 user.set_password(input.get('password'))
             user.full_clean()
             user.save()
-            return CreateUser(user=user)
+            return cls(user=user)
         except ValidationError as e:
-            return CreateUser(user=None, errors=get_errors(e))
+            return cls(user=None, errors=get_errors(e))
 
 
 class UpdateUser(graphene.relay.ClientIDMutation):
@@ -84,9 +85,9 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         try:
             user.full_clean()
             user.save()
-            return UpdateUser(user=user)
+            return cls(user=user)
         except ValidationError as e:
-            return UpdateUser(user=user, errors=get_errors(e))
+            return cls(user=user, errors=get_errors(e))
 
 
 class DeleteUser(graphene.relay.ClientIDMutation):
@@ -102,6 +103,6 @@ class DeleteUser(graphene.relay.ClientIDMutation):
         try:
             user = get_object(User, input.get('id'))
             user.delete()
-            return DeleteUser(deleted=True, user=user)
-        except:
-            return DeleteUser(deleted=False, user=None)
+            return cls(deleted=True, user=user)
+        except ObjectDoesNotExist:
+            return cls(deleted=False, user=None)

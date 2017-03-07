@@ -1,7 +1,6 @@
-from base64 import b64encode
-
-from django.contrib.auth.models import User
 from django.test import Client, TestCase
+
+from .utils import obtain_api_key, create_admin_account
 
 
 class DishApiTest(TestCase):
@@ -19,24 +18,16 @@ class DishApiTest(TestCase):
             ('Coconut rice', 'rice with coconut flavor'),
             ('plantain', 'fried plantain'),
         )
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-        self.create_admin_account()
-        self.header = {'HTTP_X_TAVERNATOKEN': self.obtain_api_key()}
-
-    def obtain_api_key(self):
-        credentials = '{}:{}'.format(
-            self.admin_test_credentials[0],
-            self.admin_test_credentials[2]
+        self.admin_test_credentials = ('admin', 'admin@taverna.com',
+                                       'qwerty123')
+        self.create_admin_account = create_admin_account(
+            *self.admin_test_credentials
         )
-        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
-
-        return self.client.post(
-            '/api/api_key',
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
-        ).json()['api_key']
-
-    def create_admin_account(self):
-        User.objects.create_superuser(*self.admin_test_credentials)
+        self.header = {
+            'HTTP_X_TAVERNATOKEN': obtain_api_key(
+                self.client, *self.admin_test_credentials
+            )
+        }
 
     def make_request(self, query):
         return self.client.post(self.endpoint, {'query': query}, **self.header).json()

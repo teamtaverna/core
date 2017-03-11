@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
@@ -55,8 +55,9 @@ class UpdateWeekday(graphene.relay.ClientIDMutation):
         weekday = get_object(Weekday, input.get('id'))
         weekday = load_object(weekday, input)
         try:
-            weekday.full_clean()
-            weekday.save()
+            if weekday:
+                weekday.full_clean()
+                weekday.save()
             return cls(weekday=weekday)
         except ValidationError as e:
             return cls(weekday=weekday, errors=get_errors(e))
@@ -75,5 +76,5 @@ class DeleteWeekday(graphene.relay.ClientIDMutation):
             weekday = get_object(Weekday, input.get('id'))
             weekday.delete()
             return cls(deleted=True, weekday=weekday)
-        except ObjectDoesNotExist:
+        except:
             return cls(deleted=False, weekday=None)

@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 import graphene
 from graphene_django import DjangoObjectType
 
-from .utils import get_user, get_errors
+from .utils import get_object, get_errors
 
 
 class UserNode(DjangoObjectType):
@@ -53,9 +53,9 @@ class CreateUser(graphene.relay.ClientIDMutation):
                 user.set_password(input.get('password'))
             user.full_clean()
             user.save()
-            return CreateUser(user=user)
+            return cls(user=user)
         except ValidationError as e:
-            return CreateUser(user=None, errors=get_errors(e))
+            return cls(user=None, errors=get_errors(e))
 
 
 class UpdateUser(graphene.relay.ClientIDMutation):
@@ -75,7 +75,7 @@ class UpdateUser(graphene.relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
-        user = get_user(input.get('id'))
+        user = get_object(User, input.get('id'))
         for key, value in input.items():
             if key == 'password':
                 user.set_password(input.get('password'))
@@ -84,9 +84,9 @@ class UpdateUser(graphene.relay.ClientIDMutation):
         try:
             user.full_clean()
             user.save()
-            return UpdateUser(user=user)
+            return cls(user=user)
         except ValidationError as e:
-            return UpdateUser(user=user, errors=get_errors(e))
+            return cls(user=user, errors=get_errors(e))
 
 
 class DeleteUser(graphene.relay.ClientIDMutation):
@@ -100,8 +100,8 @@ class DeleteUser(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         try:
-            user = get_user(input.get('id'))
+            user = get_object(User, input.get('id'))
             user.delete()
-            return DeleteUser(deleted=True, user=user)
+            return cls(deleted=True, user=user)
         except:
-            return DeleteUser(deleted=False, user=None)
+            return cls(deleted=False, user=None)

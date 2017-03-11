@@ -104,5 +104,5 @@ class DeleteUser(graphene.relay.ClientIDMutation):
             user = get_object(User, input.get('id'))
             user.delete()
             return cls(deleted=True, user=user)
-        except ObjectDoesNotExist:
+        except:
             return cls(deleted=False, user=None)

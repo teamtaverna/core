@@ -1,10 +1,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/teamtaverna/core/badge.svg?branch=master)](https://coveralls.io/github/teamtaverna/core?branch=master) [![Build Status](https://travis-ci.org/teamtaverna/core.svg?branch=master)](https://travis-ci.org/teamtaverna/core)
 
 # CORE
-Core is the power house of Taverna app, an open source meal review and management platform. More information can be found on the [wiki](https://github.com/teamtaverna/core/wiki).
+Core is the power house of Taverna app, an open source meal review and management platform. More information can be found on the [wiki](https://github.com/teamtaverna/taverna/wiki).
 
 ### Tech
-Core is written in Python3 and Django 1.9.
+Core is written in Python3 and Django 1.10.
 
 ### Collaboration
 

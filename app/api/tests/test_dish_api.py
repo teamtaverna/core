@@ -9,6 +9,8 @@ class DishApiTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.endpoint = '/api'
+        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
+        create_admin_account(*self.admin_test_credentials)
         self.data = {
             'name': 'rice',
             'description': 'white rice'
@@ -18,19 +20,18 @@ class DishApiTest(TestCase):
             ('Coconut rice', 'rice with coconut flavor'),
             ('plantain', 'fried plantain'),
         )
-        self.admin_test_credentials = ('admin', 'admin@taverna.com',
-                                       'qwerty123')
-        self.create_admin_account = create_admin_account(
-            *self.admin_test_credentials
-        )
         self.header = {
             'HTTP_X_TAVERNATOKEN': obtain_api_key(
                 self.client, *self.admin_test_credentials
             )
         }
 
-    def make_request(self, query):
-        return self.client.post(self.endpoint, {'query': query}, **self.header).json()
+    def make_request(self, query, method='GET'):
+        if method == 'GET':
+            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
+
+        if method == 'POST':
+            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_dish(self, name, description):
         query = '''
@@ -45,7 +46,7 @@ class DishApiTest(TestCase):
             }
         ''' % (name, description)
 
-        return self.make_request(query)
+        return self.make_request(query, 'POST')
 
     def create_multiple_dishes(self):
         return [self.create_dish(name, description) for name, description in self.dishes]
@@ -55,233 +56,91 @@ class DishApiTest(TestCase):
 
         return self.make_request(query)
 
+    def ordering_test_helper(self, ordering_param, records):
+        # For ascending ordering
+        query = 'query{dishes(orderBy: "%s") {edges{node{name}}}}' % (ordering_param)
+        expected = [
+            {
+                'name': records[0]
+            },
+            {
+                'name': records[1]
+            },
+            {
+                'name': records[2]
+            }
+        ]
+        response = self.make_request(query)
+        self.assertEqual(expected, response)
+
+        # For descending ordering
+        query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
+        expected.reverse()
+        response = self.make_request(query)
+        self.assertEqual(expected, response)
+
     def test_creation_of_dish_object(self):
+        # For new dish record
         response = self.create_dish(self.data['name'], self.data['description'])
         expected = {
-            'createDish': {
-                'dish': {
-                    'id': response['data']['createDish']['dish']['id'],
-                    'originalId': response['data']['createDish']['dish']['originalId'],
-                    'name': self.data['name']
-                }
-            }
+            'id': response['id'],
+            'originalId': response['originalId'],
+            'name': self.data['name']
         }
+        self.assertEqual(expected, response)
 
-        self.assertEqual(expected, response['data'])
+        # For existing weekday record
+        self.assertEqual(None, self.create_dish(self.data['name'], self.data['description']))
 
     def test_retrieval_of_one_dish_object(self):
+        # Retrieve with valid id
         expected = {
-            'dish': {
-                'name': self.data['name']
-            }
+            'name': self.data['name']
         }
         create_response = self.create_dish(self.data['name'], self.data['description'])
-        response = self.retrieve_dish(create_response['data']['createDish']['dish']['id'])
+        response = self.retrieve_dish(create_response['id'])
+        self.assertEqual(expected, response)
 
-        self.assertEqual(expected, response['data'])
-
-    def test_retrieval_of_one_dish_object_with_wrong_id(self):
-        expected = {
-            'dish': None
-        }
-        response = self.retrieve_dish(2)
-
-        self.assertEqual(expected, response['data'])
+        # Retrieve with invalid id
+        self.assertEqual(None, self.retrieve_dish(2))
 
     def test_retrieval_of_multiple_dish_objects_without_filtering(self):
         self.create_multiple_dishes()
 
         query = 'query {dishes{edges{node{name}}}}'
 
-        expected = {
-            'dishes': {
-                'edges': [
-                  {
-                    'node': {
-                        'name': self.dishes[0][0]
-                    }
-                  },
-                  {
-                    'node': {
-                        'name': self.dishes[1][0]
-                    }
-                  },
-                  {
-                    'node': {
-                        'name': self.dishes[2][0]
-                    }
-                  }
-                ]
+        expected = [
+            {
+                'name': self.dishes[0][0]
+            },
+            {
+                'name': self.dishes[1][0]
+            },
+            {
+                'name': self.dishes[2][0]
             }
-        }
+        ]
 
         response = self.make_request(query)
 
-        self.assertEqual(expected, response['data'])
+        self.assertEqual(expected, response)
 
     def test_retrieval_of_multiple_user_objects_filter_by_username(self):
         self.create_multiple_dishes()
         query = 'query {dishes(name_Icontains: "Rice") {edges{node{name}}}}'
 
-        expected = {
-            'dishes': {
-                'edges': [
-                  {
-                    'node': {
-                        'name': self.dishes[0][0]
-                    }
-                  },
-                  {
-                    'node': {
-                        'name': self.dishes[1][0]
-                    }
-                  }
-                ]
+        expected = [
+            {
+                'name': self.dishes[0][0]
+            },
+            {
+                'name': self.dishes[1][0]
             }
-        }
+        ]
 
         response = self.make_request(query)
 
-        self.assertEqual(expected, response['data'])
-
-    def test_update_of_dish_object(self):
-        create_response = self.create_dish(self.data['name'], self.data['description'])
-        query = '''
-            mutation{
-                updateDish(
-                    input: {
-                        id: "%s",
-                        name: "rice edited"
-                    }
-                )
-                {
-                    dish{
-                        id,
-                        name
-                    }
-                }
-            }
-        ''' % (create_response['data']['createDish']['dish']['id'])
-
-        expected = {
-            "updateDish": {
-                "dish": {
-                    "id": create_response['data']['createDish']['dish']['id'],
-                    "name": "rice edited"
-                }
-            }
-        }
-
-        response = self.make_request(query)
-
-        self.assertEqual(expected, response['data'])
-
-    def test_update_of_dish_object_with_wrong_id(self):
-        query = '''
-            mutation{
-                updateDish(
-                    input: {
-                        id: "%s",
-                        name: "rice edited"
-                    }
-                )
-                {
-                    dish{
-                        id,
-                        name
-                    }
-                }
-            }
-        ''' % ("wrong-id")
-
-        expected = {
-            'updateDish': {
-                'dish': None
-            }
-        }
-
-        response = self.make_request(query)
-
-        self.assertEqual(expected, response['data'])
-
-    def test_deletion_of_dish_object(self):
-        create_response = self.create_dish(self.data['name'], self.data['description'])
-        query = '''
-            mutation{
-                deleteDish(input: {id: "%s"}){
-                    dish{
-                        name
-                    }
-                }
-            }
-        ''' % (create_response['data']['createDish']['dish']['id'])
-
-        expected = {
-            "deleteDish": {
-                "dish": {
-                    "name": self.data['name']
-                }
-            }
-        }
-
-        response = self.make_request(query)
-        self.assertEqual(expected, response['data'])
-
-        response = self.retrieve_dish(create_response['data']['createDish']['dish']['id'])
-        self.assertEqual(None, response['data']['dish'])
-
-    def test_deletion_of_dish_object_with_wrong_id(self):
-        query = '''
-            mutation{
-                deleteDish(input: {id: "%s"}){
-                    dish{
-                        name
-                    }
-                }
-            }
-        ''' % ("wrong-id")
-
-        expected = {
-            "deleteDish": {
-                "dish": None
-            }
-        }
-
-        response = self.make_request(query)
-        self.assertEqual(expected, response['data'])
-
-    def ordering_test_helper(self, ordering_param, records):
-        # For ascending ordering
-        query = 'query{dishes(orderBy: "%s") {edges{node{name}}}}' % (ordering_param)
-        expected = {
-            'dishes': {
-                'edges': [
-                  {
-                    'node': {
-                        'name': records[0]
-                    }
-                  },
-                  {
-                    'node': {
-                        'name': records[1]
-                    }
-                  },
-                  {
-                    'node': {
-                        'name': records[2]
-                    }
-                  }
-                ]
-            }
-        }
-        response = self.make_request(query)
-        self.assertEqual(expected, response['data'])
-
-        # For descending ordering
-        query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
-        expected['dishes']['edges'].reverse()
-        response = self.make_request(query)
-        self.assertEqual(expected, response['data'])
+        self.assertEqual(expected, response)
 
     def test_retrieval_of_multiple_dish_objects_ordering_by_id(self):
         self.create_multiple_dishes()
@@ -302,3 +161,79 @@ class DishApiTest(TestCase):
         ]
 
         self.ordering_test_helper('name', records)
+
+    def test_update_of_dish_object(self):
+        # Update with valid id
+        create_response = self.create_dish(self.data['name'], self.data['description'])
+        query = '''
+            mutation{
+                updateDish(
+                    input: {
+                        id: "%s",
+                        name: "rice edited"
+                    }
+                )
+                {
+                    dish{
+                        id,
+                        name
+                    }
+                }
+            }
+        ''' % (create_response['id'])
+        expected = {
+            'id': create_response['id'],
+            'name': 'rice edited'
+        }
+        response = self.make_request(query, 'POST')
+        self.assertEqual(expected, response)
+
+        # Update with invalid id
+        query = '''
+            mutation{
+                updateDish(
+                    input: {
+                        id: "%s",
+                        name: "rice edited"
+                    }
+                )
+                {
+                    dish{
+                        id,
+                        name
+                    }
+                }
+            }
+        ''' % ("wrong-id")
+        self.assertEqual(None, self.make_request(query, 'POST'))
+
+    def test_deletion_of_dish_object(self):
+        # Delete with valid id
+        create_response = self.create_dish(self.data['name'], self.data['description'])
+        query = '''
+            mutation{
+                deleteDish(input: {id: "%s"}){
+                    dish{
+                        name
+                    }
+                }
+            }
+        ''' % (create_response['id'])
+        expected = {
+            "name": self.data['name']
+        }
+        response = self.make_request(query, 'POST')
+        self.assertEqual(expected, response)
+        self.assertEqual(None, self.retrieve_dish(create_response['id']))
+
+        # Delete with invalid id
+        query = '''
+            mutation{
+                deleteDish(input: {id: "%s"}){
+                    dish{
+                        name
+                    }
+                }
+            }
+        ''' % ("wrong-id")
+        self.assertEqual(None, self.make_request(query, 'POST'))

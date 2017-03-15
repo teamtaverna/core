@@ -9,26 +9,22 @@ class WeekdayApiTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com',
-                                       'qwerty123')
-        self.create_admin_account = create_admin_account(
-            *self.admin_test_credentials
-        )
+        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
+        create_admin_account(*self.admin_test_credentials)
         self.header = {
             'HTTP_X_TAVERNATOKEN': obtain_api_key(
                 self.client, *self.admin_test_credentials
             )
         }
-
         self.weekdays = ('weekday1', 'weekday2',)
+        self.first_weekday = self.create_weekday('day1')
 
-        response = self.create_weekday('day1')
-        self.first_weekday = response['data']['createWeekday']['weekday']
+    def make_request(self, query, method='GET'):
+        if method == 'GET':
+            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
 
-    def make_request(self, query):
-        return self.client.post(
-            self.endpoint, {'query': query}, **self.header
-        ).json()
+        if method == 'POST':
+            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_weekday(self, name):
         query = '''
@@ -43,7 +39,7 @@ class WeekdayApiTest(TestCase):
                 }
                 ''' % (name)
 
-        return self.make_request(query)
+        return self.make_request(query, 'POST')
 
     def retrieve_weekday(self, weekday_id):
         query = 'query {weekday(id: "%s") {name}}' % (weekday_id)
@@ -54,140 +50,116 @@ class WeekdayApiTest(TestCase):
         return [self.create_weekday(name) for name in self.weekdays]
 
     def test_creation_of_weekday_object(self):
+        # For new weekday record
         response = self.create_weekday('day2')
         expected = {
-            'createWeekday': {
-                'weekday': {
-                    'id': response['data']['createWeekday']['weekday']['id'],
-                    'originalId': response['data']['createWeekday']['weekday']['originalId'],
-                    'name': 'day2'
-                }
-            }
+            'id': response['id'],
+            'originalId': response['originalId'],
+            'name': 'day2'
         }
+        self.assertEqual(expected, response)
 
-        self.assertEqual(expected, response['data'])
-
-    def test_weekday_object_duplicate(self):
-        response = self.create_weekday('day1')
-        expected = {
-            'createWeekday': {
-                'weekday': None
-            }
-        }
-
-        self.assertEqual(expected, response['data'])
+        # For existing weekday record
+        self.assertEqual(None, self.create_weekday('day1'))
 
     def test_retrieve_weekday_object(self):
+        # Retrieve with valid id
         response = self.retrieve_weekday(self.first_weekday['id'])
         expected = {
-            'weekday': {
-                'name': self.first_weekday['name']
-            }
+            'name': self.first_weekday['name']
         }
+        self.assertEqual(expected, response)
 
-        self.assertEqual(expected, response['data'])
-
-        # Retrieve with wrong id
-        response = self.retrieve_weekday(100)
-        expected = {
-            'weekday': None
-        }
-
-        self.assertEqual(expected, response['data'])
+        # Retrieve with invalid id
+        self.assertEqual(None, self.retrieve_weekday(100))
 
     def test_retrieve_multiple_weekdays_without_filtering(self):
         self.create_multiple_weekdays()
 
         query = 'query {weekdays{edges{node{name}}}}'
 
-        expected = {
-            'weekdays': {
-                'edges': [
-                    {
-                        'node': {
-                            'name': self.first_weekday['name']
-
-                        }
-                    },
-                    {
-                        'node': {
-                            'name': self.weekdays[0]
-
-                        }
-                    },
-                    {
-                        'node': {
-                            'name': self.weekdays[1]
-
-                        }
-                    }
-                ]
+        expected = [
+            {
+                'name': self.first_weekday['name']
+            },
+            {
+                'name': self.weekdays[0]
+            },
+            {
+                'name': self.weekdays[1]
             }
-        }
+        ]
+
         response = self.make_request(query)
 
-        self.assertEqual(expected, response['data'])
+        self.assertEqual(expected, response)
 
     def test_retrieve_multiple_users_filter_by_name(self):
         self.create_multiple_weekdays()
         query = 'query {weekdays(name_Icontains: "day1") {edges{node{name}}}}'
 
-        expected = {
-            'weekdays': {
-                'edges': [
-                    {
-                        'node': {
-                            'name': self.first_weekday['name']
-
-                        }
-                    },
-                    {
-                        'node': {
-                            'name': self.weekdays[0]
-
-                        }
-                    }
-                ]
+        expected = [
+            {
+                'name': self.first_weekday['name']
+            },
+            {
+                'name': self.weekdays[0]
             }
-        }
+        ]
+
         response = self.make_request(query)
 
-        self.assertEqual(expected, response['data'])
+        self.assertEqual(expected, response)
 
     def test_update_weekday_object(self):
+        # Update with valid id
         query = '''
-                mutation{
-                    updateWeekday(
-                        input: {
-                            id: "%s",
-                            name: "day3"
-                        }
-                    )
-                    {
-                        weekday{
-                            id,
-                            originalId,
-                            name
-                        }
+            mutation{
+                updateWeekday(
+                    input: {
+                        id: "%s",
+                        name: "day3"
+                    }
+                )
+                {
+                    weekday{
+                        id,
+                        originalId,
+                        name
                     }
                 }
-                ''' % (self.first_weekday['id'])
-
-        response = self.make_request(query)
-
+            }
+        ''' % (self.first_weekday['id'])
+        response = self.make_request(query, 'POST')
         expected = {
-            'updateWeekday': {
-                'weekday': {
-                    'id': self.first_weekday['id'],
-                    'originalId': self.first_weekday['originalId'],
-                    'name': 'day3'
+            'id': self.first_weekday['id'],
+            'originalId': self.first_weekday['originalId'],
+            'name': 'day3'
+        }
+        self.assertEqual(expected, response)
+
+        # Update with invalid id
+        query = '''
+            mutation{
+                updateWeekday(
+                    input: {
+                        id: "%s",
+                        name: "day3"
+                    }
+                )
+                {
+                    weekday{
+                        id,
+                        originalId,
+                        name
+                    }
                 }
             }
-        }
-
-        self.assertEqual(expected, response['data'])
+        ''' % (100)
+        self.assertEqual(None, self.make_request(query, 'POST'))
 
     def test_deletion_weekday_object(self):
+        # Delete with valid id
         query = '''
             mutation{
                 deleteWeekday(input: {id: "%s"}){
@@ -197,21 +169,21 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (self.first_weekday['id'])
-
-        response = self.make_request(query)
-
+        response = self.make_request(query, 'POST')
         expected = {
-            "deleteWeekday": {
-                "weekday": {
-                    "name": self.first_weekday['name']
+            'name': self.first_weekday['name']
+        }
+        self.assertEqual(expected, response)
+        self.assertEqual(None, self.retrieve_weekday(self.first_weekday['id']))
+
+        # Delete with invalid id
+        query = '''
+            mutation{
+                deleteWeekday(input: {id: "%s"}){
+                    weekday{
+                        name
+                    }
                 }
             }
-        }
-
-        self.assertEqual(expected, response['data'])
-
-        # Verify that the object does not exist anymore
-        response = self.retrieve_weekday(self.first_weekday['id'])
-        self.assertEqual(
-            None, response['data']['weekday']
-        )
+        ''' % (100)
+        self.assertEqual(None, self.make_request(query, 'POST'))

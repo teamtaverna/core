@@ -222,6 +222,7 @@ class UserApiTest(TestCase):
         self.ordering_test_helper('date_joined', users)
 
     def test_update_of_user_object(self):
+        # Update with valid id
         query = '''
             mutation{
                 updateUser(
@@ -257,7 +258,34 @@ class UserApiTest(TestCase):
 
         self.assertEqual(expected, self.make_request(query, 'POST'))
 
+        # Update with invalid id
+        query = '''
+            mutation{
+                updateUser(
+                    input: {
+                        id: "%s",
+                        firstName: "Akeem",
+                        lastName: "Oduola",
+                        username: "oakeem",
+                        email: "akeem.oduola@andela.com"
+                    }
+                )
+                {
+                    user{
+                        id,
+                        originalId,
+                        username,
+                        firstName,
+                        lastName,
+                        email
+                    }
+                }
+            }
+        ''' % ('wrong-id')
+        self.assertEqual(None, self.make_request(query, 'POST'))
+
     def test_deletion_of_user_object(self):
+        # Delete with valid id
         query = '''
             mutation{
                 deleteUser(input: {id: "%s"}){
@@ -274,3 +302,15 @@ class UserApiTest(TestCase):
 
         self.assertEqual(expected, self.make_request(query, 'POST'))
         self.assertEqual(None, self.retrieve_user(self.first_user['id']))
+
+        # Delete with invalid id
+        query = '''
+            mutation{
+                deleteUser(input: {id: "%s"}){
+                    user{
+                        username
+                    }
+                }
+            }
+        ''' % ('wrong-id')
+        self.assertEqual(None, self.make_request(query, 'POST'))

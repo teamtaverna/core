@@ -19,10 +19,7 @@ def get_object(object_name, relayId, otherwise=None):
 
 
 def load_object(instance, args, exception=['id']):
-    if not instance:
-        return instance
+    if instance:
+        [setattr(instance, key, value) for key, value in args.items() if key not in exception]
 
-    for key, value in args.items():
-        if getattr(instance, key) and key not in exception:
-            setattr(instance, key, value)
     return instance

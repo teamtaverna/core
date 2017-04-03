@@ -5,7 +5,9 @@ from graphene_django.converter import convert_django_field
 
 from django.db.models import TimeField
 
-from app.timetables.models import Meal as MealModel
+from app.timetables.models import Meal
+from .utils import get_errors, get_object, load_object
+
 
 # https://github.com/graphql-python/graphene-django/issues/18
 @convert_django_field.register(TimeField)
@@ -17,7 +19,7 @@ class MealNode(DjangoObjectType):
     original_id = graphene.Int()
 
     class Meta:
-        model = MealModel
+        model = Meal
         filter_fields = {
             'name': ['icontains', 'exact']
         }
@@ -42,7 +44,7 @@ class CreateMeal(graphene.relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
         try:
-            meal = MealModel()
+            meal = Meal()
             meal.name = input.get('name')
             meal.start_time = input.get('start_time', '')
             meal.end_time = input.get('end_time', '')
@@ -53,10 +55,29 @@ class CreateMeal(graphene.relay.ClientIDMutation):
             return cls(meal=None, errors=get_errors(e))
 
 
-# class UpdateMeal(graphene.relay.ClientIDMutation):
-#     """Mutation for creating Meals"""
-#     pass
+class UpdateMeal(graphene.relay.ClientIDMutation):
+    """Mutation for creating Meals"""
 
+    class Input:
+        id = graphene.String(required=True)
+        name = graphene.String(required=False)
+        start_time = graphene.String(required=False)
+        end_time = graphene.String(required=False)
+
+    meal = graphene.Field(MealNode)
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    def mutate_and_get_payload(cls, input, context, info):
+        meal = get_object(Meal, input.get('id'))
+        meal = load_object(meal, input)
+        try:
+            if meal:
+                meal.full_clean()
+                meal.save()
+            return cls(meal=meal)
+        except ValidationError as e:
+            return cls(meal=meal, errors=get_errors(e))
 
 # class DeleteMeal(graphene.relay.ClientIDMutation):
 #     """Mutation for creating Meals"""

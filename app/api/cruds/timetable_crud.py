@@ -1,4 +1,5 @@
 from app.timetables.models import Timetable
+import graphene
 from graphene_django import DjangoObjectType
 
 from .utils import get_errors, get_object, load_object

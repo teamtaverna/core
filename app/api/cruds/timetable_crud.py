@@ -23,8 +23,8 @@ class TimetableNode(DjangoObjectType):
                            '-date_created', 'date_modified', '-date_modified']
         interfaces = (graphene.relay.Node, )
 
-        def resolve_original_id(self, args, context, info):
-            return self.id
+    def resolve_original_id(self, args, context, info):
+        return self.id
 
 
 class CreateTimetable(graphene.relay.ClientIDMutation):
@@ -80,7 +80,7 @@ class UpdateTimetable(graphene.relay.ClientIDMutation):
         admin = graphene.String(required=False)
 
     timetable = graphene.Field(TimetableNode)
-    errors = graphen.List(graphene.String)
+    errors = graphene.List(graphene.String)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):
@@ -99,8 +99,10 @@ class DeleteTimetable(graphene.relay.ClientIDMutation):
 
 
     class Input:
-        deleted = graphene.Boolean()
-        timetable = graphene.Field(TimetableNode)
+        id = graphene.String(required=True)
+        
+    deleted = graphene.Boolean()
+    timetable = graphene.Field(TimetableNode)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):

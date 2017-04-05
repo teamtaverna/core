@@ -59,67 +59,77 @@ class DishApiTest(TestCase):
     def ordering_test_helper(self, ordering_param, records):
         # For ascending ordering
         query = 'query{dishes(orderBy: "%s") {edges{node{name}}}}' % (ordering_param)
-        expected = [
-            {
-                'name': records[0]
-            },
-            {
-                'name': records[1]
-            },
-            {
-                'name': records[2]
-            }
-        ]
+        expected = {
+            'dishes': [
+                {
+                    'name': records[0]
+                },
+                {
+                    'name': records[1]
+                },
+                {
+                    'name': records[2]
+                }
+            ]
+        }
         response = self.make_request(query)
         self.assertEqual(expected, response)
 
         # For descending ordering
         query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
-        expected.reverse()
+        expected['dishes'].reverse()
         response = self.make_request(query)
         self.assertEqual(expected, response)
 
     def test_creation_of_dish_object(self):
         # For new dish record
         response = self.create_dish(self.data['name'], self.data['description'])
+        created_dish = response['dish']
         expected = {
-            'id': response['id'],
-            'originalId': response['originalId'],
-            'name': self.data['name']
+            'dish': {
+                'id': created_dish['id'],
+                'originalId': created_dish['originalId'],
+                'name': self.data['name']
+            }
         }
         self.assertEqual(expected, response)
 
         # For existing weekday record
-        self.assertEqual(None, self.create_dish(self.data['name'], self.data['description']))
+        response = self.create_dish(self.data['name'], self.data['description'])
+        self.assertEqual({'dish': None}, response)
 
     def test_retrieval_of_one_dish_object(self):
         # Retrieve with valid id
         expected = {
-            'name': self.data['name']
+            'dish': {
+                'name': self.data['name']
+            }
         }
         create_response = self.create_dish(self.data['name'], self.data['description'])
-        response = self.retrieve_dish(create_response['id'])
+        response = self.retrieve_dish(create_response['dish']['id'])
         self.assertEqual(expected, response)
 
         # Retrieve with invalid id
-        self.assertEqual(None, self.retrieve_dish(2))
+        self.assertEqual({'dish': None}, self.retrieve_dish(2))
 
     def test_retrieval_of_multiple_dish_objects_without_filtering(self):
         self.create_multiple_dishes()
 
         query = 'query {dishes{edges{node{name}}}}'
 
-        expected = [
-            {
-                'name': self.dishes[0][0]
-            },
-            {
-                'name': self.dishes[1][0]
-            },
-            {
-                'name': self.dishes[2][0]
-            }
-        ]
+        expected = {
+            'dishes': [
+                {
+                    'name': self.dishes[0][0]
+                },
+                {
+                    'name': self.dishes[1][0]
+                },
+                {
+                    'name': self.dishes[2][0]
+                }
+            ]
+        }
 
         response = self.make_request(query)
 
@@ -129,14 +139,16 @@ class DishApiTest(TestCase):
         self.create_multiple_dishes()
         query = 'query {dishes(name_Icontains: "Rice") {edges{node{name}}}}'
 
-        expected = [
-            {
-                'name': self.dishes[0][0]
-            },
-            {
-                'name': self.dishes[1][0]
-            }
-        ]
+        expected = {
+            'dishes': [
+                {
+                    'name': self.dishes[0][0]
+                },
+                {
+                    'name': self.dishes[1][0]
+                }
+            ]
+        }
 
         response = self.make_request(query)
 
@@ -180,10 +192,12 @@ class DishApiTest(TestCase):
                     }
                 }
             }
-        ''' % (create_response['id'])
+        ''' % (create_response['dish']['id'])
         expected = {
-            'id': create_response['id'],
-            'name': 'rice edited'
+            'dish': {
+                'id': create_response['dish']['id'],
+                'name': 'rice edited'
+            }
         }
         response = self.make_request(query, 'POST')
         self.assertEqual(expected, response)
@@ -204,8 +218,8 @@ class DishApiTest(TestCase):
                     }
                 }
             }
-        ''' % ("wrong-id")
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        ''' % ('wrong-id')
+        self.assertEqual({'dish': None}, self.make_request(query, 'POST'))
 
     def test_deletion_of_dish_object(self):
         # Delete with valid id
@@ -218,13 +232,15 @@ class DishApiTest(TestCase):
                     }
                 }
             }
-        ''' % (create_response['id'])
+        ''' % (create_response['dish']['id'])
         expected = {
-            "name": self.data['name']
+            'dish': {
+                'name': self.data['name']
+            }
         }
         response = self.make_request(query, 'POST')
         self.assertEqual(expected, response)
-        self.assertEqual(None, self.retrieve_dish(create_response['id']))
+        self.assertEqual({'dish': None}, self.retrieve_dish(create_response['dish']['id']))
 
         # Delete with invalid id
         query = '''
@@ -235,5 +251,5 @@ class DishApiTest(TestCase):
                     }
                 }
             }
-        ''' % ("wrong-id")
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        ''' % ('wrong-id')
+        self.assertEqual({'dish': None}, self.make_request(query, 'POST'))

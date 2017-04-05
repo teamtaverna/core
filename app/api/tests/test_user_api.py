@@ -16,7 +16,7 @@ class UserApiTest(TestCase):
                 self.client, *self.admin_test_credentials
             )
         }
-        self.first_user = self.create_user('oakeem', 'oatman')
+        self.first_user = self.create_user('oakeem', 'oatman')['user']
 
     def make_request(self, query, method='GET'):
         if method == 'GET':
@@ -59,28 +59,30 @@ class UserApiTest(TestCase):
     def ordering_test_helper(self, ordering_param, users):
         # For ascending ordering
         query = 'query{users(orderBy: "%s") {edges{node{username}}}}' % (ordering_param)
-        expected = [
-            {
-                'username': users[0]
-            },
-            {
-                'username': users[1]
-            },
-            {
-                'username': users[2]
-            },
-            {
-                'username': users[3]
-            },
-            {
-                'username': users[4]
-            }
-        ]
+        expected = {
+            'users': [
+                {
+                    'username': users[0]
+                },
+                {
+                    'username': users[1]
+                },
+                {
+                    'username': users[2]
+                },
+                {
+                    'username': users[3]
+                },
+                {
+                    'username': users[4]
+                }
+            ]
+        }
         self.assertEqual(expected, self.make_request(query))
 
         # For descending ordering
         query = 'query {users(orderBy: "-%s") {edges{node{username}}}}' % (ordering_param)
-        expected.reverse()
+        expected['users'].reverse()
         self.assertEqual(expected, self.make_request(query))
 
     def test_creation_of_user_object(self):
@@ -94,10 +96,13 @@ class UserApiTest(TestCase):
             credentials['username'],
             credentials['password']
         )
+        created_user = response['user']
         expected = {
-            'id': response['id'],
-            'originalId': response['originalId'],
-            'username': credentials['username']
+            'user': {
+                'id': created_user['id'],
+                'originalId': created_user['originalId'],
+                'username': created_user['username']
+            }
         }
         self.assertEqual(expected, response)
 
@@ -106,40 +111,44 @@ class UserApiTest(TestCase):
             credentials['username'],
             credentials['password']
         )
-        self.assertEqual(None, response)
+        self.assertEqual({'user': None}, response)
 
     def test_retrieval_of_one_user_object(self):
         # Retrieve with valid id
         expected = {
-            'username': self.first_user['username']
+            'user': {
+                'username': self.first_user['username']
+            }
         }
         self.assertEqual(expected, self.retrieve_user(self.first_user['id']))
 
         # Retrieve with invalid id
-        self.assertEqual(None, self.retrieve_user(100))
+        self.assertEqual({'user': None}, self.retrieve_user(100))
 
     def test_retrieval_of_multiple_user_objects_without_filtering(self):
         new_users = self.create_multiple_users()
 
         query = 'query {users{edges{node{username}}}}'
 
-        expected = [
-            {
-                'username': self.admin_test_credentials[0]
-            },
-            {
-                'username': self.first_user['username']
-            },
-            {
-                'username': new_users[0][0]
-            },
-            {
-                'username': new_users[1][0]
-            },
-            {
-                'username': new_users[2][0]
-            }
-        ]
+        expected = {
+           'users': [
+                {
+                    'username': self.admin_test_credentials[0]
+                },
+                {
+                    'username': self.first_user['username']
+                },
+                {
+                    'username': new_users[0][0]
+                },
+                {
+                    'username': new_users[1][0]
+                },
+                {
+                    'username': new_users[2][0]
+                }
+            ]
+        }
 
         self.assertEqual(expected, self.make_request(query))
 
@@ -148,14 +157,16 @@ class UserApiTest(TestCase):
 
         query = 'query {users(username_Icontains: "H") {edges{node{username}}}}'
 
-        expected = [
-            {
-                'username': new_users[0][0]
-            },
-            {
-                'username': new_users[1][0]
-            }
-        ]
+        expected = {
+            'users': [
+                {
+                    'username': new_users[0][0]
+                },
+                {
+                    'username': new_users[1][0]
+                }
+            ]
+        }
 
         self.assertEqual(expected, self.make_request(query))
 
@@ -164,11 +175,13 @@ class UserApiTest(TestCase):
 
         query = 'query {users(isStaff: true) {edges{node{username}}}}'
 
-        expected = [
-            {
-                'username': self.admin_test_credentials[0]
-            }
-        ]
+        expected = {
+            'users': [
+                {
+                    'username': self.admin_test_credentials[0]
+                }
+            ]
+        }
 
         self.assertEqual(expected, self.make_request(query))
 
@@ -177,11 +190,13 @@ class UserApiTest(TestCase):
 
         query = 'query {users(isActive: true) {edges{node{username}}}}'
 
-        expected = [
-            {
-                'username': self.admin_test_credentials[0]
-            }
-        ]
+        expected = {
+            'users': [
+                {
+                    'username': self.admin_test_credentials[0]
+                }
+            ]
+        }
 
         self.assertEqual(expected, self.make_request(query))
 
@@ -248,12 +263,14 @@ class UserApiTest(TestCase):
         ''' % (self.first_user['id'])
 
         expected = {
-            'id': self.first_user['id'],
-            'originalId': self.first_user['originalId'],
-            'username': 'oakeem',
-            'firstName': 'Akeem',
-            'lastName': 'Oduola',
-            'email': 'akeem.oduola@andela.com',
+            'user': {
+                'id': self.first_user['id'],
+                'originalId': self.first_user['originalId'],
+                'username': 'oakeem',
+                'firstName': 'Akeem',
+                'lastName': 'Oduola',
+                'email': 'akeem.oduola@andela.com',
+            }
         }
 
         self.assertEqual(expected, self.make_request(query, 'POST'))
@@ -282,7 +299,7 @@ class UserApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'user': None}, self.make_request(query, 'POST'))
 
     def test_deletion_of_user_object(self):
         # Delete with valid id
@@ -297,11 +314,13 @@ class UserApiTest(TestCase):
         ''' % (self.first_user['id'])
 
         expected = {
-            'username': self.first_user['username']
+            'user': {
+                'username': self.first_user['username']
+            }
         }
 
         self.assertEqual(expected, self.make_request(query, 'POST'))
-        self.assertEqual(None, self.retrieve_user(self.first_user['id']))
+        self.assertEqual({'user': None}, self.retrieve_user(self.first_user['id']))
 
         # Delete with invalid id
         query = '''
@@ -313,4 +332,4 @@ class UserApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'user': None}, self.make_request(query, 'POST'))

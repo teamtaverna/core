@@ -19,7 +19,7 @@ class TimetableNode(DjangoObjectType):
         filter_order_by = ['id', '-id', 'name', '-name', 'cycle_length', '-cycle_length',
                            'ref_cycle_length', '-ref_cycle_length', 'ref_cycle_date', '-ref_cycle_date',
                             'inactive_weekdays','-inactive_weekdays', 'vendors', '-vendors', 'is_active',
-                            '-is_active', 'description', '-description', 'admins', '-admins' 'date_created',
+                            '-is_active', 'admins', '-admins', 'date_created',
                            '-date_created', 'date_modified', '-date_modified']
         interfaces = (graphene.relay.Node, )
 

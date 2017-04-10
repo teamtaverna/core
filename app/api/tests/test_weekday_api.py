@@ -17,7 +17,7 @@ class WeekdayApiTest(TestCase):
             )
         }
         self.weekdays = ('weekday1', 'weekday2',)
-        self.first_weekday = self.create_weekday('day1')
+        self.first_weekday = self.create_weekday('day1')['weekday']
 
     def make_request(self, query, method='GET'):
         if method == 'GET':
@@ -52,43 +52,50 @@ class WeekdayApiTest(TestCase):
     def test_creation_of_weekday_object(self):
         # For new weekday record
         response = self.create_weekday('day2')
+        created_weekday = response['weekday']
         expected = {
-            'id': response['id'],
-            'originalId': response['originalId'],
-            'name': 'day2'
+            'weekday': {
+                'id': created_weekday['id'],
+                'originalId': created_weekday['originalId'],
+                'name': 'day2'
+            }
         }
         self.assertEqual(expected, response)
 
         # For existing weekday record
-        self.assertEqual(None, self.create_weekday('day1'))
+        self.assertEqual({'weekday': None}, self.create_weekday('day1'))
 
     def test_retrieve_weekday_object(self):
         # Retrieve with valid id
         response = self.retrieve_weekday(self.first_weekday['id'])
         expected = {
-            'name': self.first_weekday['name']
+            'weekday': {
+                'name': self.first_weekday['name']
+            }
         }
         self.assertEqual(expected, response)
 
         # Retrieve with invalid id
-        self.assertEqual(None, self.retrieve_weekday(100))
+        self.assertEqual({'weekday': None}, self.retrieve_weekday(100))
 
     def test_retrieve_multiple_weekdays_without_filtering(self):
         self.create_multiple_weekdays()
 
         query = 'query {weekdays{edges{node{name}}}}'
 
-        expected = [
-            {
-                'name': self.first_weekday['name']
-            },
-            {
-                'name': self.weekdays[0]
-            },
-            {
-                'name': self.weekdays[1]
-            }
-        ]
+        expected = {
+            'weekdays': [
+                {
+                    'name': self.first_weekday['name']
+                },
+                {
+                    'name': self.weekdays[0]
+                },
+                {
+                    'name': self.weekdays[1]
+                }
+            ]
+        }
 
         response = self.make_request(query)
 
@@ -98,14 +105,16 @@ class WeekdayApiTest(TestCase):
         self.create_multiple_weekdays()
         query = 'query {weekdays(name_Icontains: "day1") {edges{node{name}}}}'
 
-        expected = [
-            {
-                'name': self.first_weekday['name']
-            },
-            {
-                'name': self.weekdays[0]
-            }
-        ]
+        expected = {
+            'weekdays': [
+                {
+                    'name': self.first_weekday['name']
+                },
+                {
+                    'name': self.weekdays[0]
+                }
+            ]
+        }
 
         response = self.make_request(query)
 
@@ -132,9 +141,11 @@ class WeekdayApiTest(TestCase):
         ''' % (self.first_weekday['id'])
         response = self.make_request(query, 'POST')
         expected = {
-            'id': self.first_weekday['id'],
-            'originalId': self.first_weekday['originalId'],
-            'name': 'day3'
+            'weekday': {
+                'id': self.first_weekday['id'],
+                'originalId': self.first_weekday['originalId'],
+                'name': 'day3'
+            }
         }
         self.assertEqual(expected, response)
 
@@ -156,7 +167,7 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (100)
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'weekday': None}, self.make_request(query, 'POST'))
 
     def test_deletion_weekday_object(self):
         # Delete with valid id
@@ -171,10 +182,12 @@ class WeekdayApiTest(TestCase):
         ''' % (self.first_weekday['id'])
         response = self.make_request(query, 'POST')
         expected = {
-            'name': self.first_weekday['name']
+            'weekday': {
+                'name': self.first_weekday['name']
+            }
         }
         self.assertEqual(expected, response)
-        self.assertEqual(None, self.retrieve_weekday(self.first_weekday['id']))
+        self.assertEqual({'weekday': None}, self.retrieve_weekday(self.first_weekday['id']))
 
         # Delete with invalid id
         query = '''
@@ -186,4 +199,4 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (100)
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'weekday': None}, self.make_request(query, 'POST'))

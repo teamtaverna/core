@@ -21,6 +21,7 @@ class Query(graphene.AbstractType):
     meal = graphene.relay.Node.Field(MealNode)
     meals = DjangoFilterConnectionField(MealNode)
 
+
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()

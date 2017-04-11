@@ -1,8 +1,6 @@
-from base64 import b64encode
 import datetime
 
 from django.test import Client, TestCase
-from django.contrib.auth.models import User
 
 from app.api.tests.utils import obtain_api_key, create_admin_account
 
@@ -46,7 +44,7 @@ class MealApiTest(TestCase):
             }
         ''' % (name, start_time, end_time)
 
-        return self.make_request(query, 'POST')
+        return self.make_request(query, method='POST')
 
     def retrieve_meal(self, id):
         query = 'query {meal(id: "%s" ) {name}}' % (id)
@@ -54,30 +52,40 @@ class MealApiTest(TestCase):
         return self.make_request(query)
 
     def test_creation_of_meal_object(self):
-        response = self.create_meal(self.data['name'], self.data['start_time'], self.data['end_time'])
+        response = self.create_meal(self.data['name'],
+                                    self.data['start_time'],
+                                    self.data['end_time'])
+        created_meal = response['meal']
         expected = {
-            'id': response['id'],
-            'originalId': response['originalId'],
-            'name': self.data['name']
+            'meal': {
+                'id': created_meal['id'],
+                'originalId': created_meal['originalId'],
+                'name': self.data['name']
+            }
         }
 
         self.assertEqual(expected, response)
-
 
     def test_retrieval_of_one_meal_object(self):
         # Retrieve with valid id
         expected = {
-            'name': self.data['name']
+            'meal': {
+                'name': self.data['name']
+            }
         }
-        create_response = self.create_meal(self.data['name'], self.data['start_time'], self.data['end_time'])
-        response = self.retrieve_meal(create_response['id'])
+        create_response = self.create_meal(self.data['name'],
+                                           self.data['start_time'],
+                                           self.data['end_time'])
+        response = self.retrieve_meal(create_response['meal']['id'])
         self.assertEqual(expected, response)
 
         # Retrieve with invalid id
-        self.assertEqual(None, self.retrieve_meal(2))
+        self.assertEqual({'meal': None}, self.retrieve_meal(2))
 
     def test_updating_of_meal_object(self):
-        create_response = self.create_meal(self.data['name'], self.data['start_time'], self.data['end_time'])
+        create_response = self.create_meal(self.data['name'],
+                                           self.data['start_time'],
+                                           self.data['end_time'])
         # Update with valid id
         query = '''
             mutation{
@@ -94,10 +102,12 @@ class MealApiTest(TestCase):
                     }
                 }
             }
-        ''' % (create_response['id'])
+        ''' % (create_response['meal']['id'])
         expected = {
-            'id': create_response['id'],
-            'name': 'breakfast edited'
+            'meal': {
+                'id': create_response['meal']['id'],
+                'name': 'breakfast edited'
+            }
         }
         response = self.make_request(query, 'POST')
         self.assertEqual(expected, response)
@@ -119,11 +129,13 @@ class MealApiTest(TestCase):
                 }
             }
         ''' % ("wrong-id")
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'meal': None}, self.make_request(query, 'POST'))
 
     def test_deletion_of_meal_object(self):
         # Delete with valid id
-        create_response = self.create_meal(self.data['name'], self.data['start_time'], self.data['end_time'])
+        create_response = self.create_meal(self.data['name'],
+                                           self.data['start_time'],
+                                           self.data['end_time'])
         query = '''
             mutation{
                 deleteMeal(input: {id: "%s"}){
@@ -132,13 +144,15 @@ class MealApiTest(TestCase):
                     }
                 }
             }
-        ''' % (create_response['id'])
+        ''' % (create_response['meal']['id'])
         expected = {
-            "name": self.data['name']
+            'meal': {
+                "name": self.data['name']
+            }
         }
         response = self.make_request(query, 'POST')
         self.assertEqual(expected, response)
-        self.assertEqual(None, self.retrieve_meal(create_response['id']))
+        self.assertEqual({'meal': None}, self.retrieve_meal(create_response['meal']['id']))
 
         # Delete with invalid id
         query = '''
@@ -150,4 +164,4 @@ class MealApiTest(TestCase):
                 }
             }
         ''' % ("wrong-id")
-        self.assertEqual(None, self.make_request(query, 'POST'))
+        self.assertEqual({'meal': None}, self.make_request(query, 'POST'))

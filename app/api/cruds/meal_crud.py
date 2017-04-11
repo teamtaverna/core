@@ -4,6 +4,7 @@ from graphene_django.types import DjangoObjectType
 from graphene_django.converter import convert_django_field
 
 from django.db.models import TimeField
+from django.core.exceptions import ValidationError
 
 from app.timetables.models import Meal
 from app.api.cruds.utils import get_errors, get_object, load_object
@@ -13,6 +14,7 @@ from app.api.cruds.utils import get_errors, get_object, load_object
 @convert_django_field.register(TimeField)
 def convert_function(field, registry=None):
     return graphene.String()
+
 
 class MealNode(DjangoObjectType):
     """GraphQL Node for Meal model"""
@@ -98,4 +100,3 @@ class DeleteMeal(graphene.relay.ClientIDMutation):
             return cls(deleted=True, meal=meal)
         except:
             return cls(deleted=False, meal=None)
-

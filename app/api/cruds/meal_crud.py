@@ -6,7 +6,7 @@ from graphene_django.converter import convert_django_field
 from django.db.models import TimeField
 
 from app.timetables.models import Meal
-from .utils import get_errors, get_object, load_object
+from app.api.cruds.utils import get_errors, get_object, load_object
 
 
 # https://github.com/graphql-python/graphene-django/issues/18
@@ -16,6 +16,7 @@ def convert_function(field, registry=None):
 
 class MealNode(DjangoObjectType):
     """GraphQL Node for Meal model"""
+
     original_id = graphene.Int()
 
     class Meta:
@@ -79,6 +80,22 @@ class UpdateMeal(graphene.relay.ClientIDMutation):
         except ValidationError as e:
             return cls(meal=meal, errors=get_errors(e))
 
-# class DeleteMeal(graphene.relay.ClientIDMutation):
-#     """Mutation for creating Meals"""
-#     pass
+
+class DeleteMeal(graphene.relay.ClientIDMutation):
+    """Mutation for Deleting Meals"""
+
+    class Input:
+        id = graphene.String(required=True)
+
+    deleted = graphene.Boolean()
+    meal = graphene.Field(MealNode)
+
+    @classmethod
+    def mutate_and_get_payload(cls, input, context, info):
+        try:
+            meal = get_object(Meal, input.get('id'))
+            meal.delete()
+            return cls(deleted=True, meal=meal)
+        except:
+            return cls(deleted=False, meal=None)
+

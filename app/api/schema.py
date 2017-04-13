@@ -6,6 +6,7 @@ from .cruds.dish_crud import DishNode, CreateDish, UpdateDish, DeleteDish
 from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
                                  DeleteWeekday,)
 from .cruds.meal_crud import MealNode, CreateMeal, UpdateMeal, DeleteMeal
+from .cruds.vendor_crud import VendorNode
 
 
 class Query(graphene.AbstractType):
@@ -20,6 +21,9 @@ class Query(graphene.AbstractType):
 
     meal = graphene.relay.Node.Field(MealNode)
     meals = DjangoFilterConnectionField(MealNode)
+
+    vendor = graphene.relay.Node.Field(VendorNode)
+    vendors = DjangoFilterConnectionField(VendorNode)
 
 
 class Mutation(graphene.ObjectType):

@@ -33,7 +33,7 @@ class GraphqlResponseFlattenerMiddleware(object):
                 # Use case for retrieval a record
                 elif isinstance(resource, dict):
                     print(key, resource)
-                    if self.contains_dict(resource):
+                    if self.contains_dict_or_None(resource):
                         flattened_content.update(resource)
                     else:
                         flattened_content[key] = resource
@@ -47,8 +47,11 @@ class GraphqlResponseFlattenerMiddleware(object):
         response.content = json.dumps(content)
         return response
 
-    def contains_dict(self, resource):
+    def contains_dict_or_None(self, resource):
         for key, value in resource.items():
+            if value is None:
+                return True
+
             if not isinstance(value, dict):
                 return False
         return True

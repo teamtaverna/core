@@ -105,7 +105,7 @@ class DishApiTest(TestCase):
         }
         create_response = self.create_dish(self.data['name'], self.data['description'])
         response = self.retrieve_dish(create_response['dish']['id'])
-        self.assertEqual(expected, response)
+        self.assertEqual(expected, response['dish'])
 
         # Retrieve with invalid id
         self.assertEqual({'dish': None}, self.retrieve_dish(2))

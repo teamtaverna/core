@@ -39,7 +39,6 @@ class UserApiTest(TestCase):
         ''' % (username, password)
 
         response = self.make_request(query, 'POST')
-        print(response)
         return response
 
     def create_multiple_users(self):

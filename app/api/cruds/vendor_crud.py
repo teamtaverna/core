@@ -1,7 +1,10 @@
+from django.core.exceptions import ValidationError
+
 import graphene
 from graphene_django import DjangoObjectType
 
 from app.timetables.models import Vendor
+from .utils import get_errors
 
 
 class VendorNode(DjangoObjectType):
@@ -17,3 +20,25 @@ class VendorNode(DjangoObjectType):
 
     def resolve_original_id(self, args, context, info):
         return self.id
+
+
+class CreateVendor(graphene.relay.ClientIDMutation):
+    vendor = graphene.Field(VendorNode)
+    errors = graphene.List(graphene.String)
+
+    class Input:
+        name = graphene.String(required=True)
+        info = graphene.String(required=False)
+
+    @classmethod
+    def mutate_and_get_payload(cls, input, context, info):
+        try:
+            vendor = Vendor(
+                name=input.get('name'),
+                info=input.get('info', '')
+            )
+            vendor.full_clean()
+            vendor.save()
+            return cls(vendor=vendor)
+        except ValidationError as e:
+            return cls(vendor=None, errors=get_errors(e))

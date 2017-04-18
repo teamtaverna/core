@@ -70,3 +70,22 @@ class UpdateVendor(graphene.relay.ClientIDMutation):
             return cls(vendor=vendor)
         except ValidationError as e:
             return cls(vendor=vendor, errors=get_errors(e))
+
+
+class DeleteVendor(graphene.relay.ClientIDMutation):
+    """API functionality to delete vendors."""
+
+    vendor = graphene.Field(VendorNode)
+    deleted = graphene.Boolean()
+
+    class Input:
+        id = graphene.String(required=True)
+
+    @classmethod
+    def mutate_and_get_payload(cls, input, context, info):
+        try:
+            vendor = get_object(Vendor, input.get('id'))
+            vendor.delete()
+            return cls(deleted=True, vendor=vendor)
+        except:
+            return cls(deleted=False, vendor=None)

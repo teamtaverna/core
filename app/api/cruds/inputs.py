@@ -19,6 +19,7 @@ class UserCreateInput(graphene.InputObjectType):
 
 
 class UserUpdateInput(graphene.InputObjectType):
+    id = graphene.String(required=True)
     username = graphene.String(required=False)
     first_name = graphene.String(required=False)
     last_name = graphene.String(required=False)

@@ -9,12 +9,15 @@ class GraphqlResponseFlattenerMiddleware(object):
 
     def __call__(self, request):
         response = self.get_response(request)
+
         try:
             content = json.loads(response.content.decode())
         except json.JSONDecodeError:
             return response
 
-        if 'data' in content and request.method == 'GET':
+        if 'data' in content:
+            if content['data'].get('__schema'):
+                return response
             flattened_content = {}
             index = 0
             for resource in list(content['data'].values()):
@@ -34,14 +37,6 @@ class GraphqlResponseFlattenerMiddleware(object):
                     flattened_content[list(content['data'].keys())[index]] = resource
 
                 index += 1
-            content = flattened_content
-        elif 'data' in content and request.method == 'POST':
-            flattened_content = {}
-            for resource in list(content['data'].values()):
-                if resource:
-                    item = list(resource.values())[0]
-                    if item is None or isinstance(item, dict):
-                        flattened_content[list(resource.keys())[0]] = item
             content = flattened_content
 
         response.content = json.dumps(content)

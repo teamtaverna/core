@@ -28,7 +28,7 @@ class UserApiTest(TestCase):
     def create_user(self, username, password):
         query = '''
             mutation{
-              createUser(input: {username: "%s", password: "%s"}){
+              createUser(input: {user:{username: "%s", password: "%s"}}){
                 user{
                   id,
                   originalId,
@@ -38,7 +38,9 @@ class UserApiTest(TestCase):
             }
         ''' % (username, password)
 
-        return self.make_request(query, 'POST')
+        response = self.make_request(query, 'POST')
+        print(response)
+        return response
 
     def create_multiple_users(self):
         new_users = (
@@ -112,6 +114,33 @@ class UserApiTest(TestCase):
             credentials['password']
         )
         self.assertEqual({'user': None}, response)
+
+    def test_creation_of_user_with_profile(self):
+        query = '''
+            mutation{
+              createUser(input: {username: "%s", password: "%s", profile: {customAuthId:"abc"}}){
+                user{
+                  id,
+                  originalId,
+                  username,
+                  profile{customAuthId}
+                }
+              }
+            }
+        ''' % ('tom_dick', 'qwerty123')
+
+        response = self.make_request(query, 'POST')
+        print(response)
+        created_user = response['user']
+        expected = {
+            'user': {
+                'id': created_user['id'],
+                'originalId': created_user['originalId'],
+                'username': created_user['username'],
+                'profile': {'customAuthId': 'abc'}
+            }
+        }
+        self.assertEqual(expected, response)
 
     def test_retrieval_of_one_user_object(self):
         # Retrieve with valid id

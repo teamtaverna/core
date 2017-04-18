@@ -118,7 +118,7 @@ class UserApiTest(TestCase):
     def test_creation_of_user_with_profile(self):
         query = '''
             mutation{
-              createUser(input: {username: "%s", password: "%s", profile: {customAuthId:"abc"}}){
+              createUser(input: {user:{username: "%s", password: "%s"}, profile: {customAuthId:"abc"}}){
                 user{
                   id,
                   originalId,
@@ -130,7 +130,6 @@ class UserApiTest(TestCase):
         ''' % ('tom_dick', 'qwerty123')
 
         response = self.make_request(query, 'POST')
-        print(response)
         created_user = response['user']
         expected = {
             'user': {

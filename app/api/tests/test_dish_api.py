@@ -101,9 +101,7 @@ class DishApiTest(TestCase):
     def test_retrieval_of_one_dish_object(self):
         # Retrieve with valid id
         expected = {
-            'dish': {
-                'name': self.data['name']
-            }
+            'name': self.data['name']
         }
         create_response = self.create_dish(self.data['name'], self.data['description'])
         response = self.retrieve_dish(create_response['dish']['id'])

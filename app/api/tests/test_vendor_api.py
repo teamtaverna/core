@@ -9,9 +9,10 @@ class VendorApiTest(TestCase):
     def setUp(self):
         self.client = Client()
         create_admin_account()
+        self.first_vendor = self.create_vendor('vendor1', 'info1')['vendor']
         self.vendors = (
-            ('vendor1', 'info1'),
-            ('vendor2', 'info2')
+            ('vendor2', 'info2'),
+            ('vendor3', 'info3')
         )
 
     def create_vendor(self, name, info):
@@ -50,3 +51,20 @@ class VendorApiTest(TestCase):
             }
         }
         self.assertEqual(expected, response)
+
+        # For existing vendor record
+        self.assertEqual({'vendor': None},
+                         self.create_vendor('vendor1', 'info1'))
+
+    def test_retrieve_vendor_object(self):
+        # Retrieve with valid id
+        response = self.retrieve_vendor(self.first_vendor['id'])
+        expected = {
+            'vendor': {
+                'name': self.first_vendor['name']
+            }
+        }
+        self.assertEqual(expected, response)
+
+        # Retrieve with invalid id
+        self.assertEqual({'vendor': None}, self.retrieve_vendor(100))

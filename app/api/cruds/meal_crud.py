@@ -26,7 +26,7 @@ class MealNode(DjangoObjectType):
         filter_fields = {
             'name': ['icontains', 'exact']
         }
-        filter_order_by = ['id', 'start_time']
+        filter_order_by = ['id', 'name', 'start_time', 'end_time']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):
@@ -37,9 +37,9 @@ class CreateMeal(graphene.relay.ClientIDMutation):
     """Mutation for creating Meals"""
 
     class Input:
-        name = graphene.String(require=True)
-        start_time = graphene.String(require=True)
-        end_time = graphene.String(require=True)
+        name = graphene.String(required=True)
+        start_time = graphene.String(required=True)
+        end_time = graphene.String(required=True)
 
     meal = graphene.Field(MealNode)
     errors = graphene.List(graphene.String)
@@ -49,8 +49,8 @@ class CreateMeal(graphene.relay.ClientIDMutation):
         try:
             meal = Meal()
             meal.name = input.get('name')
-            meal.start_time = input.get('start_time', '')
-            meal.end_time = input.get('end_time', '')
+            meal.start_time = input.get('start_time')
+            meal.end_time = input.get('end_time')
             meal.full_clean()
             meal.save()
             return cls(meal=meal)

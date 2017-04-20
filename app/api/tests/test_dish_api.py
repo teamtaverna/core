@@ -1,6 +1,6 @@
 from django.test import Client, TestCase
 
-from .utils import obtain_api_key, create_admin_account
+from .utils import create_admin_account, make_request
 
 
 class DishApiTest(TestCase):
@@ -8,9 +8,7 @@ class DishApiTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-        create_admin_account(*self.admin_test_credentials)
+        create_admin_account()
         self.data = {
             'name': 'rice',
             'description': 'white rice'
@@ -20,18 +18,6 @@ class DishApiTest(TestCase):
             ('Coconut rice', 'rice with coconut flavor'),
             ('plantain', 'fried plantain'),
         )
-        self.header = {
-            'HTTP_X_TAVERNATOKEN': obtain_api_key(
-                self.client, *self.admin_test_credentials
-            )
-        }
-
-    def make_request(self, query, method='GET'):
-        if method == 'GET':
-            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
-
-        if method == 'POST':
-            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_dish(self, name, description):
         query = '''
@@ -46,7 +32,7 @@ class DishApiTest(TestCase):
             }
         ''' % (name, description)
 
-        return self.make_request(query, 'POST')
+        return make_request(self.client, query, 'POST')
 
     def create_multiple_dishes(self):
         return [self.create_dish(name, description) for name, description in self.dishes]
@@ -54,7 +40,7 @@ class DishApiTest(TestCase):
     def retrieve_dish(self, id):
         query = 'query {dish(id: "%s" ) {name}}' % (id)
 
-        return self.make_request(query)
+        return make_request(self.client, query)
 
     def ordering_test_helper(self, ordering_param, records):
         # For ascending ordering
@@ -72,13 +58,13 @@ class DishApiTest(TestCase):
                 }
             ]
         }
-        response = self.make_request(query)
+        response = make_request(self.client, query)
         self.assertEqual(expected, response)
 
         # For descending ordering
         query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
         expected['dishes'].reverse()
-        response = self.make_request(query)
+        response = make_request(self.client, query)
         self.assertEqual(expected, response)
 
     def test_creation_of_dish_object(self):
@@ -131,7 +117,7 @@ class DishApiTest(TestCase):
             ]
         }
 
-        response = self.make_request(query)
+        response = make_request(self.client, query)
 
         self.assertEqual(expected, response)
 
@@ -150,7 +136,7 @@ class DishApiTest(TestCase):
             ]
         }
 
-        response = self.make_request(query)
+        response = make_request(self.client, query)
 
         self.assertEqual(expected, response)
 
@@ -199,7 +185,7 @@ class DishApiTest(TestCase):
                 'name': 'rice edited'
             }
         }
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         self.assertEqual(expected, response)
 
         # Update with invalid id
@@ -219,7 +205,7 @@ class DishApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual({'dish': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'dish': None}, make_request(self.client, query, 'POST'))
 
     def test_deletion_of_dish_object(self):
         # Delete with valid id
@@ -238,7 +224,7 @@ class DishApiTest(TestCase):
                 'name': self.data['name']
             }
         }
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         self.assertEqual(expected, response)
         self.assertEqual({'dish': None}, self.retrieve_dish(create_response['dish']['id']))
 
@@ -252,4 +238,4 @@ class DishApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual({'dish': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'dish': None}, make_request(self.client, query, 'POST'))

@@ -1,6 +1,6 @@
 from django.test import Client, TestCase
 
-from .utils import obtain_api_key, create_admin_account
+from .utils import create_admin_account, make_request
 
 
 class WeekdayApiTest(TestCase):
@@ -8,23 +8,9 @@ class WeekdayApiTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-        create_admin_account(*self.admin_test_credentials)
-        self.header = {
-            'HTTP_X_TAVERNATOKEN': obtain_api_key(
-                self.client, *self.admin_test_credentials
-            )
-        }
+        create_admin_account()
         self.weekdays = ('weekday1', 'weekday2',)
         self.first_weekday = self.create_weekday('day1')['weekday']
-
-    def make_request(self, query, method='GET'):
-        if method == 'GET':
-            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
-
-        if method == 'POST':
-            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_weekday(self, name):
         query = '''
@@ -39,12 +25,12 @@ class WeekdayApiTest(TestCase):
                 }
                 ''' % (name)
 
-        return self.make_request(query, 'POST')
+        return make_request(self.client, query, 'POST')
 
     def retrieve_weekday(self, weekday_id):
         query = 'query {weekday(id: "%s") {name}}' % (weekday_id)
 
-        return self.make_request(query)
+        return make_request(self.client, query)
 
     def create_multiple_weekdays(self):
         return [self.create_weekday(name) for name in self.weekdays]
@@ -97,7 +83,7 @@ class WeekdayApiTest(TestCase):
             ]
         }
 
-        response = self.make_request(query)
+        response = make_request(self.client, query)
 
         self.assertEqual(expected, response)
 
@@ -116,7 +102,7 @@ class WeekdayApiTest(TestCase):
             ]
         }
 
-        response = self.make_request(query)
+        response = make_request(self.client, query)
 
         self.assertEqual(expected, response)
 
@@ -139,7 +125,7 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (self.first_weekday['id'])
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         expected = {
             'weekday': {
                 'id': self.first_weekday['id'],
@@ -167,7 +153,7 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (100)
-        self.assertEqual({'weekday': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'weekday': None}, make_request(self.client, query, 'POST'))
 
     def test_deletion_weekday_object(self):
         # Delete with valid id
@@ -180,7 +166,7 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (self.first_weekday['id'])
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         expected = {
             'weekday': {
                 'name': self.first_weekday['name']
@@ -199,4 +185,4 @@ class WeekdayApiTest(TestCase):
                 }
             }
         ''' % (100)
-        self.assertEqual({'weekday': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'weekday': None}, make_request(self.client, query, 'POST'))

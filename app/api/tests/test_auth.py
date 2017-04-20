@@ -1,35 +1,18 @@
-from base64 import b64encode
 import json
 
-from django.contrib.auth.models import User
 from django.http import HttpRequest, JsonResponse
 from django.test import Client, TestCase
 
 from ..auth import authorization_required
+from .utils import obtain_api_key, create_admin_account
 
 
 class ApiAuthTest(TestCase):
     """Test for API Auth."""
 
     def setUp(self):
+        self.client = Client()
         self.request = HttpRequest()
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-
-    def obtain_api_key(self):
-        client = Client()
-        credentials = '{}:{}'.format(
-            self.admin_test_credentials[0],
-            self.admin_test_credentials[2]
-        )
-        b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
-
-        return client.post(
-            '/api/api_key',
-            **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}
-        ).json()['api_key']
-
-    def create_admin_account(self):
-        User.objects.create_superuser(*self.admin_test_credentials)
 
     @staticmethod
     @authorization_required
@@ -55,8 +38,8 @@ class ApiAuthTest(TestCase):
 
     def test_api_get_request_with_valid_api_key_header(self):
         self.request.method = 'GET'
-        self.create_admin_account()
-        self.request.META['HTTP_X_TAVERNATOKEN'] = self.obtain_api_key()
+        create_admin_account()
+        self.request.META['HTTP_X_TAVERNATOKEN'] = obtain_api_key(self.client)
         response = self.make_request()
 
         self.assertEqual('Success.', response['message'])
@@ -76,8 +59,8 @@ class ApiAuthTest(TestCase):
 
     def test_api_post_request_with_valid_api_key_header(self):
         self.request.method = 'POST'
-        self.create_admin_account()
-        self.request.META['HTTP_X_TAVERNATOKEN'] = self.obtain_api_key()
+        create_admin_account()
+        self.request.META['HTTP_X_TAVERNATOKEN'] = obtain_api_key(self.client)
         response = self.make_request()
 
         self.assertEqual('Success.', response['message'])

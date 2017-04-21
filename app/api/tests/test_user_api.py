@@ -28,7 +28,7 @@ class UserApiTest(TestCase):
     def create_user(self, username, password):
         query = '''
             mutation{
-              createUser(input: {username: "%s", password: "%s"}){
+              createUser(input: {user:{username: "%s", password: "%s"}}){
                 user{
                   id,
                   originalId,
@@ -112,6 +112,33 @@ class UserApiTest(TestCase):
             credentials['password']
         )
         self.assertEqual({'user': None}, response)
+
+    def test_creation_of_user_with_profile(self):
+        query = '''
+            mutation{
+              createUser(input: {user:{username: "%s", password: "%s"},
+                profile: {customAuthId:"abc"}}){
+                user{
+                  id,
+                  originalId,
+                  username,
+                  profile{customAuthId}
+                }
+              }
+            }
+        ''' % ('tom_dick', 'qwerty123')
+
+        response = self.make_request(query, 'POST')
+        created_user = response['user']
+        expected = {
+            'user': {
+                'id': created_user['id'],
+                'originalId': created_user['originalId'],
+                'username': created_user['username'],
+                'profile': {'customAuthId': 'abc'}
+            }
+        }
+        self.assertEqual(expected, response)
 
     def test_retrieval_of_one_user_object(self):
         # Retrieve with valid id
@@ -242,11 +269,14 @@ class UserApiTest(TestCase):
             mutation{
                 updateUser(
                     input: {
-                        id: "%s",
-                        firstName: "Akeem",
-                        lastName: "Oduola",
-                        username: "oakeem",
-                        email: "akeem.oduola@andela.com"
+                        user:{
+                            id: "%s",
+                            firstName: "Akeem",
+                            lastName: "Oduola",
+                            username: "oakeem",
+                            email: "akeem.oduola@andela.com"
+                        }
+
                     }
                 )
                 {
@@ -280,11 +310,13 @@ class UserApiTest(TestCase):
             mutation{
                 updateUser(
                     input: {
-                        id: "%s",
-                        firstName: "Akeem",
-                        lastName: "Oduola",
-                        username: "oakeem",
-                        email: "akeem.oduola@andela.com"
+                        user:{
+                            id: "%s",
+                            firstName: "Akeem",
+                            lastName: "Oduola",
+                            username: "oakeem",
+                            email: "akeem.oduola@andela.com"
+                        }
                     }
                 )
                 {
@@ -300,6 +332,53 @@ class UserApiTest(TestCase):
             }
         ''' % ('wrong-id')
         self.assertEqual({'user': None}, self.make_request(query, 'POST'))
+
+    def test_update_of_user_object_with_profile(self):
+        # Update with valid id
+        query = '''
+            mutation{
+                updateUser(
+                    input: {
+                        user:{
+                            id: "%s",
+                            firstName: "Akeem",
+                            lastName: "Oduola",
+                            username: "oakeem",
+                            email: "akeem.oduola@andela.com"
+                        },
+                        profile: {customAuthId:"abcd"}
+
+                    }
+                )
+                {
+                    user{
+                        id,
+                        originalId,
+                        username,
+                        firstName,
+                        lastName,
+                        email,
+                        profile{customAuthId}
+                    }
+                }
+            }
+        ''' % (self.first_user['id'])
+
+        expected = {
+            'user': {
+                'id': self.first_user['id'],
+                'originalId': self.first_user['originalId'],
+                'username': 'oakeem',
+                'firstName': 'Akeem',
+                'lastName': 'Oduola',
+                'email': 'akeem.oduola@andela.com',
+                'profile': {
+                    'customAuthId': 'abcd'
+                }
+            }
+        }
+
+        self.assertEqual(expected, self.make_request(query, 'POST'))
 
     def test_deletion_of_user_object(self):
         # Delete with valid id

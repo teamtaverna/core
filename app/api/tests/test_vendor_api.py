@@ -91,3 +91,101 @@ class VendorApiTest(TestCase):
         response = make_request(self.client, query)
 
         self.assertEqual(expected, response)
+
+    def test_retrieve_multiple_users_filter_by_name(self):
+        self.create_multiple_vendors()
+        query = 'query {vendors(name_Icontains: "ndor1") {edges{node{name}}}}'
+
+        expected = {
+            'vendors': [
+                {
+                    'name': self.first_vendor['name']
+                }
+            ]
+        }
+
+        response = make_request(self.client, query)
+
+        self.assertEqual(expected, response)
+
+    def test_update_vendor_object(self):
+        # Update with valid id
+        query = '''
+            mutation{
+                updateVendor(
+                    input: {
+                        id: "%s",
+                        name: "vendor1_updated"
+                    }
+                )
+                {
+                    vendor{
+                        id,
+                        originalId,
+                        name
+                    }
+                }
+            }
+        ''' % (self.first_vendor['id'])
+        response = make_request(self.client, query, 'POST')
+        expected = {
+            'vendor': {
+                'id': self.first_vendor['id'],
+                'originalId': self.first_vendor['originalId'],
+                'name': 'vendor1_updated'
+            }
+        }
+        self.assertEqual(expected, response)
+
+        # Update with invalid id
+        query = '''
+            mutation{
+                updateVendor(
+                    input: {
+                        id: "%s",
+                        name: "invalid_update"
+                    }
+                )
+                {
+                    vendor{
+                        id,
+                        originalId,
+                        name
+                    }
+                }
+            }
+        ''' % (100)
+        self.assertEqual({'vendor': None},
+                         make_request(self.client, query, 'POST'))
+
+    def test_deletion_vendor_object(self):
+        # Delete with valid id
+        query = '''
+            mutation{
+                deleteVendor(input: {id: "%s"}){
+                    vendor{
+                        name
+                    }
+                }
+            }
+        ''' % (self.first_vendor['id'])
+        response = make_request(self.client, query, 'POST')
+        expected = {
+            'vendor': {
+                'name': self.first_vendor['name']
+            }
+        }
+        self.assertEqual(expected, response)
+        self.assertEqual({'vendor': None}, self.retrieve_vendor(self.first_vendor['id']))
+
+        # Delete with invalid id
+        query = '''
+            mutation{
+                deleteVendor(input: {id: "%s"}){
+                    vendor{
+                        name
+                    }
+                }
+            }
+        ''' % (100)
+        self.assertEqual({'vendor': None}, make_request(self.client, query, 'POST'))

@@ -87,7 +87,7 @@ class WeekdayApiTest(TestCase):
 
         self.assertEqual(expected, response)
 
-    def test_retrieve_multiple_users_filter_by_name(self):
+    def test_retrieve_multiple_weekdays_filter_by_name(self):
         self.create_multiple_weekdays()
         query = 'query {weekdays(name_Icontains: "day1") {edges{node{name}}}}'
 

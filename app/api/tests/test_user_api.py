@@ -115,7 +115,7 @@ class UserApiTest(TestCase):
             }
         ''' % ('tom_dick', 'qwerty123')
 
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         created_user = response['user']
         expected = {
             'user': {
@@ -365,7 +365,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        self.assertEqual(expected, self.make_request(query, 'POST'))
+        self.assertEqual(expected, make_request(self.client, query, 'POST'))
 
     def test_deletion_of_user_object(self):
         # Delete with valid id

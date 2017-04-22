@@ -68,3 +68,26 @@ class VendorApiTest(TestCase):
 
         # Retrieve with invalid id
         self.assertEqual({'vendor': None}, self.retrieve_vendor(100))
+
+    def test_retrieve_multiple_vendors_without_filtering(self):
+        self.create_multiple_vendors()
+
+        query = 'query {vendors{edges{node{name}}}}'
+
+        expected = {
+            'vendors': [
+                {
+                    'name': self.first_vendor['name']
+                },
+                {
+                    'name': self.vendors[0][0]
+                },
+                {
+                    'name': self.vendors[1][0]
+                }
+            ]
+        }
+
+        response = make_request(self.client, query)
+
+        self.assertEqual(expected, response)

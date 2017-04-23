@@ -29,7 +29,7 @@ class Query(graphene.AbstractType):
     vendors = DjangoFilterConnectionField(VendorNode)
 
     timetable = graphene.relay.Node.Field(TimetableNode)
-    timetables = graphene.relay.Node.Field(TimetableNode)
+    timetables = DjangoFilterConnectionField(TimetableNode)
 
 
 class Mutation(graphene.ObjectType):

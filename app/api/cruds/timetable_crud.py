@@ -13,13 +13,12 @@ class TimetableNode(DjangoObjectType):
         model = Timetable
         filter_fields = {
             'name': ['icontains'],
-            'code': ['exact'],
-            'api_key': ['exact']
+            'code': ['exact']
         }
         filter_order_by = ['id', '-id', 'name', '-name', 'cycle_length', '-cycle_length',
                            'ref_cycle_length', '-ref_cycle_length', 'ref_cycle_date', '-ref_cycle_date',
-                            'inactive_weekdays','-inactive_weekdays', 'vendors', '-vendors', 'is_active',
-                            '-is_active', 'admins', '-admins', 'date_created',
+                           'inactive_weekdays', '-inactive_weekdays', 'vendors', '-vendors', 'is_active',
+                           '-is_active', 'admins', '-admins', 'date_created',
                            '-date_created', 'date_modified', '-date_modified']
         interfaces = (graphene.relay.Node, )
 
@@ -66,7 +65,6 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
 
 class UpdateTimetable(graphene.relay.ClientIDMutation):
 
-
     class Input:
         id = graphene.String(required=True)
         name = graphene.String(required=False)
@@ -97,10 +95,9 @@ class UpdateTimetable(graphene.relay.ClientIDMutation):
 
 class DeleteTimetable(graphene.relay.ClientIDMutation):
 
-
     class Input:
         id = graphene.String(required=True)
-        
+
     deleted = graphene.Boolean()
     timetable = graphene.Field(TimetableNode)
 

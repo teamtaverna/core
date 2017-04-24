@@ -32,11 +32,11 @@ class CreateDish(graphene.relay.ClientIDMutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
             dish = Dish()
-            dish.name = input.get('name')
-            dish.description = input.get('description', '')
+            dish.name = args.get('name')
+            dish.description = args.get('description', '')
             dish.full_clean()
             dish.save()
             return cls(dish=dish)
@@ -55,9 +55,9 @@ class UpdateDish(graphene.relay.ClientIDMutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        dish = get_object(Dish, input.get('id'))
-        dish = load_object(dish, input)
+    def mutate_and_get_payload(cls, args, context, info):
+        dish = get_object(Dish, args.get('id'))
+        dish = load_object(dish, args)
         try:
             if dish:
                 dish.full_clean()
@@ -76,9 +76,9 @@ class DeleteDish(graphene.relay.ClientIDMutation):
     dish = graphene.Field(DishNode)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
-            dish = get_object(Dish, input.get('id'))
+            dish = get_object(Dish, args.get('id'))
             dish.delete()
             return cls(deleted=True, dish=dish)
         except:

@@ -92,7 +92,7 @@ class VendorApiTest(TestCase):
 
         self.assertEqual(expected, response)
 
-    def test_retrieve_multiple_users_filter_by_name(self):
+    def test_retrieve_multiple_vendors_filter_by_name(self):
         self.create_multiple_vendors()
         query = 'query {vendors(name_Icontains: "ndor1") {edges{node{name}}}}'
 

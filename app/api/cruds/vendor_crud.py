@@ -35,11 +35,11 @@ class CreateVendor(graphene.relay.ClientIDMutation):
         info = graphene.String(required=False)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
             vendor = Vendor(
-                name=input.get('name'),
-                info=input.get('info', '')
+                name=args.get('name'),
+                info=args.get('info', '')
             )
             vendor.full_clean()
             vendor.save()
@@ -60,9 +60,9 @@ class UpdateVendor(graphene.relay.ClientIDMutation):
         info = graphene.String(required=False)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        vendor = get_object(Vendor, input.get('id'))
-        vendor = load_object(vendor, input)
+    def mutate_and_get_payload(cls, args, context, info):
+        vendor = get_object(Vendor, args.get('id'))
+        vendor = load_object(vendor, args)
         try:
             if vendor:
                 vendor.full_clean()
@@ -82,9 +82,9 @@ class DeleteVendor(graphene.relay.ClientIDMutation):
         id = graphene.String(required=True)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
-            vendor = get_object(Vendor, input.get('id'))
+            vendor = get_object(Vendor, args.get('id'))
             vendor.delete()
             return cls(deleted=True, vendor=vendor)
         except:

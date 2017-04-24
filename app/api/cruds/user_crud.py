@@ -5,6 +5,37 @@ import graphene
 from graphene_django import DjangoObjectType
 
 from .utils import get_errors, get_object, load_object
+from app.accounts.models import UserProfile
+from .inputs import ProfileInput, UserCreateInput, UserUpdateInput
+
+
+def process_user(instance, args):
+    user_data = args.get('user')
+    user = load_object(instance, user_data, ['id', 'password', 'profile', 'is_staff', 'is_active'])
+    user.is_staff = user_data.get('is_staff', False)
+    user.is_active = user_data.get('is_active', False)
+    if user_data.get('password'):
+        user.set_password(user_data.get('password'))
+    user.full_clean()
+    user.save()
+    profile_data = args.get('profile')
+    if profile_data:
+        profile = load_object(user.profile, profile_data)
+        if profile:
+            profile.save()
+
+    return user
+
+
+class ProfileNode(DjangoObjectType):
+    original_id = graphene.Int()
+
+    class Meta:
+        model = UserProfile
+        interfaces = (graphene.relay.Node, )
+
+    def resolve_original_id(self, args, context, info):
+        return self.id
 
 
 class UserNode(DjangoObjectType):
@@ -28,31 +59,16 @@ class UserNode(DjangoObjectType):
 class CreateUser(graphene.relay.ClientIDMutation):
 
     class Input:
-        username = graphene.String(required=True)
-        first_name = graphene.String(required=False)
-        last_name = graphene.String(required=False)
-        email = graphene.String(required=False)
-        is_staff = graphene.Boolean(required=False)
-        is_active = graphene.Boolean(required=False)
-        password = graphene.String(required=True)
+        user = graphene.Argument(UserCreateInput)
+        profile = graphene.Argument(ProfileInput)
 
     user = graphene.Field(UserNode)
     errors = graphene.List(graphene.String)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
-            user = User()
-            user.username = input.get('username')
-            user.first_name = input.get('first_name', '')
-            user.last_name = input.get('last_name', '')
-            user.email = input.get('email', '')
-            user.is_staff = input.get('is_staff', False)
-            user.is_active = input.get('is_active', False)
-            if input.get('password'):
-                user.set_password(input.get('password'))
-            user.full_clean()
-            user.save()
+            user = process_user(User(), args)
             return cls(user=user)
         except ValidationError as e:
             return cls(user=None, errors=get_errors(e))
@@ -61,34 +77,21 @@ class CreateUser(graphene.relay.ClientIDMutation):
 class UpdateUser(graphene.relay.ClientIDMutation):
 
     class Input:
-        id = graphene.String(required=True)
-        username = graphene.String(required=False)
-        first_name = graphene.String(required=False)
-        last_name = graphene.String(required=False)
-        email = graphene.String(required=False)
-        is_staff = graphene.Boolean(required=False)
-        is_active = graphene.Boolean(required=False)
-        password = graphene.String(required=False)
+        user = graphene.Argument(UserUpdateInput)
+        profile = graphene.Argument(ProfileInput)
 
     user = graphene.Field(UserNode)
     errors = graphene.List(graphene.String)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        user = get_object(User, input.get('id'))
-        user = load_object(user, input, ['id', 'password'])
-
-        if user:
-            if 'password' in input:
-                user.set_password(input['password'])
-
-            try:
-                user.full_clean()
-                user.save()
-            except ValidationError as e:
-                return cls(user=user, errors=get_errors(e))
-
-        return cls(user=user)
+    def mutate_and_get_payload(cls, args, context, info):
+        try:
+            user = get_object(User, args['user'].get('id'))
+            if user:
+                user = process_user(user, args)
+            return cls(user=user)
+        except ValidationError as e:
+            return cls(user=None, errors=get_errors(e))
 
 
 class DeleteUser(graphene.relay.ClientIDMutation):
@@ -100,9 +103,9 @@ class DeleteUser(graphene.relay.ClientIDMutation):
     user = graphene.Field(UserNode)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
-            user = get_object(User, input.get('id'))
+            user = get_object(User, args.get('id'))
             user.delete()
             return cls(deleted=True, user=user)
         except:

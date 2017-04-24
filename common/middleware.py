@@ -9,40 +9,47 @@ class GraphqlResponseFlattenerMiddleware(object):
 
     def __call__(self, request):
         response = self.get_response(request)
+
         try:
             content = json.loads(response.content.decode())
         except json.JSONDecodeError:
             return response
 
-        if 'data' in content and request.method == 'GET':
+        if 'data' in content:
+            if content['data'].get('__schema'):
+                return response
             flattened_content = {}
             index = 0
             for resource in list(content['data'].values()):
                 # Use case for retrieval of all records
+                key = list(content['data'].keys())[index]
                 if (resource and 'edges' in resource
                         and isinstance(resource['edges'], list)
                         and 'node' in resource['edges'][0]):
 
-                    flattened_content[list(content['data'].keys())[index]] = []
+                    flattened_content[key] = []
                     for item in list(resource.values())[0]:
-                        flattened_content[
-                            list(content['data'].keys())[index]
-                        ].append(list(item.values())[0])
+                        flattened_content[key].append(list(item.values())[0])
 
                 # Use case for retrieval a record
-                elif resource is None or isinstance(resource, dict):
+                elif isinstance(resource, dict):
+                    if self.contains_dict_or_None(resource):
+                        flattened_content.update(resource)
+                    else:
+                        flattened_content[key] = resource
+                elif resource is None:
                     flattened_content[list(content['data'].keys())[index]] = resource
 
                 index += 1
-            content = flattened_content
-        elif 'data' in content and request.method == 'POST':
-            flattened_content = {}
-            for resource in list(content['data'].values()):
-                if resource:
-                    item = list(resource.values())[0]
-                    if item is None or isinstance(item, dict):
-                        flattened_content[list(resource.keys())[0]] = item
+
             content = flattened_content
 
         response.content = json.dumps(content)
         return response
+
+    def contains_dict_or_None(self, resource):
+        for key, value in resource.items():
+            if value is None:
+                return True
+
+            return isinstance(value, dict)

@@ -2,7 +2,7 @@ import datetime
 
 from django.test import Client, TestCase
 
-from app.api.tests.utils import obtain_api_key, create_admin_account
+from .utils import create_admin_account, make_request
 
 
 class MealApiTest(TestCase):
@@ -10,26 +10,12 @@ class MealApiTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-        create_admin_account(*self.admin_test_credentials)
+        create_admin_account()
         self.data = {
             'name': 'BreakFast',
             'start_time': datetime.time(8, 30, 0),
             'end_time': datetime.time(10, 0, 0)
         }
-        self.header = {
-            'HTTP_X_TAVERNATOKEN': obtain_api_key(
-                self.client, *self.admin_test_credentials
-            )
-        }
-
-    def make_request(self, query, method='GET'):
-        if method == 'GET':
-            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
-
-        if method == 'POST':
-            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_meal(self, name, start_time, end_time):
         query = '''
@@ -44,12 +30,12 @@ class MealApiTest(TestCase):
             }
         ''' % (name, start_time, end_time)
 
-        return self.make_request(query, method='POST')
+        return make_request(self.client, query, method='POST')
 
     def retrieve_meal(self, id):
         query = 'query {meal(id: "%s" ) {name}}' % (id)
 
-        return self.make_request(query)
+        return make_request(self.client, query)
 
     def test_creation_of_meal_object(self):
         response = self.create_meal(self.data['name'],
@@ -109,7 +95,7 @@ class MealApiTest(TestCase):
                 'name': 'breakfast edited'
             }
         }
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         self.assertEqual(expected, response)
 
         # Update with invalid id
@@ -129,7 +115,7 @@ class MealApiTest(TestCase):
                 }
             }
         ''' % ("wrong-id")
-        self.assertEqual({'meal': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'meal': None}, make_request(self.client, query, 'POST'))
 
     def test_deletion_of_meal_object(self):
         # Delete with valid id
@@ -150,7 +136,7 @@ class MealApiTest(TestCase):
                 "name": self.data['name']
             }
         }
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         self.assertEqual(expected, response)
         self.assertEqual({'meal': None}, self.retrieve_meal(create_response['meal']['id']))
 
@@ -164,4 +150,4 @@ class MealApiTest(TestCase):
                 }
             }
         ''' % ("wrong-id")
-        self.assertEqual({'meal': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'meal': None}, make_request(self.client, query, 'POST'))

@@ -30,10 +30,10 @@ class CreateWeekday(graphene.relay.ClientIDMutation):
         name = graphene.String(required=True)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
             weekday = Weekday(
-                name=input.get('name')
+                name=args.get('name')
             )
             weekday.full_clean()
             weekday.save()
@@ -51,9 +51,9 @@ class UpdateWeekday(graphene.relay.ClientIDMutation):
         name = graphene.String(required=True)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        weekday = get_object(Weekday, input.get('id'))
-        weekday = load_object(weekday, input)
+    def mutate_and_get_payload(cls, args, context, info):
+        weekday = get_object(Weekday, args.get('id'))
+        weekday = load_object(weekday, args)
         try:
             if weekday:
                 weekday.full_clean()
@@ -71,9 +71,9 @@ class DeleteWeekday(graphene.relay.ClientIDMutation):
         id = graphene.String(required=True)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
-            weekday = get_object(Weekday, input.get('id'))
+            weekday = get_object(Weekday, args.get('id'))
             weekday.delete()
             return cls(deleted=True, weekday=weekday)
         except:

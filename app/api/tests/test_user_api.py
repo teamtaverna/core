@@ -1,6 +1,7 @@
 from django.test import Client, TestCase
 
-from .utils import obtain_api_key, create_admin_account
+from .utils import (admin_test_credentials, create_admin_account,
+                    make_request,)
 
 
 class UserApiTest(TestCase):
@@ -8,22 +9,8 @@ class UserApiTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = '/api'
-        self.admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123')
-        create_admin_account(*self.admin_test_credentials)
-        self.header = {
-            'HTTP_X_TAVERNATOKEN': obtain_api_key(
-                self.client, *self.admin_test_credentials
-            )
-        }
+        create_admin_account()
         self.first_user = self.create_user('oakeem', 'oatman')['user']
-
-    def make_request(self, query, method='GET'):
-        if method == 'GET':
-            return self.client.get(self.endpoint, data={'query': query}, **self.header).json()
-
-        if method == 'POST':
-            return self.client.post(self.endpoint, data={'query': query}, **self.header).json()
 
     def create_user(self, username, password):
         query = '''
@@ -38,7 +25,7 @@ class UserApiTest(TestCase):
             }
         ''' % (username, password)
 
-        return self.make_request(query, 'POST')
+        return make_request(self.client, query, 'POST')
 
     def create_multiple_users(self):
         new_users = (
@@ -54,7 +41,7 @@ class UserApiTest(TestCase):
     def retrieve_user(self, user_id):
         query = 'query {user(id: "%s") {username}}' % (user_id)
 
-        return self.make_request(query)
+        return make_request(self.client, query)
 
     def ordering_test_helper(self, ordering_param, users):
         # For ascending ordering
@@ -78,12 +65,12 @@ class UserApiTest(TestCase):
                 }
             ]
         }
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
         # For descending ordering
         query = 'query {users(orderBy: "-%s") {edges{node{username}}}}' % (ordering_param)
         expected['users'].reverse()
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
     def test_creation_of_user_object(self):
         credentials = {
@@ -128,7 +115,7 @@ class UserApiTest(TestCase):
             }
         ''' % ('tom_dick', 'qwerty123')
 
-        response = self.make_request(query, 'POST')
+        response = make_request(self.client, query, 'POST')
         created_user = response['user']
         expected = {
             'user': {
@@ -160,7 +147,7 @@ class UserApiTest(TestCase):
         expected = {
            'users': [
                 {
-                    'username': self.admin_test_credentials[0]
+                    'username': admin_test_credentials[0]
                 },
                 {
                     'username': self.first_user['username']
@@ -177,7 +164,7 @@ class UserApiTest(TestCase):
             ]
         }
 
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
     def test_retrieval_of_multiple_user_objects_filter_by_username(self):
         new_users = self.create_multiple_users()
@@ -195,7 +182,7 @@ class UserApiTest(TestCase):
             ]
         }
 
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
     def test_retrieval_of_multiple_user_objects_filter_by_is_staff(self):
         self.create_multiple_users()
@@ -205,12 +192,12 @@ class UserApiTest(TestCase):
         expected = {
             'users': [
                 {
-                    'username': self.admin_test_credentials[0]
+                    'username': admin_test_credentials[0]
                 }
             ]
         }
 
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
     def test_retrieval_of_multiple_user_objects_filter_by_is_active(self):
         self.create_multiple_users()
@@ -220,17 +207,17 @@ class UserApiTest(TestCase):
         expected = {
             'users': [
                 {
-                    'username': self.admin_test_credentials[0]
+                    'username': admin_test_credentials[0]
                 }
             ]
         }
 
-        self.assertEqual(expected, self.make_request(query))
+        self.assertEqual(expected, make_request(self.client, query))
 
     def test_retrieval_of_multiple_user_objects_ordering_by_id(self):
         new_users = self.create_multiple_users()
         users = [
-            self.admin_test_credentials[0],
+            admin_test_credentials[0],
             self.first_user['username'],
             new_users[0][0],
             new_users[1][0],
@@ -242,7 +229,7 @@ class UserApiTest(TestCase):
     def test_retrieval_of_multiple_user_objects_ordering_by_username(self):
         new_users = self.create_multiple_users()
         users = [
-            self.admin_test_credentials[0],
+            admin_test_credentials[0],
             new_users[0][0],
             self.first_user['username'],
             new_users[1][0],
@@ -254,7 +241,7 @@ class UserApiTest(TestCase):
     def test_retrieval_of_multiple_user_objects_ordering_by_date_joined(self):
         new_users = self.create_multiple_users()
         users = [
-            self.admin_test_credentials[0],
+            admin_test_credentials[0],
             self.first_user['username'],
             new_users[0][0],
             new_users[1][0],
@@ -303,7 +290,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        self.assertEqual(expected, self.make_request(query, 'POST'))
+        self.assertEqual(expected, make_request(self.client, query, 'POST'))
 
         # Update with invalid id
         query = '''
@@ -331,7 +318,7 @@ class UserApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual({'user': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'user': None}, make_request(self.client, query, 'POST'))
 
     def test_update_of_user_object_with_profile(self):
         # Update with valid id
@@ -378,7 +365,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        self.assertEqual(expected, self.make_request(query, 'POST'))
+        self.assertEqual(expected, make_request(self.client, query, 'POST'))
 
     def test_deletion_of_user_object(self):
         # Delete with valid id
@@ -398,7 +385,7 @@ class UserApiTest(TestCase):
             }
         }
 
-        self.assertEqual(expected, self.make_request(query, 'POST'))
+        self.assertEqual(expected, make_request(self.client, query, 'POST'))
         self.assertEqual({'user': None}, self.retrieve_user(self.first_user['id']))
 
         # Delete with invalid id
@@ -411,4 +398,4 @@ class UserApiTest(TestCase):
                 }
             }
         ''' % ('wrong-id')
-        self.assertEqual({'user': None}, self.make_request(query, 'POST'))
+        self.assertEqual({'user': None}, make_request(self.client, query, 'POST'))

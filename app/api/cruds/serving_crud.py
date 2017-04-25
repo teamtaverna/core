@@ -1,11 +1,9 @@
-from django.db.models.fields import TimeField
-
 import graphene
 from graphene_django import DjangoObjectType
 from graphene_django.converter import convert_django_field
 from hashid_field import HashidField
 
-from app.timetables.models import Course, Meal, MenuItem, Serving, Timetable, Vendor
+from app.timetables.models import Course, MenuItem, Serving, Timetable
 
 
 @convert_django_field.register(HashidField)

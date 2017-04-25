@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.test import Client, TestCase
 
 from app.timetables.factories import (
@@ -63,7 +61,11 @@ class ServingApiTest(TestCase):
 
     def test_retrieval_of_servings(self):
         # Retrieve with valid combo
-        response = self.retrieve_servings(self.timetable.slug, self.vendor.slug, self.date.isoformat())
+        response = self.retrieve_servings(
+            self.timetable.slug,
+            self.vendor.slug,
+            self.date.isoformat()
+        )
         expected = {
             'servings': [
                 {

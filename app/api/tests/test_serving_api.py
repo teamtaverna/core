@@ -92,7 +92,9 @@ class ServingApiTest(TestCase):
                 } for menu_item in self.menu_items
             ]
         }
-        self.assertEqual(expected, response)
+
+        for x in response['servings']:
+            self.assertIn(x, expected['servings'])
 
         # Retrieve with invalid combo
         self.assertIn(

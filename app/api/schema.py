@@ -1,5 +1,5 @@
 import graphene
-from graphene_django.filter import DjangoFilterConnectionField
+from graphene_django import DjangoConnectionField
 
 from .cruds.user_crud import UserNode, CreateUser, UpdateUser, DeleteUser
 from .cruds.dish_crud import DishNode, CreateDish, UpdateDish, DeleteDish
@@ -14,22 +14,22 @@ from .cruds.vendor_crud import (VendorNode, CreateVendor, UpdateVendor,
 
 class Query(graphene.AbstractType):
     user = graphene.relay.Node.Field(UserNode)
-    users = DjangoFilterConnectionField(UserNode)
+    users = DjangoConnectionField(UserNode)
 
     weekday = graphene.relay.Node.Field(WeekdayNode)
-    weekdays = DjangoFilterConnectionField(WeekdayNode)
+    weekdays = DjangoConnectionField(WeekdayNode)
 
     dish = graphene.relay.Node.Field(DishNode)
-    dishes = DjangoFilterConnectionField(DishNode)
+    dishes = DjangoConnectionField(DishNode)
 
     meal = graphene.relay.Node.Field(MealNode)
-    meals = DjangoFilterConnectionField(MealNode)
+    meals = DjangoConnectionField(MealNode)
 
     vendor = graphene.relay.Node.Field(VendorNode)
-    vendors = DjangoFilterConnectionField(VendorNode)
+    vendors = DjangoConnectionField(VendorNode)
 
     timetable = graphene.relay.Node.Field(TimetableNode)
-    timetables = DjangoFilterConnectionField(TimetableNode)
+    timetables = DjangoConnectionField(TimetableNode)
 
 
 class Mutation(graphene.ObjectType):

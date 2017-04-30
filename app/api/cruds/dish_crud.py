@@ -11,11 +11,11 @@ class DishNode(DjangoObjectType):
 
     class Meta:
         model = Dish
-        filter_fields = {
-            'name': ['icontains'],
-        }
-        filter_order_by = ['id', '-id', 'name', '-name', 'date_created',
-                           '-date_created', 'date_modified', '-date_modified']
+        # filter_fields = {
+        #     'name': ['icontains'],
+        # }
+        # filter_order_by = ['id', '-id', 'name', '-name', 'date_created',
+        #                    '-date_created', 'date_modified', '-date_modified']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

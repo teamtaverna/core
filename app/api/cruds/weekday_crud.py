@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
+from django_filters import FilterSet, OrderingFilter
 
 from app.timetables.models import Weekday
 from .utils import get_errors, get_object, load_object
@@ -9,13 +10,12 @@ from .utils import get_errors, get_object, load_object
 
 class WeekdayNode(DjangoObjectType):
     original_id = graphene.Int()
+    # order_by = OrderingFilter(fields=[('name', '-name')])
 
     class Meta:
         model = Weekday
-        filter_fields = {
-            'name': ['icontains']
-        }
-        filter_order_by = ['name', '-name']
+
+        filter_fields = {'name': ['icontains']}
         interfaces = (graphene.relay.Node,)
 
     def resolve_original_id(self, args, context, info):

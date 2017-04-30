@@ -14,10 +14,10 @@ class VendorNode(DjangoObjectType):
 
     class Meta:
         model = Vendor
-        filter_fields = {
-            'name': ['icontains']
-        }
-        filter_order_by = ['name', '-name']
+        # filter_fields = {
+        #     'name': ['icontains']
+        # }
+        # filter_order_by = ['name', '-name']
         interfaces = (graphene.relay.Node,)
 
     def resolve_original_id(self, args, context, info):

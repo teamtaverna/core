@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
-from django_filters import FilterSet, OrderingFilter
+from django_filters import OrderingFilter
 
 from app.timetables.models import Weekday
 from .utils import get_errors, get_object, load_object
@@ -10,7 +10,7 @@ from .utils import get_errors, get_object, load_object
 
 class WeekdayNode(DjangoObjectType):
     original_id = graphene.Int()
-    # order_by = OrderingFilter(fields=[('name', '-name')])
+    order_by = OrderingFilter(fields=[('name', 'name')])
 
     class Meta:
         model = Weekday

@@ -3,17 +3,25 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
+from django_filters import OrderingFilter
+
 from .utils import get_errors, get_object, load_object
 
 
 class DishNode(DjangoObjectType):
     original_id = graphene.Int()
+    order_by = OrderingFilter(fields=[('id', 'id'),
+                                      ('name', 'name'),
+                                      ('date_created', 'date_created'),
+                                      ('date_modified', 'date_modified')]
+                              )
 
     class Meta:
         model = Dish
-        # filter_fields = {
-        #     'name': ['icontains'],
-        # }
+        filter_fields = {
+            'name': ['icontains'],
+        }
+
         # filter_order_by = ['id', '-id', 'name', '-name', 'date_created',
         #                    '-date_created', 'date_modified', '-date_modified']
         interfaces = (graphene.relay.Node, )

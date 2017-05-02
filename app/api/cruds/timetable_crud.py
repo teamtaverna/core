@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType, DjangoConnectionField
-from django_filters import FilterSet, OrderingFilter
 
 from app.timetables.models import Timetable
 from .utils import get_errors, get_object, load_object
@@ -15,10 +14,10 @@ class TimetableNode(DjangoObjectType):
 
     class Meta:
         model = Timetable
-        # filter_fields = {
-        #     'name': ['icontains'],
-        #     'code': ['exact']
-        # }
+        filter_fields = {
+            'name': ['icontains'],
+            'code': ['exact']
+        }
         # filter_order_by = ['id', '-id', 'name', '-name', 'cycle_length',
         #                    '-cycle_length', 'ref_cycle_length', '-ref_cycle_length',
         #                    'ref_cycle_date', '-ref_cycle_date', 'inactive_weekdays',

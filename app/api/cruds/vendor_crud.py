@@ -14,9 +14,9 @@ class VendorNode(DjangoObjectType):
 
     class Meta:
         model = Vendor
-        # filter_fields = {
-        #     'name': ['icontains']
-        # }
+        filter_fields = {
+            'name': ['icontains']
+        }
         # filter_order_by = ['name', '-name']
         interfaces = (graphene.relay.Node,)
 

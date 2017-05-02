@@ -23,9 +23,9 @@ class MealNode(DjangoObjectType):
 
     class Meta:
         model = Meal
-        # filter_fields = {
-        #     'name': ['icontains', 'exact']
-        # }
+        filter_fields = {
+            'name': ['icontains', 'exact']
+        }
         # filter_order_by = ['id', 'name', 'start_time', 'end_time']
         interfaces = (graphene.relay.Node, )
 

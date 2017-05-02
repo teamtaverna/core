@@ -89,7 +89,7 @@ class WeekdayApiTest(TestCase):
 
     def test_retrieve_multiple_weekdays_filter_by_name(self):
         self.create_multiple_weekdays()
-        query = 'query {weekdays(name__icontains: "day1") {edges{node{name}}}}'
+        query = 'query {weekdays(name_Icontains: "day1") {edges{node{name}}}}'
 
         expected = {
             'weekdays': [

@@ -3,13 +3,13 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
-from django_filters import OrderingFilter
+from django_filters import OrderingFilter, FilterSet
 
 from .utils import get_errors, get_object, load_object
 
 
-class DishNode(DjangoObjectType):
-    original_id = graphene.Int()
+class DishFilter(FilterSet):
+
     order_by = OrderingFilter(fields=[('id', 'id'),
                                       ('name', 'name'),
                                       ('date_created', 'date_created'),
@@ -17,13 +17,15 @@ class DishNode(DjangoObjectType):
                               )
 
     class Meta:
+        fields = {'name': ['icontains']}
         model = Dish
-        filter_fields = {
-            'name': ['icontains'],
-        }
 
-        # filter_order_by = ['id', '-id', 'name', '-name', 'date_created',
-        #                    '-date_created', 'date_modified', '-date_modified']
+
+class DishNode(DjangoObjectType):
+    original_id = graphene.Int()
+
+    class Meta:
+        model = Dish
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

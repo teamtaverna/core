@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
+from django_filters import OrderingFilter, FilterSet
 
 from .utils import get_errors, get_object, load_object
 from app.accounts.models import UserProfile
@@ -11,7 +12,8 @@ from .inputs import ProfileInput, UserCreateInput, UserUpdateInput
 
 def process_user(instance, args):
     user_data = args.get('user')
-    user = load_object(instance, user_data, ['id', 'password', 'profile', 'is_staff', 'is_active'])
+    user = load_object(instance, user_data, ['id', 'password', 'profile',
+                                             'is_staff', 'is_active'])
     user.is_staff = user_data.get('is_staff', False)
     user.is_active = user_data.get('is_active', False)
     if user_data.get('password'):
@@ -25,6 +27,24 @@ def process_user(instance, args):
             profile.save()
 
     return user
+
+
+class UserFilter(FilterSet):
+
+    order_by = OrderingFilter(fields=[('id', 'id'),
+                                      ('username', 'username'),
+                                      ('is_staff', 'is_staff'),
+                                      ('is_active', 'is_active'),
+                                      ('date_joined', 'date_joined')]
+                              )
+
+    class Meta:
+        fields = {
+            'username': ['icontains'],
+            'is_staff': ['exact'],
+            'is_active': ['exact']
+        }
+        model = User
 
 
 class ProfileNode(DjangoObjectType):
@@ -43,13 +63,6 @@ class UserNode(DjangoObjectType):
 
     class Meta:
         model = User
-        filter_fields = {
-            'username': ['icontains'],
-            'is_staff': ['exact'],
-            'is_active': ['exact']
-        }
-        # filter_order_by = ['id', '-id', 'username', '-username', 'is_staff',
-        #                    '-is_staff', 'is_active', '-is_active', 'date_joined', '-date_joined']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

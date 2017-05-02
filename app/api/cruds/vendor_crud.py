@@ -2,9 +2,19 @@ from django.core.exceptions import ValidationError
 
 import graphene
 from graphene_django import DjangoObjectType
+from django_filters import OrderingFilter, FilterSet
 
 from app.timetables.models import Vendor
 from .utils import get_errors, get_object, load_object
+
+
+class VendorFilter(FilterSet):
+
+    order_by = OrderingFilter(fields=[('name', 'name')])
+
+    class Meta:
+        fields = {'name': ['icontains']}
+        model = Vendor
 
 
 class VendorNode(DjangoObjectType):
@@ -14,10 +24,6 @@ class VendorNode(DjangoObjectType):
 
     class Meta:
         model = Vendor
-        filter_fields = {
-            'name': ['icontains']
-        }
-        # filter_order_by = ['name', '-name']
         interfaces = (graphene.relay.Node,)
 
     def resolve_original_id(self, args, context, info):

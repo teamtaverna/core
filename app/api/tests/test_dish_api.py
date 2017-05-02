@@ -44,7 +44,7 @@ class DishApiTest(TestCase):
 
     def ordering_test_helper(self, ordering_param, records):
         # For ascending ordering
-        query = 'query{dishes(order_by: "%s") {edges{node{name}}}}' % (ordering_param)
+        query = 'query{dishes(orderBy: "%s") {edges{node{name}}}}' % (ordering_param)
         expected = {
             'dishes': [
                 {
@@ -62,7 +62,7 @@ class DishApiTest(TestCase):
         self.assertEqual(expected, response)
 
         # For descending ordering
-        query = 'query {dishes(order_by: "-%s") {edges{node{name}}}}' % (ordering_param)
+        query = 'query {dishes(orderBy: "-%s") {edges{node{name}}}}' % (ordering_param)
         expected['dishes'].reverse()
         response = make_request(self.client, query)
         self.assertEqual(expected, response)

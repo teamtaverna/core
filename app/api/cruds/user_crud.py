@@ -43,11 +43,11 @@ class UserNode(DjangoObjectType):
 
     class Meta:
         model = User
-        # filter_fields = {
-        #     'username': ['icontains'],
-        #     'is_staff': ['exact'],
-        #     'is_active': ['exact']
-        # }
+        filter_fields = {
+            'username': ['icontains'],
+            'is_staff': ['exact'],
+            'is_active': ['exact']
+        }
         # filter_order_by = ['id', '-id', 'username', '-username', 'is_staff',
         #                    '-is_staff', 'is_active', '-is_active', 'date_joined', '-date_joined']
         interfaces = (graphene.relay.Node, )

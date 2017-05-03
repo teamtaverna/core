@@ -4,7 +4,7 @@ import graphene
 from graphene_django import DjangoObjectType, DjangoConnectionField
 from django_filters import OrderingFilter, FilterSet
 
-from app.timetables.models import Timetable
+from app.timetables.models import Timetable, VendorService, TimetableManagement
 from .utils import get_errors, get_object, load_object
 from .vendor_crud import VendorNode
 from .user_crud import UserNode
@@ -48,33 +48,42 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
 
     class Input:
         name = graphene.String(required=True)
+        code = graphene.String(required=True)
         cycle_length = graphene.Int(required=True)
         ref_cycle_day = graphene.Int(required=True)
-        ref_cycle_date = graphene.Int(required=True)
-        inactive_weekdays = graphene.String(required=False)
-        vendors = graphene.String(required=True)
+        ref_cycle_date = graphene.String(required=True)
+        inactive_weekdays = graphene.Int(required=False)
+        vendor_id = graphene.Int(required=False)
         is_active = graphene.Boolean(required=False)
         description = graphene.String(required=False)
-        admin = graphene.String(required=True)
+        admin_id = graphene.Int(required=False)
 
     timetable = graphene.Field(TimetableNode)
     errors = graphene.List(graphene.String)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
+    def mutate_and_get_payload(cls, args, context, info):
         try:
             timetable = Timetable()
-            timetable.name = input.get('name')
-            timetable.cycle_length = input.get('cycle_length')
-            timetable.ref_cycle_day = input.get('ref_cycle_day')
-            timetable.ref_cycle_date = input.get('ref_cycle_date')
-            timetable.inactive_weekdays = input.get('inactive_weekdays', '')
-            timetable.vendors = input.get('vendors')
-            timetable.is_active = input.get('is_active', True)
-            timetable.description = input.get('description', '')
-            timetable.admin = input.get('admin')
+            timetable.name = args.get('name')
+            timetable.code = args.get('code')
+            timetable.cycle_length = args.get('cycle_length')
+            timetable.ref_cycle_day = args.get('ref_cycle_day')
+            timetable.ref_cycle_date = args.get('ref_cycle_date')
+            timetable.is_active = args.get('is_active', True)
+            timetable.description = args.get('description', '')
             timetable.full_clean()
             timetable.save()
+            ### TO FIX:
+            ### This part is buggy. Try to save vendor, admin and weekday appropriately
+            vendor = VendorService.objects.get(id=args.get('vendor_id'))
+            if vendor:
+                timetable.vendorservice_set.add(vendor)
+
+            admin = TimetableManagement.objects.get(id=args.get('admin_id'))
+            if admin:
+                timetable.timetablemanagement_set.add(admin)
+            # Add implementation for weekday also
             return cls(timetable=timetable)
         except ValidationError as e:
             return cls(timetable=None, errors=get_errors(e))

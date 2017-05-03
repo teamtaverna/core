@@ -16,7 +16,6 @@ class TimetableApiTest(TestCase):
                                                      '2017-04-26', self.weekday.id,
                                                      self.vendor.id, self.admin.id)['timetable']
 
-
     def create_timetable(self, name, code, cycle_length, ref_cycle_day,
                          ref_cycle_date, inactive_weekday_id, vendor_id,
                          admin_id):

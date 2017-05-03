@@ -79,19 +79,27 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
             timetable.full_clean()
             timetable.save()
 
-            weekday = Weekday.objects.get(id=args.get('inactive_weekday_id'))
-            if weekday:
+            try:
+                weekday = Weekday.objects.get(
+                    id=args.get('inactive_weekday_id')
+                )
                 timetable.inactive_weekdays.add(weekday)
+            except Weekday.DoesNotExist:
+                pass
 
-            vendor = Vendor.objects.get(id=args.get('vendor_id'))
-            if vendor:
+            try:
+                vendor = Vendor.objects.get(id=args.get('vendor_id'))
                 VendorService.objects.create(timetable=timetable,
                                              vendor=vendor)
+            except Vendor.DoesNotExist:
+                pass
 
-            admin = User.objects.get(id=args.get('admin_id'))
-            if admin:
+            try:
+                admin = User.objects.get(id=args.get('admin_id'))
                 TimetableManagement.objects.create(user=admin,
                                                    timetable=timetable)
+            except User.DoesNotExist:
+                pass
 
             return cls(timetable=timetable)
         except ValidationError as e:
@@ -102,15 +110,16 @@ class UpdateTimetable(graphene.relay.ClientIDMutation):
 
     class Input:
         id = graphene.String(required=True)
-        name = graphene.String(required=False)
-        cycle_length = graphene.Int(required=False)
-        ref_cycle_day = graphene.Int(required=False)
-        ref_cycle_date = graphene.Int(required=False)
-        inactive_weekdays = graphene.String(required=False)
-        vendors = graphene.String(required=False)
+        name = graphene.String(required=True)
+        code = graphene.String(required=True)
+        cycle_length = graphene.Int(required=True)
+        ref_cycle_day = graphene.Int(required=True)
+        ref_cycle_date = graphene.String(required=True)
+        inactive_weekday_id = graphene.Int(required=False)
+        vendor_id = graphene.Int(required=False)
         is_active = graphene.Boolean(required=False)
         description = graphene.String(required=False)
-        admin = graphene.String(required=False)
+        admin_id = graphene.Int(required=False)
 
     timetable = graphene.Field(TimetableNode)
     errors = graphene.List(graphene.String)

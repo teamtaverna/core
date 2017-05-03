@@ -4,7 +4,8 @@ import graphene
 from graphene_django import DjangoObjectType, DjangoConnectionField
 from django_filters import OrderingFilter, FilterSet
 
-from app.timetables.models import Timetable, VendorService, TimetableManagement, Vendor, User, Weekday
+from app.timetables.models import (Timetable, VendorService, Vendor,
+                                   TimetableManagement, User, Weekday,)
 from .utils import get_errors, get_object, load_object
 from .vendor_crud import VendorNode
 from .user_crud import UserNode
@@ -55,7 +56,7 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
         cycle_length = graphene.Int(required=True)
         ref_cycle_day = graphene.Int(required=True)
         ref_cycle_date = graphene.String(required=True)
-        weekday_id = graphene.Int(required=False)
+        inactive_weekday_id = graphene.Int(required=False)
         vendor_id = graphene.Int(required=False)
         is_active = graphene.Boolean(required=False)
         description = graphene.String(required=False)
@@ -78,18 +79,19 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
             timetable.full_clean()
             timetable.save()
 
-            weekday = Weekday.objects.get(id=args.get('weekday_id'))
+            weekday = Weekday.objects.get(id=args.get('inactive_weekday_id'))
             if weekday:
                 timetable.inactive_weekdays.add(weekday)
-            ### TO FIX:
-            ### This part is buggy. Try to save vendor, admin appropriately
-            vendor = VendorService.objects.get(id=args.get('vendor_id'))
-            if vendor:
-                timetable.vendorservice_set.add(vendor)
 
-            admin = TimetableManagement.objects.get(id=args.get('admin_id'))
+            vendor = Vendor.objects.get(id=args.get('vendor_id'))
+            if vendor:
+                VendorService.objects.create(timetable=timetable,
+                                             vendor=vendor)
+
+            admin = User.objects.get(id=args.get('admin_id'))
             if admin:
-                timetable.timetablemanagement_set.add(admin)
+                TimetableManagement.objects.create(user=admin,
+                                                   timetable=timetable)
 
             return cls(timetable=timetable)
         except ValidationError as e:

@@ -50,6 +50,9 @@ class TimetableNode(DjangoObjectType):
 
 class CreateTimetable(graphene.relay.ClientIDMutation):
 
+    timetable = graphene.Field(TimetableNode)
+    errors = graphene.List(graphene.String)
+
     class Input:
         name = graphene.String(required=True)
         code = graphene.String(required=True)
@@ -61,9 +64,6 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
         is_active = graphene.Boolean(required=False)
         description = graphene.String(required=False)
         admin_id = graphene.Int(required=False)
-
-    timetable = graphene.Field(TimetableNode)
-    errors = graphene.List(graphene.String)
 
     @classmethod
     def mutate_and_get_payload(cls, args, context, info):
@@ -108,6 +108,9 @@ class CreateTimetable(graphene.relay.ClientIDMutation):
 
 class UpdateTimetable(graphene.relay.ClientIDMutation):
 
+    timetable = graphene.Field(TimetableNode)
+    errors = graphene.List(graphene.String)
+
     class Input:
         id = graphene.String(required=True)
         name = graphene.String(required=True)
@@ -121,29 +124,45 @@ class UpdateTimetable(graphene.relay.ClientIDMutation):
         description = graphene.String(required=False)
         admin_id = graphene.Int(required=False)
 
-    timetable = graphene.Field(TimetableNode)
-    errors = graphene.List(graphene.String)
-
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        timetable = get_object(Timetable, input.get('id'))
-        timetable = load_object(timetable, input)
+    def mutate_and_get_payload(cls, args, context, info):
+        timetable = get_object(Timetable, args.get('id'))
+        timetable = load_object(timetable, args)
         try:
-            if timetable:
-                timetable.full_clean()
-                timetable.save()
+            timetable.full_clean()
+            timetable.save()
+            ### WIP: To fix ... updating the many to many related fields
+            try:
+                weekday = Weekday.objects.get(
+                    id=args.get('inactive_weekday_id')
+                )
+                timetable.inactive_weekdays.add(weekday)
+            except Weekday.DoesNotExist:
+                pass
+            try:
+                vendor = Vendor.objects.get(id=args.get('vendor_id'))
+                VendorService.objects.create(timetable=timetable,
+                                             vendor=vendor)
+            except Vendor.DoesNotExist:
+                pass
+
+            try:
+                admin = User.objects.get(id=args.get('admin_id'))
+                TimetableManagement.objects.create(user=admin,
+                                                   timetable=timetable)
+            except User.DoesNotExist:
+                pass
             return cls(timetable=timetable)
         except ValidationError as e:
-            return cls(timetable=timetable, errors=get_errors(e))
-
+            return cls(timetable=None, errors=get_errors(e))
 
 class DeleteTimetable(graphene.relay.ClientIDMutation):
 
+    timetable = graphene.Field(TimetableNode)
+    deleted = graphene.Boolean()
+
     class Input:
         id = graphene.String(required=True)
-
-    deleted = graphene.Boolean()
-    timetable = graphene.Field(TimetableNode)
 
     @classmethod
     def mutate_and_get_payload(cls, input, context, info):

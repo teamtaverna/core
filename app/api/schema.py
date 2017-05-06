@@ -5,9 +5,7 @@ from .cruds.user_crud import (UserNode, CreateUser, UpdateUser, DeleteUser,
                               UserFilter,)
 from .cruds.dish_crud import (DishNode, CreateDish, UpdateDish, DeleteDish,
                               DishFilter,)
-from .cruds.timetable_crud import (TimetableNode, CreateTimetable,
-                                   UpdateTimetable, DeleteTimetable,
-                                   TimetableFilter,)
+from .cruds.timetable_crud import TimetableNode, TimetableFilter
 from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
                                  DeleteWeekday, WeekdayFilter)
 from .cruds.meal_crud import (MealNode, CreateMeal, UpdateMeal, DeleteMeal,
@@ -47,10 +45,6 @@ class Mutation(graphene.ObjectType):
     create_dish = CreateDish.Field()
     update_dish = UpdateDish.Field()
     delete_dish = DeleteDish.Field()
-
-    create_timetable = CreateTimetable.Field()
-    update_timetable = UpdateTimetable.Field()
-    delete_timetable = DeleteTimetable.Field()
 
     create_weekday = CreateWeekday.Field()
     update_weekday = UpdateWeekday.Field()

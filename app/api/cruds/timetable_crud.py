@@ -1,12 +1,8 @@
-from django.core.exceptions import ValidationError
-
 import graphene
 from graphene_django import DjangoObjectType, DjangoConnectionField
 from django_filters import OrderingFilter, FilterSet
 
-from app.timetables.models import (Timetable, VendorService, Vendor,
-                                   TimetableManagement, User, Weekday,)
-from .utils import get_errors, get_object, load_object
+from app.timetables.models import Timetable
 from .vendor_crud import VendorNode
 from .user_crud import UserNode
 from .weekday_crud import WeekdayNode

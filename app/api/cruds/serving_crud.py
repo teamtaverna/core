@@ -3,7 +3,7 @@ from graphene_django import DjangoObjectType
 from graphene_django.converter import convert_django_field
 from hashid_field import HashidField
 
-from app.timetables.models import Course, MenuItem, Serving, Timetable
+from app.timetables.models import Course, MenuItem, Serving
 
 
 @convert_django_field.register(HashidField)
@@ -27,18 +27,6 @@ class MenuItemNode(DjangoObjectType):
 
     class Meta:
         model = MenuItem
-        interfaces = (graphene.relay.Node, )
-
-    def resolve_original_id(self, args, context, info):
-        return self.id
-
-
-class TimetableNode(DjangoObjectType):
-    original_id = graphene.Int()
-
-    class Meta:
-        model = Timetable
-        exclude_fields = ['admins', 'inactive_weekdays', 'vendors']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

@@ -95,7 +95,6 @@ class Timetable(SlugifyMixin, TimestampMixin):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     code = models.CharField(max_length=60, unique=True)
-    api_key = models.CharField(max_length=255, unique=True)
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )

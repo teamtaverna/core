@@ -1,10 +1,11 @@
 """Set up Graphql for Meal Model"""
+from django.db.models import TimeField
+from django.core.exceptions import ValidationError
+
 import graphene
 from graphene_django.types import DjangoObjectType
 from graphene_django.converter import convert_django_field
-
-from django.db.models import TimeField
-from django.core.exceptions import ValidationError
+from django_filters import OrderingFilter, FilterSet
 
 from app.timetables.models import Meal
 from app.api.cruds.utils import get_errors, get_object, load_object
@@ -16,6 +17,19 @@ def convert_function(field, registry=None):
     return graphene.String()
 
 
+class MealFilter(FilterSet):
+
+    order_by = OrderingFilter(fields=[('id', 'id'),
+                                      ('name', 'name'),
+                                      ('start_time', 'start_time'),
+                                      ('end_time', 'end_time')]
+                              )
+
+    class Meta:
+        fields = {'name': ['icontains', 'exact']}
+        model = Meal
+
+
 class MealNode(DjangoObjectType):
     """GraphQL Node for Meal model"""
 
@@ -23,10 +37,6 @@ class MealNode(DjangoObjectType):
 
     class Meta:
         model = Meal
-        filter_fields = {
-            'name': ['icontains', 'exact']
-        }
-        filter_order_by = ['id', 'name', 'start_time', 'end_time']
         interfaces = (graphene.relay.Node, )
 
     def resolve_original_id(self, args, context, info):

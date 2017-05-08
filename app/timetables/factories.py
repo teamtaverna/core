@@ -72,7 +72,6 @@ class TimetableFactory(TimestampFactory):
 
     name = 'Fellows Timetable'
     code = 'FT7876'
-    api_key = 'TF78993jTY'
     cycle_length = 14
     ref_cycle_day = 2
     ref_cycle_date = datetime.date(2016, 10, 1)

@@ -86,7 +86,6 @@ class TimetableTest(TestCase):
         self.another_timetable = Timetable(
             name='timetable',
             code='FT7871',
-            api_key='TF78993jTA',
             cycle_length=self.timetable.cycle_length,
             ref_cycle_day=self.timetable.ref_cycle_day,
             ref_cycle_date=self.timetable.ref_cycle_date,
@@ -100,11 +99,6 @@ class TimetableTest(TestCase):
 
     def test_duplicate_timetable_code_cannot_be_saved(self):
         self.another_timetable.code = self.timetable.code
-
-        self.assertRaises(ValidationError, self.another_timetable.save)
-
-    def test_duplicate_api_key_cannot_be_saved(self):
-        self.another_timetable.api_key = self.timetable.api_key
 
         self.assertRaises(ValidationError, self.another_timetable.save)
 

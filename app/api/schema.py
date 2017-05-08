@@ -1,17 +1,22 @@
+from datetime import datetime
+
 import graphene
 from graphene_django.filter import DjangoFilterConnectionField
 
-from .cruds.user_crud import (UserNode, CreateUser, UpdateUser, DeleteUser,
-                              UserFilter,)
+
+from app.timetables.models import ServingAutoUpdate, Timetable, Vendor
 from .cruds.dish_crud import (DishNode, CreateDish, UpdateDish, DeleteDish,
                               DishFilter,)
-from .cruds.timetable_crud import TimetableNode, TimetableFilter
-from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
-                                 DeleteWeekday, WeekdayFilter)
 from .cruds.meal_crud import (MealNode, CreateMeal, UpdateMeal, DeleteMeal,
                               MealFilter,)
+from .cruds.serving_crud import ServingNode
+from .cruds.timetable_crud import TimetableNode, TimetableFilter
+from .cruds.user_crud import (UserNode, CreateUser, UpdateUser, DeleteUser,
+                              UserFilter,)
 from .cruds.vendor_crud import (VendorNode, CreateVendor, UpdateVendor,
-                                DeleteVendor, VendorFilter)
+                                DeleteVendor, VendorFilter,)
+from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
+                                 DeleteWeekday, WeekdayFilter)
 
 
 class Query(graphene.AbstractType):
@@ -35,6 +40,20 @@ class Query(graphene.AbstractType):
     timetable = graphene.relay.Node.Field(TimetableNode)
     timetables = DjangoFilterConnectionField(TimetableNode,
                                              filterset_class=TimetableFilter)
+
+    servings = graphene.List(
+        ServingNode,
+        timetable=graphene.String(),
+        vendor=graphene.String(),
+        date=graphene.String()
+    )
+
+    def resolve_servings(self, args, context, info):
+        timetable = Timetable.objects.get(slug=args['timetable'])
+        vendor = Vendor.objects.get(slug=args['vendor'])
+        date = datetime.strptime(args['date'], '%Y-%m-%d').date()
+
+        return ServingAutoUpdate.get_servings(timetable, vendor, date)
 
 
 class Mutation(graphene.ObjectType):

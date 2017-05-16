@@ -50,10 +50,12 @@ class Query(graphene.AbstractType):
 
     def resolve_servings(self, args, context, info):
         timetable = Timetable.objects.get(slug=args['timetable'])
-        vendor = Vendor.objects.get(slug=args['vendor'])
         date = datetime.strptime(args['date'], '%Y-%m-%d').date()
+        if 'vendor' in args:
+            vendor = Vendor.objects.get(slug=args['vendor'])
+            return ServingAutoUpdate.get_servings(timetable, date, vendor=vendor)
 
-        return ServingAutoUpdate.get_servings(timetable, vendor, date)
+        return ServingAutoUpdate.get_servings(timetable, date)
 
 
 class Mutation(graphene.ObjectType):

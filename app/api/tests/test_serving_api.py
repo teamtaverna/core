@@ -33,8 +33,13 @@ class ServingApiTest(TestCase):
         self.client = Client()
         create_admin_account()
 
-    def retrieve_servings(self, timetable, vendor, date):
-        query = '''query {servings(timetable: "%s", vendor: "%s", date: "%s") {
+    def retrieve_servings(self, timetable, date, vendor=None):
+        if vendor:
+            query_args = 'timetable: "{}", vendor: "{}", date: "{}"'.format(timetable, vendor, date)
+        else:
+            query_args = 'timetable: "{}", date: "{}"'.format(timetable, date)
+
+        query = '''query {servings(%s) {
                     dateServed
                     vendor {
                         name
@@ -55,7 +60,7 @@ class ServingApiTest(TestCase):
                             name
                         }
                     }
-                }}''' % (timetable, vendor, date)
+                }}''' % (query_args)
 
         return make_request(self.client, query)
 
@@ -63,8 +68,8 @@ class ServingApiTest(TestCase):
         # Retrieve with valid combo
         response = self.retrieve_servings(
             self.timetable.slug,
-            self.vendor.slug,
-            self.date.isoformat()
+            self.date.isoformat(),
+            vendor=self.vendor.slug
         )
         expected = {
             'servings': [
@@ -101,3 +106,39 @@ class ServingApiTest(TestCase):
             'error',
             self.retrieve_servings(self.timetable.slug+'d', self.vendor.slug, self.date.isoformat())
         )
+
+    def test_retrieval_of_servings_without_specifying_vendor(self):
+        # Retrieve with valid combo
+        response = self.retrieve_servings(
+            self.timetable.slug,
+            self.date.isoformat()
+        )
+        expected = {
+            'servings': [
+                {
+                    'dateServed': self.date.isoformat(),
+                    'vendor': {
+                        'name': self.vendor.name,
+                    },
+                    'menuItem': {
+                        'cycleDay': menu_item.cycle_day,
+                        'meal': {
+                            'name': menu_item.meal.name,
+                        },
+                        'course': {
+                            'name': menu_item.course.name,
+                            'sequenceOrder': menu_item.course.sequence_order,
+                        },
+                        'dish': {
+                            'name': menu_item.dish.name,
+                        },
+                        'timetable': {
+                            'name': self.timetable.name,
+                        }
+                    }
+                } for menu_item in self.menu_items
+            ]
+        }
+
+        for x in response['servings']:
+            self.assertIn(x, expected['servings'])

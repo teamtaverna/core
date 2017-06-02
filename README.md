@@ -4,7 +4,7 @@
 Core is the power house of Taverna app, an open source meal review and management platform. More information can be found on the [wiki](https://github.com/teamtaverna/taverna/wiki).
 
 ### Tech
-Core is written in Python3 and Django 1.10.
+Core is written in Python3 and Django 1.11.
 
 ### Collaboration
 

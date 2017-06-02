@@ -3,7 +3,7 @@ from base64 import b64encode
 from django.contrib.auth.models import User
 
 
-admin_test_credentials = ('admin', 'admin@taverna.com', 'qwerty123',)
+admin_test_credentials = ('admin1', 'admin@taverna.com', 'qwerty123',)
 normal_user_credentials = ('user1', 'user1@taverna.com', 'qwerty123',)
 endpoint = '/api'
 
@@ -14,7 +14,6 @@ def obtain_api_key(client):
             admin_test_credentials[2]
         )
         b64_encoded_credentials = b64encode(credentials.encode('utf-8'))
-
         return client.post(
             '/api/api_key',
             **{'HTTP_AUTHORIZATION': 'Basic %s' % b64_encoded_credentials.decode('utf-8')}

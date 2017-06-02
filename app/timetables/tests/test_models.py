@@ -86,7 +86,6 @@ class TimetableTest(TestCase):
         self.another_timetable = Timetable(
             name='timetable',
             code='FT7871',
-            api_key='TF78993jTA',
             cycle_length=self.timetable.cycle_length,
             ref_cycle_day=self.timetable.ref_cycle_day,
             ref_cycle_date=self.timetable.ref_cycle_date,
@@ -100,11 +99,6 @@ class TimetableTest(TestCase):
 
     def test_duplicate_timetable_code_cannot_be_saved(self):
         self.another_timetable.code = self.timetable.code
-
-        self.assertRaises(ValidationError, self.another_timetable.save)
-
-    def test_duplicate_api_key_cannot_be_saved(self):
-        self.another_timetable.api_key = self.timetable.api_key
 
         self.assertRaises(ValidationError, self.another_timetable.save)
 
@@ -402,13 +396,17 @@ class ServingAutoUpdateTest(TestCase):
         self.assertRaises(
             ValidationError,
             ServingAutoUpdate.get_servings,
-            self.timetable, self.vendor, self.later_date
+            self.timetable, self.later_date, vendor=self.vendor
         )
 
     def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
         try:
             with transaction.atomic():
-                ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.earlier_date)
+                ServingAutoUpdate.get_servings(
+                    self.timetable,
+                    self.earlier_date,
+                    vendor=self.vendor
+                )
         except ValidationError as e:
             self.assertEqual(
                 ['Supply a date later than or equal to {}'.format(self.date)],
@@ -422,7 +420,7 @@ class ServingAutoUpdateTest(TestCase):
         self.assertRaises(
             ValidationError,
             ServingAutoUpdate.get_servings,
-            self.timetable, self.vendor, self.date
+            self.timetable, self.date, vendor=self.vendor
         )
 
     def test_get_servings_for_right_combination_of_timetable_and_vendor_and_date(self):
@@ -439,7 +437,25 @@ class ServingAutoUpdateTest(TestCase):
         )
 
         # After get_servings is called
-        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.date)
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.date, vendor=self.vendor)
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, len(servings))
+        self.assertIsInstance(servings[0], Serving)
+
+    def test_get_servings_for_right_combination_of_timetable_and_date_without_vendor(self):
+        # Before get_servings is called
+        kwargs = {
+            'timetable': self.timetable,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+
+        # After get_servings is called
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.date)
         self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
         self.assertEqual(3, len(servings))
         self.assertIsInstance(servings[0], Serving)

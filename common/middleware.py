@@ -30,7 +30,8 @@ class GraphqlResponseFlattenerMiddleware(object):
                     flattened_content[key] = []
                     for item in list(resource.values())[0]:
                         flattened_content[key].append(list(item.values())[0])
-
+                elif isinstance(resource, list):
+                    flattened_content[key] = [x for x in resource]
                 # Use case for retrieval a record
                 elif isinstance(resource, dict):
                     if self.contains_dict_or_None(resource):
@@ -41,6 +42,9 @@ class GraphqlResponseFlattenerMiddleware(object):
                     flattened_content[list(content['data'].keys())[index]] = resource
 
                 index += 1
+
+            if 'errors' in content:
+                flattened_content['error'] = content['errors'][0]['message']
 
             content = flattened_content
 

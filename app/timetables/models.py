@@ -95,7 +95,6 @@ class Timetable(SlugifyMixin, TimestampMixin):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     code = models.CharField(max_length=60, unique=True)
-    api_key = models.CharField(max_length=255, unique=True)
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
@@ -337,21 +336,27 @@ class ServingAutoUpdate(models.Model):
             )
 
     @classmethod
-    def get_servings(cls, timetable, vendor, date):
-        cls.verify_vendor_is_serving(timetable, vendor, date)
+    def get_servings(cls, timetable, date, vendor=None):
+        if vendor:
+            cls.verify_vendor_is_serving(timetable, vendor, date)
+            vendors = [vendor]
+        else:
+            vendors = Vendor.objects.all()
+
         menu_items = cls.get_menu_items(timetable, date)
 
-        kwargs = {
-            'timetable': timetable,
-            'vendor': vendor,
-            'date': date
-        }
-        if not cls.objects.filter(**kwargs).exists():
-            cls.objects.create(**kwargs)
+        for vendor in vendors:
+            kwargs = {
+                'timetable': timetable,
+                'vendor': vendor,
+                'date': date
+            }
+            if not cls.objects.filter(**kwargs).exists():
+                cls.objects.create(**kwargs)
 
         return Serving.objects.filter(
             menu_item__in=menu_items,
-            vendor=vendor,
+            vendor__in=vendors,
             date_served=date
         )
 

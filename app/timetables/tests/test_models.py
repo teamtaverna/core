@@ -396,13 +396,17 @@ class ServingAutoUpdateTest(TestCase):
         self.assertRaises(
             ValidationError,
             ServingAutoUpdate.get_servings,
-            self.timetable, self.vendor, self.later_date
+            self.timetable, self.later_date, vendor=self.vendor
         )
 
     def test_get_servings_for_a_date_earlier_than_ref_cycle_date(self):
         try:
             with transaction.atomic():
-                ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.earlier_date)
+                ServingAutoUpdate.get_servings(
+                    self.timetable,
+                    self.earlier_date,
+                    vendor=self.vendor
+                )
         except ValidationError as e:
             self.assertEqual(
                 ['Supply a date later than or equal to {}'.format(self.date)],
@@ -416,7 +420,7 @@ class ServingAutoUpdateTest(TestCase):
         self.assertRaises(
             ValidationError,
             ServingAutoUpdate.get_servings,
-            self.timetable, self.vendor, self.date
+            self.timetable, self.date, vendor=self.vendor
         )
 
     def test_get_servings_for_right_combination_of_timetable_and_vendor_and_date(self):
@@ -433,7 +437,25 @@ class ServingAutoUpdateTest(TestCase):
         )
 
         # After get_servings is called
-        servings = ServingAutoUpdate.get_servings(self.timetable, self.vendor, self.date)
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.date, vendor=self.vendor)
+        self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
+        self.assertEqual(3, len(servings))
+        self.assertIsInstance(servings[0], Serving)
+
+    def test_get_servings_for_right_combination_of_timetable_and_date_without_vendor(self):
+        # Before get_servings is called
+        kwargs = {
+            'timetable': self.timetable,
+            'date': self.date
+        }
+        self.assertRaises(
+            ServingAutoUpdate.DoesNotExist,
+            ServingAutoUpdate.objects.get,
+            **kwargs
+        )
+
+        # After get_servings is called
+        servings = ServingAutoUpdate.get_servings(self.timetable, self.date)
         self.assertIsInstance(ServingAutoUpdate.objects.get(**kwargs), ServingAutoUpdate)
         self.assertEqual(3, len(servings))
         self.assertIsInstance(servings[0], Serving)

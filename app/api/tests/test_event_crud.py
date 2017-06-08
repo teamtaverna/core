@@ -12,15 +12,12 @@ class EventApiTest(TestCase):
         self.event = EventFactory()
 
     def retrieve_event(self):
-        query = 'query {events{edges{node{name}}}}'
-
+        query = 'query {event{name}}'
         return make_request(self.client, query)
 
     def test_retrieve_events(self):
         response = self.retrieve_event()
-        expected = {
-            'events': [{
-                'name': self.event.name
-            }]
-        }
+        expected = {'events': [{
+            'name': self.event.name
+        }]}
         self.assertEqual(expected, response)

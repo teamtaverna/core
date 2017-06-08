@@ -1,5 +1,5 @@
 import graphene
-from graphene_django import DjangoObjectType
+from graphene_django import DjangoConnectionField, DjangoObjectType
 from django_filters import OrderingFilter, FilterSet
 
 from app.timetables.models import Event
@@ -12,14 +12,14 @@ class EventFilter(FilterSet):
                                       ('action', 'action'),
                                       ('start_date', 'start_date'),
                                       ('end_date', 'end_date')])
-    
+
     class Meta:
         fields = {
             'name': ['icontains']
         }
         model = Event
 
-        
+
 class EventNode(DjangoObjectType):
     original_id = graphene.Int()
     timetable = DjangoConnectionField(lambda: TimetableNode)

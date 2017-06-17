@@ -17,6 +17,7 @@ from .cruds.vendor_crud import (VendorNode, CreateVendor, UpdateVendor,
                                 DeleteVendor, VendorFilter,)
 from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
                                  DeleteWeekday, WeekdayFilter)
+from .cruds.event_crud import EventNode, EventFilter
 
 
 class Query(graphene.AbstractType):
@@ -40,6 +41,9 @@ class Query(graphene.AbstractType):
     timetable = graphene.relay.Node.Field(TimetableNode)
     timetables = DjangoFilterConnectionField(TimetableNode,
                                              filterset_class=TimetableFilter)
+    event = graphene.relay.Node.Field(EventNode)
+    events = DjangoFilterConnectionField(EventNode,
+                                         filterset_class=EventFilter)
 
     servings = graphene.List(
         ServingNode,

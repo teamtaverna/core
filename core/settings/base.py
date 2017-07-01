@@ -34,6 +34,7 @@ SECRET_KEY = dotenv.get('SECRET_KEY')
 
 # Application definition
 PREREQ_APPS = [
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +42,6 @@ PREREQ_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
-    'grappelli',
 ]
 
 PROJECT_APPS = [

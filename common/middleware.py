@@ -23,9 +23,11 @@ class GraphqlResponseFlattenerMiddleware(object):
             for resource in list(content['data'].values()):
                 # Use case for retrieval of all records
                 key = list(content['data'].keys())[index]
-                if (resource and 'edges' in resource
-                        and isinstance(resource['edges'], list)
-                        and 'node' in resource['edges'][0]):
+
+                if (resource and 'edges' in resource and
+                        isinstance(resource['edges'], list) and
+                        len(resource['edges']) > 0 and
+                        'node' in resource['edges'][0]):
 
                     flattened_content[key] = []
                     for item in list(resource.values())[0]:
@@ -39,7 +41,9 @@ class GraphqlResponseFlattenerMiddleware(object):
                     else:
                         flattened_content[key] = resource
                 elif resource is None:
-                    flattened_content[list(content['data'].keys())[index]] = resource
+                    flattened_content[
+                        list(content['data'].keys())[index]
+                    ] = resource
 
                 index += 1
 

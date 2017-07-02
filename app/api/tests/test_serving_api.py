@@ -35,7 +35,9 @@ class ServingApiTest(TestCase):
 
     def retrieve_servings(self, timetable, date, vendor=None):
         if vendor:
-            query_args = 'timetable: "{}", vendor: "{}", date: "{}"'.format(timetable, vendor, date)
+            query_args = 'timetable: "{}", vendor: "{}", date: "{}"'.format(
+                timetable, vendor, date
+            )
         else:
             query_args = 'timetable: "{}", date: "{}"'.format(timetable, date)
 

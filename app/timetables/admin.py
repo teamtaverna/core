@@ -57,7 +57,7 @@ class TimetableAdmin(admin.ModelAdmin):
 
     readonly_fields = ('slug', 'date_created', 'date_modified')
     fields = (
-        'name', 'slug', 'code', 'cycle_length',
+        'name', 'slug', 'cycle_length',
         'ref_cycle_day', 'description', 'is_active',
         'ref_cycle_date', 'date_created', 'date_modified'
     )

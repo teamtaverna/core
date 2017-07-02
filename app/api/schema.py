@@ -57,7 +57,9 @@ class Query(graphene.AbstractType):
         date = datetime.strptime(args['date'], '%Y-%m-%d').date()
         if 'vendor' in args:
             vendor = Vendor.objects.get(slug=args['vendor'])
-            return ServingAutoUpdate.get_servings(timetable, date, vendor=vendor)
+            return ServingAutoUpdate.get_servings(
+                timetable, date, vendor=vendor
+            )
 
         return ServingAutoUpdate.get_servings(timetable, date)
 

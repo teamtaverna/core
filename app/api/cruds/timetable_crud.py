@@ -12,7 +12,6 @@ class TimetableFilter(FilterSet):
 
     order_by = OrderingFilter(fields=[('id', 'id'),
                                       ('name', 'name'),
-                                      ('code', 'code'),
                                       ('cycle_length', 'cycle_length'),
                                       ('ref_cycle_length', 'ref_cycle_length'),
                                       ('ref_cycle_date', 'ref_cycle_date'),
@@ -24,8 +23,7 @@ class TimetableFilter(FilterSet):
 
     class Meta:
         fields = {
-            'name': ['icontains'],
-            'code': ['exact']
+            'name': ['icontains']
         }
         model = Timetable
 

@@ -71,7 +71,6 @@ class TimetableFactory(TimestampFactory):
         model = models.Timetable
 
     name = 'Fellows Timetable'
-    code = 'FT7876'
     cycle_length = 14
     ref_cycle_day = 2
     ref_cycle_date = datetime.date(2016, 10, 1)

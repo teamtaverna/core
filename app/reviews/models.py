@@ -24,7 +24,8 @@ class Review(TimestampMixin):
         (TERRIBLE, 'TERRIBLE')
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # Make nullable for anonymity of reviewers.
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     serving = models.ForeignKey(Serving, on_delete=models.CASCADE)
     value = models.PositiveSmallIntegerField(choices=RATINGS)
     comment = models.TextField(blank=True)

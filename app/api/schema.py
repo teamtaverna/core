@@ -7,8 +7,11 @@ from graphene_django.filter import DjangoFilterConnectionField
 from app.timetables.models import ServingAutoUpdate, Timetable, Vendor
 from .cruds.dish_crud import (DishNode, CreateDish, UpdateDish, DeleteDish,
                               DishFilter,)
+from .cruds.event_crud import EventNode, EventFilter
 from .cruds.meal_crud import (MealNode, CreateMeal, UpdateMeal, DeleteMeal,
                               MealFilter,)
+from .cruds.review_crud import (ReviewNode, CreateReview, UpdateReview,
+                                DeleteReview, ReviewFilter,)
 from .cruds.serving_crud import ServingNode
 from .cruds.timetable_crud import TimetableNode, TimetableFilter
 from .cruds.user_crud import (UserNode, CreateUser, UpdateUser, DeleteUser,
@@ -16,8 +19,7 @@ from .cruds.user_crud import (UserNode, CreateUser, UpdateUser, DeleteUser,
 from .cruds.vendor_crud import (VendorNode, CreateVendor, UpdateVendor,
                                 DeleteVendor, VendorFilter,)
 from .cruds.weekday_crud import (WeekdayNode, CreateWeekday, UpdateWeekday,
-                                 DeleteWeekday, WeekdayFilter)
-from .cruds.event_crud import EventNode, EventFilter
+                                 DeleteWeekday, WeekdayFilter,)
 
 
 class Query(graphene.AbstractType):
@@ -25,8 +27,7 @@ class Query(graphene.AbstractType):
     users = DjangoFilterConnectionField(UserNode, filterset_class=UserFilter)
 
     weekday = graphene.relay.Node.Field(WeekdayNode)
-    weekdays = DjangoFilterConnectionField(WeekdayNode,
-                                           filterset_class=WeekdayFilter)
+    weekdays = DjangoFilterConnectionField(WeekdayNode, filterset_class=WeekdayFilter)
 
     dish = graphene.relay.Node.Field(DishNode)
     dishes = DjangoFilterConnectionField(DishNode, filterset_class=DishFilter)
@@ -35,15 +36,16 @@ class Query(graphene.AbstractType):
     meals = DjangoFilterConnectionField(MealNode, filterset_class=MealFilter)
 
     vendor = graphene.relay.Node.Field(VendorNode)
-    vendors = DjangoFilterConnectionField(VendorNode,
-                                          filterset_class=VendorFilter)
+    vendors = DjangoFilterConnectionField(VendorNode, filterset_class=VendorFilter)
 
     timetable = graphene.relay.Node.Field(TimetableNode)
-    timetables = DjangoFilterConnectionField(TimetableNode,
-                                             filterset_class=TimetableFilter)
+    timetables = DjangoFilterConnectionField(TimetableNode, filterset_class=TimetableFilter)
+
     event = graphene.relay.Node.Field(EventNode)
-    events = DjangoFilterConnectionField(EventNode,
-                                         filterset_class=EventFilter)
+    events = DjangoFilterConnectionField(EventNode, filterset_class=EventFilter)
+
+    review = graphene.relay.Node.Field(ReviewNode)
+    reviews = DjangoFilterConnectionField(ReviewNode, filterset_class=ReviewFilter)
 
     servings = graphene.List(
         ServingNode,
@@ -84,3 +86,7 @@ class Mutation(graphene.ObjectType):
     create_vendor = CreateVendor.Field()
     update_vendor = UpdateVendor.Field()
     delete_vendor = DeleteVendor.Field()
+
+    create_review = CreateReview.Field()
+    update_review = UpdateReview.Field()
+    delete_review = DeleteReview.Field()

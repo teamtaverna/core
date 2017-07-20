@@ -26,6 +26,9 @@ class Review(TimestampMixin):
 
     # Make nullable for anonymity of reviewers.
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    # anonymity_id is just a unique identifier for the reviewer used
+    # as a check prevent multiple reviews from one person
+    anonymity_id = models.CharField(blank=True, null=True, max_length=250)
     serving = models.ForeignKey(Serving, on_delete=models.CASCADE)
     value = models.PositiveSmallIntegerField(choices=RATINGS)
     comment = models.TextField(blank=True)

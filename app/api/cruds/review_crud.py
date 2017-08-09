@@ -42,6 +42,7 @@ class CreateReview(graphene.relay.ClientIDMutation):
         serving = graphene.String(required=True)
         value = graphene.String(required=True)
         comment = graphene.String(required=False)
+        anonymity_id = graphene.String(required=False)
 
     @classmethod
     def mutate_and_get_payload(cls, args, context, info):
@@ -50,6 +51,7 @@ class CreateReview(graphene.relay.ClientIDMutation):
                 serving=Serving.objects.get(public_id=args.get('serving')),
                 value=int(args.get('value')),
                 comment=args.get('comment', ''),
+                anonymity_id=args.get('anonymity_id', ''),
             )
             review.full_clean()
             review.save()

@@ -1,7 +1,8 @@
 import factory
 
 from . import models
-from app.timetables.factories import ServingFactory, TimestampFactory, UserFactory
+from app.timetables.factories import (ServingFactory, TimestampFactory,
+                                      UserFactory,)
 
 
 class ReviewFactory(TimestampFactory):
@@ -14,3 +15,4 @@ class ReviewFactory(TimestampFactory):
     serving = factory.SubFactory(ServingFactory)
     value = 4
     comment = 'Fresh and Delicious!'
+    anonymity_id = 'somerandomid'

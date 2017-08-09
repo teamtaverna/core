@@ -51,7 +51,7 @@ class CreateReview(graphene.relay.ClientIDMutation):
                 serving=Serving.objects.get(public_id=args.get('serving')),
                 value=int(args.get('value')),
                 comment=args.get('comment', ''),
-                anonymity_id=args.get('anonymity_id', '')
+                anonymity_id=args.get('anonymity_id', ''),
             )
             review.full_clean()
             review.save()

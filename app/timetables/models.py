@@ -20,6 +20,9 @@ class Weekday(SlugifyMixin, models.Model):
     slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
 
     slugify_field = 'name'
+    # Order (monday == 0 ... sunday == 6) matters
+    # in conformity with datetime.date.weekday implementation
+    WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
     def __str__(self):
         return self.name
@@ -206,6 +209,13 @@ class MenuItem(TimestampMixin):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
 
+    def clean(self):
+        if self.cycle_day > self.timetable.cycle_length:
+            raise ValidationError(
+                _('Supply a cycle day in the range 1 - {}'.format(self.timetable.cycle_length))
+            )
+        super().clean()
+
     def save(self, *args, **kwargs):
         # Calling full_clean instead of clean to ensure validators are called
         self.full_clean()
@@ -270,6 +280,30 @@ class Serving(TimestampMixin):
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     date_served = models.DateField()
+
+    def get_serving_weekday(self):
+        return Weekday.WEEKDAYS[self.date_served.weekday()]
+
+    def is_timetable_inactive_today(self):
+        return self.get_serving_weekday() in (self.menu_item.timetable.inactive_weekdays.all()
+                                              .values_list('slug', flat=True))
+
+    def clean(self):
+        if self.is_timetable_inactive_today():
+            raise ValidationError(
+                _('Timetable {} is inactive on {}.'.format(
+                    self.menu_item.timetable.name,
+                    self.date_served,
+                ))
+            )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        # Calling full_clean instead of clean to ensure validators are called
+        self.full_clean()
+
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return '{} served on {}'.format(self.menu_item, self.date_served)

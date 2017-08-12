@@ -186,6 +186,8 @@ class TimetableManagement(models.Model):
 
     class Meta:
         unique_together = ('user', 'timetable')
+        verbose_name = 'Timetable Admin'
+        verbose_name_plural = 'Timetable Admins'
 
 
 class MenuItem(TimestampMixin):
@@ -216,6 +218,8 @@ class MenuItem(TimestampMixin):
 
     class Meta:
         unique_together = ('timetable', 'cycle_day', 'meal', 'course', 'dish')
+        verbose_name = 'Menu Item'
+        verbose_name_plural = 'Menu Items'
 
 
 class Event(TimestampMixin):
@@ -302,6 +306,8 @@ class VendorService(models.Model):
 
     class Meta:
         unique_together = ('timetable', 'vendor')
+        verbose_name = 'Vendor Service'
+        verbose_name_plural = 'Vendor Services'
 
 
 class ServingAutoUpdate(models.Model):
@@ -389,3 +395,5 @@ class ServingAutoUpdate(models.Model):
 
     class Meta:
         unique_together = ('timetable', 'vendor', 'date')
+        verbose_name = 'ServingAutoUpdate'
+        verbose_name_plural = 'ServingAutoUpdates'

@@ -257,7 +257,7 @@ class ServingTest(TestCase):
         )
 
     def test_enforcement_of_unique_together(self):
-        self.assertRaises(IntegrityError, self.another_serving.save)
+        self.assertRaises(ValidationError, self.another_serving.save)
 
 
 class VendorServiceTest(TestCase):

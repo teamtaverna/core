@@ -1,9 +1,14 @@
 from django.contrib import admin
+from django.conf import settings
 
 from .models import (
     Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
     Vendor, VendorService, Serving, ServingAutoUpdate, TimetableManagement
 )
+
+
+def clear_actions(actions):
+    [actions.pop(key) for key in actions]
 
 
 @admin.register(Weekday)
@@ -104,10 +109,25 @@ class VendorAdmin(DefaultAdmin):
 class ServingAdmin(TimeStampAdmin):
     """Admin customisation for Serving model."""
 
-    readonly_fields = ('public_id',)
     fields = ('public_id', 'menu_item', 'vendor', 'date_served')
+    readonly_fields = fields
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not settings.DEBUG:
+            clear_actions(actions)
+
+        return actions
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 admin.site.empty_value_display = ''
 
-admin.site.register([TimetableManagement, VendorService, ServingAutoUpdate])
+admin.site.register([TimetableManagement, VendorService])
+if settings.DEBUG:
+    admin.site.register(ServingAutoUpdate)

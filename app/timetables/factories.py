@@ -21,15 +21,6 @@ class TimestampFactory(DjangoModelFactory):
     date_modified = timezone.make_aware(timezone.datetime(2009, 1, 1, 0, 0, 0))
 
 
-class WeekdayFactory(DjangoModelFactory):
-    """Weekday model factory."""
-
-    class Meta:
-        model = models.Weekday
-
-    name = 'Monday'
-
-
 class MealFactory(DjangoModelFactory):
     """Meal model factory."""
 
@@ -75,6 +66,7 @@ class TimetableFactory(TimestampFactory):
     ref_cycle_day = 2
     ref_cycle_date = datetime.date(2016, 10, 1)
     description = 'Some random description'
+    inactive_weekdays = '0,2'
 
 
 class TimetableManagementFactory(DjangoModelFactory):

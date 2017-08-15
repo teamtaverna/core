@@ -5,7 +5,6 @@ from django_filters import OrderingFilter, FilterSet
 from app.timetables.models import Timetable
 from .vendor_crud import VendorNode
 from .user_crud import UserNode
-from .weekday_crud import WeekdayNode
 
 
 class TimetableFilter(FilterSet):
@@ -32,7 +31,6 @@ class TimetableNode(DjangoObjectType):
     original_id = graphene.Int()
     vendors = DjangoConnectionField(lambda: VendorNode)
     admins = DjangoConnectionField(lambda: UserNode)
-    inactive_weekdays = DjangoConnectionField(lambda: WeekdayNode)
 
     class Meta:
         model = Timetable

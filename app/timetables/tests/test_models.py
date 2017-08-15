@@ -8,25 +8,12 @@ from django.test import TestCase
 from app.timetables.factories import (
     CourseFactory, DishFactory, EventFactory, MealFactory, MenuItemFactory,
     ServingFactory, TimetableFactory, VendorFactory, VendorServiceFactory,
-    WeekdayFactory
 )
 
 from app.timetables.models import (
     Course, Dish, Event, Meal, MenuItem, Serving, ServingAutoUpdate, Timetable,
-    Vendor, VendorService, Weekday
+    Vendor, VendorService,
 )
-
-
-class WeekdayTest(TestCase):
-    """Tests the Weekday model."""
-
-    def setUp(self):
-        WeekdayFactory()
-
-    def test_duplicate_weekday_name_cannot_be_saved(self):
-        day = Weekday(name='Monday')
-
-        self.assertRaises(ValidationError, day.save)
 
 
 class MealTest(TestCase):
@@ -257,7 +244,7 @@ class ServingTest(TestCase):
         )
 
     def test_enforcement_of_unique_together(self):
-        self.assertRaises(ValidationError, self.another_serving.save)
+        self.assertRaises(IntegrityError, self.another_serving.save)
 
 
 class VendorServiceTest(TestCase):
@@ -385,6 +372,20 @@ class ServingAutoUpdateTest(TestCase):
         # After create_servings_if_not_exist is called
         ServingAutoUpdate.create_servings_if_not_exist(self.timetable, self.vendor, self.date)
         self.assertEqual(3, self.get_servings_count())
+
+    def test_get_servings_with_date_being_an_inactive_weekday_of_the_specified_timetable(self):
+        date = self.later_date - datetime.timedelta(days=1)
+        try:
+            with transaction.atomic():
+                ServingAutoUpdate.get_servings(
+                    self.timetable,
+                    date,
+                )
+        except ValidationError as e:
+            self.assertEqual(
+                ['Timetable {} is inactive on {}.'.format(self.timetable.name, date)],
+                e.messages
+            )
 
     def test_get_servings_with_no_menu_item_entry_for_combination_of_timetable_and_date(self):
         self.assertRaises(

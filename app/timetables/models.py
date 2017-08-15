@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, validate_comma_separated_integer_list
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
@@ -11,21 +11,6 @@ from hashid_field import HashidField
 
 from common.mixins import SlugifyMixin, TimestampMixin
 from common.utils import timestamp_seconds
-
-
-class Weekday(SlugifyMixin, models.Model):
-    """Model representing the day of the week."""
-
-    name = models.CharField(max_length=60)
-    slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
-
-    slugify_field = 'name'
-    # Order (monday == 0 ... sunday == 6) matters
-    # in conformity with datetime.date.weekday implementation
-    WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-    def __str__(self):
-        return self.name
 
 
 class Meal(SlugifyMixin, models.Model):
@@ -104,7 +89,11 @@ class Timetable(SlugifyMixin, TimestampMixin):
         validators=[MinValueValidator(1)]
     )
     ref_cycle_date = models.DateField()
-    inactive_weekdays = models.ManyToManyField(Weekday)
+    inactive_weekdays = models.CharField(
+        max_length=13,  # At max., we would have '0,1,2,3,4,5,6'
+        blank=True,
+        validators=[validate_comma_separated_integer_list],
+    )
     vendors = models.ManyToManyField(Vendor, through='VendorService')
     is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True)
@@ -152,6 +141,9 @@ class Timetable(SlugifyMixin, TimestampMixin):
             vendorservice__start_date__lte=date,
             vendorservice__end_date__gte=date
         )]
+
+    def is_timetable_inactive_this_day(self, date):
+        return str(date.weekday()) in self.inactive_weekdays
 
 
 class Dish(SlugifyMixin, TimestampMixin):
@@ -281,30 +273,6 @@ class Serving(TimestampMixin):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     date_served = models.DateField()
 
-    def get_serving_weekday(self):
-        return Weekday.WEEKDAYS[self.date_served.weekday()]
-
-    def is_timetable_inactive_today(self):
-        return self.get_serving_weekday() in (self.menu_item.timetable.inactive_weekdays.all()
-                                              .values_list('slug', flat=True))
-
-    def clean(self):
-        if self.is_timetable_inactive_today():
-            raise ValidationError(
-                _('Timetable {} is inactive on {}.'.format(
-                    self.menu_item.timetable.name,
-                    self.date_served,
-                ))
-            )
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        # Calling full_clean instead of clean to ensure validators are called
-        self.full_clean()
-
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         return '{} served on {}'.format(self.menu_item, self.date_served)
 
@@ -376,6 +344,14 @@ class ServingAutoUpdate(models.Model):
 
     @classmethod
     def get_servings(cls, timetable, date, vendor=None):
+        if timetable.is_timetable_inactive_this_day(date):
+            raise ValidationError(
+                _('Timetable {} is inactive on {}.'.format(
+                    timetable.name,
+                    date,
+                ))
+            )
+
         if vendor:
             cls.verify_vendor_is_serving(timetable, vendor, date)
             vendors = [vendor]

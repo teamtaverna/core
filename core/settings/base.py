@@ -157,3 +157,4 @@ SUIT_CONFIG = {
 # Hashid settings
 HASHID_FIELD_SALT = dotenv.get('HASHID_FIELD_SALT')
 DEBUG = dotenv.get('DEBUG')
+WEEKDAYS = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')

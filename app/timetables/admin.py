@@ -1,9 +1,10 @@
-from django.contrib import admin
+from django import forms
 from django.conf import settings
+from django.contrib import admin
 
 from .models import (
-    Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
-    Vendor, VendorService, Serving, ServingAutoUpdate, TimetableManagement
+    Course, Dish, Event, Meal, MenuItem, Serving, ServingAutoUpdate,
+    Timetable, TimetableManagement, Vendor, VendorService,
 )
 
 
@@ -11,7 +12,6 @@ def clear_actions(actions):
     [actions.pop(key) for key in actions]
 
 
-@admin.register(Weekday)
 class DefaultAdmin(admin.ModelAdmin):
     """Default admin for models with just name and slug fields."""
 
@@ -44,16 +44,27 @@ class AdminsInline(admin.TabularInline):
     model = Timetable.admins.through
 
 
-class WeekdaysInline(admin.TabularInline):
-    """Tabular inline setting for Timetable inactive weekdays."""
-
-    model = Timetable.inactive_weekdays.through
-
-
 class VendorsInline(admin.TabularInline):
     """Tabular inline setting for Timetable vendors."""
 
     model = Timetable.vendors.through
+
+
+class TimetableForm(forms.ModelForm):
+    inactive_weekdays = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=((key, value) for key, value in enumerate(settings.WEEKDAYS)),
+    )
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.get('instance'):
+            # inactive_weekdays field is a list of integer at the form level
+            kwargs['instance'].inactive_weekdays = kwargs['instance'].inactive_weekdays.split(',')
+        super().__init__(*args, **kwargs)
+
+    def clean_inactive_weekdays(self):
+        # inactive_weekdays field is a string of comma-separated list of integer at the model level
+        return ','.join(self.cleaned_data['inactive_weekdays'])
 
 
 @admin.register(Timetable)
@@ -64,9 +75,10 @@ class TimetableAdmin(admin.ModelAdmin):
     fields = (
         'name', 'slug', 'cycle_length',
         'ref_cycle_day', 'description', 'is_active',
-        'ref_cycle_date', 'date_created', 'date_modified'
+        'ref_cycle_date', 'inactive_weekdays', 'date_created', 'date_modified'
     )
-    inlines = (WeekdaysInline, AdminsInline, VendorsInline)
+    form = TimetableForm
+    inlines = (AdminsInline, VendorsInline)
 
 
 @admin.register(Dish)

@@ -1,12 +1,17 @@
+from django import forms
+from django.conf import settings
 from django.contrib import admin
 
 from .models import (
-    Event, Weekday, Course, Meal, Timetable, Dish, MenuItem,
-    Vendor, VendorService, Serving, ServingAutoUpdate, TimetableManagement
+    Course, Dish, Event, Meal, MenuItem, Serving, ServingAutoUpdate,
+    Timetable, TimetableManagement, Vendor, VendorService,
 )
 
 
-@admin.register(Weekday)
+def clear_actions(actions):
+    [actions.pop(key) for key in actions]
+
+
 class DefaultAdmin(admin.ModelAdmin):
     """Default admin for models with just name and slug fields."""
 
@@ -39,16 +44,27 @@ class AdminsInline(admin.TabularInline):
     model = Timetable.admins.through
 
 
-class WeekdaysInline(admin.TabularInline):
-    """Tabular inline setting for Timetable inactive weekdays."""
-
-    model = Timetable.inactive_weekdays.through
-
-
 class VendorsInline(admin.TabularInline):
     """Tabular inline setting for Timetable vendors."""
 
     model = Timetable.vendors.through
+
+
+class TimetableForm(forms.ModelForm):
+    inactive_weekdays = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=((key, value) for key, value in enumerate(settings.WEEKDAYS)),
+    )
+
+    def __init__(self, *args, **kwargs):
+        if kwargs.get('instance'):
+            # inactive_weekdays field is a list of integer at the form level
+            kwargs['instance'].inactive_weekdays = kwargs['instance'].inactive_weekdays.split(',')
+        super().__init__(*args, **kwargs)
+
+    def clean_inactive_weekdays(self):
+        # inactive_weekdays field is a string of comma-separated list of integer at the model level
+        return ','.join(self.cleaned_data['inactive_weekdays'])
 
 
 @admin.register(Timetable)
@@ -59,9 +75,10 @@ class TimetableAdmin(admin.ModelAdmin):
     fields = (
         'name', 'slug', 'cycle_length',
         'ref_cycle_day', 'description', 'is_active',
-        'ref_cycle_date', 'date_created', 'date_modified'
+        'ref_cycle_date', 'inactive_weekdays', 'date_created', 'date_modified'
     )
-    inlines = (WeekdaysInline, AdminsInline, VendorsInline)
+    form = TimetableForm
+    inlines = (AdminsInline, VendorsInline)
 
 
 @admin.register(Dish)
@@ -104,10 +121,25 @@ class VendorAdmin(DefaultAdmin):
 class ServingAdmin(TimeStampAdmin):
     """Admin customisation for Serving model."""
 
-    readonly_fields = ('public_id',)
     fields = ('public_id', 'menu_item', 'vendor', 'date_served')
+    readonly_fields = fields
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not settings.DEBUG:
+            clear_actions(actions)
+
+        return actions
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 admin.site.empty_value_display = ''
 
-admin.site.register([TimetableManagement, VendorService, ServingAutoUpdate])
+admin.site.register([TimetableManagement, VendorService])
+if settings.DEBUG:
+    admin.site.register(ServingAutoUpdate)

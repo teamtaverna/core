@@ -34,8 +34,8 @@ class CourseAdmin(DefaultAdmin):
     fieldsets = [
         ('Course', {
             'fields': ('name', 'slug', 'sequence_order',),
-            'description': 'A particular dish served as one \
-                            of the successive parts of a meal option.'
+            'description': ('A particular dish served as one '
+                            'of the successive parts of a meal option.')
         }),
     ]
 
@@ -47,9 +47,9 @@ class MealAdmin(DefaultAdmin):
     fieldsets = [
         ('Meal', {
             'fields': ('name', 'slug', 'start_time', 'end_time',),
-            'description': 'One of the occasions during the day\
-                            that food is scheduled to be served.\
-                            For example breakfast, lunch, tea-break.'
+            'description': ('One of the occasions during the day '
+                            'that food is scheduled to be served. '
+                            'For example breakfast, lunch, tea-break.')
         }),
     ]
 
@@ -93,9 +93,9 @@ class TimetableAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'cycle_length', 'ref_cycle_day',
                        'description', 'is_active', 'ref_cycle_date',
                        'inactive_weekdays', 'date_created', 'date_modified',),
-            'description': 'Holds the entire structure and scheduling of meals,\
-                            menu-items, etc, served at a location, to a team\
-                            or the entire organization'
+            'description': ('Holds the entire structure and scheduling of '
+                            'meals, menu-items, etc, served at a location, '
+                            'to a team or the entire organization.')
         }),
     ]
     form = TimetableForm
@@ -111,9 +111,9 @@ class DishAdmin(admin.ModelAdmin):
         ('Dish', {
             'fields': ('name', 'slug', 'description', 'date_created',
                        'date_modified',),
-            'description': 'The actual food served as a given course.\
-                            For example, Coconut rice garnished with\
-                            fish stew and chicken or just Ice-cream.'
+            'description': ('The actual food served as a given course. '
+                            'For example, Coconut rice garnished with '
+                            'fish stew and chicken or just Ice-cream.')
         }),
     ]
 
@@ -139,9 +139,9 @@ class EventAdmin(TimeStampAdmin):
         ('Event', {
             'fields': ('name', 'timetable', 'action', 'start_date', 'end_date',
                        'date_created', 'date_modified',),
-            'description': 'A date or range of dates to prevent\
-                            food scheduling or user reviews during that\
-                            period. Example: Christmas.'
+            'description': ('A date or range of dates to prevent '
+                            'food scheduling or user reviews during that '
+                            'period. Example: Christmas.')
         }),
     ]
 

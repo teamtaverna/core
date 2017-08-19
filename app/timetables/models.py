@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, validate_comma_separated_integer_list
+from django.core.validators import (MinValueValidator,
+                                    validate_comma_separated_integer_list,)
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
@@ -53,8 +54,10 @@ class Course(SlugifyMixin, models.Model):
     )
     sequence_order = models.PositiveSmallIntegerField(
         unique=True,
-        help_text='The numerical order of the dishes for a meal option.\
-                   E.g, 1 for appetizer, 2 for main course'
+        help_text=(
+            'The numerical order of the dishes for a meal option. '
+            'E.g, 1 for appetizer, 2 for main course'
+        )
     )
 
     slugify_field = 'name'
@@ -94,25 +97,32 @@ class Timetable(SlugifyMixin, TimestampMixin):
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
-        help_text='Number of days in which the menu timetable is repeated\
-                  after a period of time. E.g, A cycle length of\
-                  14 days (2 weeks) including the inactive weekdays\
-                  like weekends after which the food schedule is repeated.'
+        help_text=(
+            'Number of days in which the menu timetable is repeated '
+            'after a period of time. E.g, A cycle length of '
+            '14 days (2 weeks) including the inactive weekdays '
+            'like weekends after which the food schedule is repeated.'
+        )
     )
     ref_cycle_day = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
-        help_text='The reference day (numerical value) in time\
-                   with which cycle day for any other following date\
-                   can be computed. E.g, 1 if today is Sunday as\
-                   first day of the cycle length. No need to always\
-                   update this except the cycle changes.'
+        help_text=(
+            'The reference day (numerical value) in time '
+            'with which cycle day for any other following date '
+            'can be computed. E.g, 1 if today is Sunday as '
+            'first day of the cycle length. No need to always '
+            'update this except the cycle changes.'
+        )
     )
     ref_cycle_date = models.DateField(
-        help_text='The reference date in time with which cycle day\
-                   for any other following date can be computed.\
-                   E.g, 1 if today is Sunday as first day of the\
-                   cycle length. No need to always\
-                   update this except the cycle changes.')
+        help_text=(
+            'The reference date in time with which cycle day '
+            'for any other following date can be computed. '
+            'E.g, 1 if today is Sunday as first day of the '
+            'cycle length. No need to always '
+            'update this except the cycle changes.'
+        )
+    )
     inactive_weekdays = models.CharField(
         max_length=13,  # At max., we would have '0,1,2,3,4,5,6'
         blank=True,
@@ -362,8 +372,8 @@ class ServingAutoUpdate(models.Model):
     def verify_vendor_is_serving(timetable, vendor, date):
         if not vendor.is_vendor_serving(timetable, date):
             raise ValidationError(
-                _('Ensure the specified Vendor has an active tenure ' +
-                    'for the specified Date on the specified Timetable')
+                _('Ensure the specified Vendor has an active tenure '
+                  'for the specified Date on the specified Timetable')
             )
 
     @classmethod

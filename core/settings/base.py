@@ -143,7 +143,7 @@ STATICFILES_DIRS = (
 )
 
 # Admin site settings
-AdminSite.site_header = 'Taverna Admin'
+AdminSite.site_header = 'FoodBoard Admin'
 
 # Graphene settings
 GRAPHENE = {

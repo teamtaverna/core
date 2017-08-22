@@ -1,8 +1,10 @@
 import pytz
-import requests
 
 from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
+
+from ipware.ip import get_real_ip
+from geolite2 import geolite2
 
 
 class TimezoneMiddleware(MiddlewareMixin):
@@ -11,10 +13,14 @@ class TimezoneMiddleware(MiddlewareMixin):
         user_time_zone = request.session.get('user_time_zone')
         try:
             if not user_time_zone:
-                freegeoip_response = requests.get('http://freegeoip.net/json')
-                user_time_zone = freegeoip_response.json()['time_zone']
-                if user_time_zone:
-                    request.session['user_time_zone'] = user_time_zone
+                user_ip = get_real_ip(request)
+                if user_ip:
+                    reader = geolite2.reader()
+                    ip_details = reader.get(user_ip)
+                    user_time_zone = ip_details['location']['time_zone']
+                    geolite2.close()
+                    if user_time_zone:
+                        request.session['user_time_zone'] = user_time_zone
             timezone.activate(pytz.timezone(user_time_zone))
         except:
             timezone.deactivate()

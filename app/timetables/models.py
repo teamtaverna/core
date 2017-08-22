@@ -236,10 +236,11 @@ class MenuItem(TimestampMixin):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
 
     def clean(self):
-        if self.cycle_day > self.timetable.cycle_length:
-            raise ValidationError(
-                _('Supply a cycle day in the range 1 - {}'.format(self.timetable.cycle_length))
-            )
+        if self.cycle_day and self.timetable.cycle_length:
+            if self.cycle_day > self.timetable.cycle_length:
+                raise ValidationError(
+                    _('Supply a cycle day in the range 1 - {}'.format(self.timetable.cycle_length))
+                )
         super().clean()
 
     def save(self, *args, **kwargs):

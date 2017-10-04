@@ -379,7 +379,7 @@ class ServingAutoUpdate(models.Model):
 
     @classmethod
     def get_servings(cls, timetable, date, vendor=None):
-        if timetable.is_timetable_inactive_this_day(date):
+        if not timetable.is_active or timetable.is_timetable_inactive_this_day(date):
             raise ValidationError(
                 _('Timetable {} is inactive on {}.'.format(
                     timetable.name,

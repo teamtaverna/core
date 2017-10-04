@@ -12,10 +12,7 @@ Want to contribute? Great!
 
 You need to have postgreSQL installed and set up on your machine.
 
-Clone the repository from [GitHub](https://www.github.com)
-```
-$ git clone https://github.com/teamtaverna/core.git
-```
+Fork the repository. Please read the CONTRIBUTING.md guide.
 
 ### Installation
 
@@ -61,3 +58,12 @@ Next,
     ```
     python3 manage.py runserver
     ```
+
+
+To run tests
+```
+$ python manage.py test
+```
+```
+$ flake8 .
+```

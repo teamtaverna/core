@@ -1,7 +1,7 @@
 language: python
 
 python:
-- "3.5"
+- '3.5'
 
 install:
 - pip install -r requirements.txt
@@ -10,7 +10,7 @@ services:
 - postgresql
 
 before_script:
-- psql -c "create database travis_ci_test;" -U postgres
+- psql -c 'create database travis_ci_test;' -U postgres
 - python manage.py migrate --settings=core.settings
 
 script:
@@ -30,4 +30,8 @@ deploy:
     master: taverna-core
     staging: taverna-core-staging
   run:
-    - "python manage.py migrate --noinput"
+  - python manage.py migrate --noinput
+
+env:
+  global:
+    secure: Ht8QdJoisRYxjY8MPzNkUaNuJ1w6K+ZiBmhChI7H0A5K3J7BVTXZUCN8FZzD32axbMPopZJWJKjxpJco3JFUPgfVJV8nFmx8PuT8Domrc6yehz1khVdIc41RVZIbtkArsNU4edslGvSMAdSqKZIbCgg18JMztvlltHqln9kd0R44WqaBbz0vK8Zo77YFWV9yOnl6CnqOGLQXdyLTrGyAIVhLdLGmOMqNI2RVXb8mdRSlxRihky70CE8OFjEg0ayiKd2ITfaVrs4V1YruYKFB1Atx5oWBmvRg7kex11YRg3Pb86RoScmHmip4lQ7D2jHODseHpRNs1OKOyhyo4vGeibIboo/4fHN2m6c3oBdCU0LyjjjFyKxmw+wA4yZzzuPrLiIG3aL8aGXBZJ6sXEH9UDzHKcjWnjjFBYOrsppCGIsNtLkCz6QbNnF50Wwovytg7UDMIUqAZoEAyF1gRkrh7sOU+3+eTjxBf78/wzNV7UangKRPsbY8M0I58TSWwlD6zC+qMLW4dDtrV8WBged8cZ7W22fbXAIvXmykCa1mLBsToPbv5UuSzYJ0xSR05hmZ1J+Q/nxATTX2hQefQ4Ft/25d66upAFEHjzknm14l1m89g5Xf1byfJXoY4nDg0eOC+gajSO0Ujnx9MeNES0xhhj4wUrR6bpy+lS3snuGdJis=

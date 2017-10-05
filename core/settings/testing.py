@@ -1,5 +1,10 @@
 from .base import *
 
+# Secret Key
+SECRET_KEY = "testing in travis"
+
+# Debug
+DEBUG = True
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases

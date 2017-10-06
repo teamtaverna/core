@@ -249,8 +249,8 @@ class MenuItem(TimestampMixin):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return 'Cycle {} {} for timetable {}'.format(
-            self.cycle_day, self.meal, self.timetable
+        return '{} ({}) for {} on cycle {} timetable {}'.format(
+            self.dish, self.course, self.meal, self.cycle_day, self.timetable
         )
 
     class Meta:

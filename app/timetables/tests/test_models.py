@@ -373,6 +373,22 @@ class ServingAutoUpdateTest(TestCase):
         ServingAutoUpdate.create_servings_if_not_exist(self.timetable, self.vendor, self.date)
         self.assertEqual(3, self.get_servings_count())
 
+    def test_get_servings_on_an_inactive_timetable(self):
+        self.timetable.is_active = False
+        try:
+            with transaction.atomic():
+                ServingAutoUpdate.get_servings(
+                    self.timetable,
+                    self.date,
+                    vendor=self.vendor,
+                )
+            self.assertTrue(False)
+        except ValidationError as e:
+            self.assertEqual(
+                ['Timetable {} is inactive on {}.'.format(self.timetable.name, self.date)],
+                e.messages
+            )
+
     def test_get_servings_with_date_being_an_inactive_weekday_of_the_specified_timetable(self):
         date = self.later_date - datetime.timedelta(days=1)
         try:

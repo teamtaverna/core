@@ -130,6 +130,14 @@ class MenuItemAdmin(TimeStampAdmin):
         }),
     ]
 
+    list_filter = (
+        'timetable',
+        'cycle_day',
+        'meal',
+        'course',
+        'dish'
+        )
+
 
 @admin.register(Event)
 class EventAdmin(TimeStampAdmin):

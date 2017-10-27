@@ -140,11 +140,11 @@ class MenuItemAdmin(TimeStampAdmin):
         )
 
     list_filter = (
-        'timetable',
+        'timetable__name',
         'cycle_day',
-        'meal',
-        'course',
-        'dish'
+        'meal__name',
+        'course__name',
+        'dish__name'
         )
 
 

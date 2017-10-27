@@ -131,6 +131,14 @@ class MenuItemAdmin(TimeStampAdmin):
         }),
     ]
 
+    search_fields = (
+        'timetable__name',
+        'cycle_day',
+        'meal__name',
+        'course__name',
+        'dish__name'
+        )
+
     list_filter = (
         'timetable',
         'cycle_day',

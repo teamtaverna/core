@@ -107,6 +107,7 @@ class DishAdmin(admin.ModelAdmin):
     """Admin customisation for Dish model."""
 
     readonly_fields = ('slug', 'date_created', 'date_modified')
+    search_fields = ('name',)
     fieldsets = [
         ('Dish', {
             'fields': ('name', 'slug', 'description', 'date_created',

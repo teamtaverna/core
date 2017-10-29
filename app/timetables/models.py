@@ -22,7 +22,7 @@ class Meal(SlugifyMixin, models.Model):
     is scheduled to be served. E.g breakfast, lunch, etc.
     """
 
-    name = models.CharField(max_length=60, verbose_name='Meal name')
+    name = models.CharField(max_length=60, verbose_name='Meal Name')
     slug = models.SlugField(max_length=60, unique=True, null=True, editable=False)
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -48,7 +48,7 @@ class Course(SlugifyMixin, models.Model):
 
     name = models.CharField(
         max_length=150,
-        verbose_name='Course name',
+        verbose_name='Course Name',
         help_text='Example: appetizer, main course, dessert'
     )
     slug = models.SlugField(
@@ -95,7 +95,7 @@ class Timetable(SlugifyMixin, TimestampMixin):
     served at a location, to a team or the entire organisation.
     """
 
-    name = models.CharField(max_length=255, verbose_name='Timetable name')
+    name = models.CharField(max_length=255, verbose_name='Timetable Name')
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     cycle_length = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
@@ -192,7 +192,7 @@ class Dish(SlugifyMixin, TimestampMixin):
     Ice-cream.
     """
 
-    name = models.CharField(max_length=255, verbose_name='Dish name')
+    name = models.CharField(max_length=255, verbose_name='Dish Name')
     slug = models.SlugField(max_length=255, unique=True, null=True, editable=False)
     description = models.TextField(blank=True)
 

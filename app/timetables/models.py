@@ -71,7 +71,7 @@ class Course(SlugifyMixin, models.Model):
 class Vendor(SlugifyMixin, models.Model):
     """Model representing food service-provider."""
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, verbose_name="Vendor Name")
     slug = models.SlugField(max_length=255, unique=True, editable=False)
     info = models.TextField(blank=True)
 

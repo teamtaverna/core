@@ -107,6 +107,7 @@ class DishAdmin(admin.ModelAdmin):
     """Admin customisation for Dish model."""
 
     readonly_fields = ('slug', 'date_created', 'date_modified')
+    search_fields = ('name',)
     fieldsets = [
         ('Dish', {
             'fields': ('name', 'slug', 'description', 'date_created',
@@ -129,6 +130,22 @@ class MenuItemAdmin(TimeStampAdmin):
             'description': 'Meal combination option to be served.'
         }),
     ]
+
+    search_fields = (
+        'timetable__name',
+        'cycle_day',
+        'meal__name',
+        'course__name',
+        'dish__name'
+        )
+
+    list_filter = (
+        'timetable__name',
+        'cycle_day',
+        'meal__name',
+        'course__name',
+        'dish__name'
+        )
 
 
 @admin.register(Event)
